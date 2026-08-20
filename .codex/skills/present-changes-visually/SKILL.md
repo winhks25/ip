@@ -19,7 +19,7 @@ imperative subject and a detailed body explaining what changed and why.
 4. Run the bundled generator from the repository root:
 
    ```bash
-   python3 "$HOME/.codex/skills/present-changes-visually/scripts/generate-split-view-diff.py" \
+   python3 .codex/skills/present-changes-visually/scripts/generate-split-view-diff.py \
      . HEAD WORKTREE _temp/visual-diff.html
    ```
 
