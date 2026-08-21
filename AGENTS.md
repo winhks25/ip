@@ -22,6 +22,12 @@ Unless the user says otherwise, assume that you are assisting a student working 
   * Make generated code as self-explanatory as possible, and include explanatory comments where they improve understanding.
   * When faced with a design choice, choose the simplest option that is sufficient for the requirements, while briefly explaining relevant more advanced alternatives.
 
+# Code update verification
+
+After every code update, inspect `test/ui-test-plan.md` and update it when the changed behavior, inputs, or expected console output is no longer covered accurately. Then invoke the project-specific `$test-ui` skill using the resulting test plan.
+
+The `$test-ui` run is required even when the test plan does not need changes. It must compile or prepare the project with Java 25, execute the listed cases in order, compare actual output with expected output, and stop at the first failure. Include the console input/output session record in the response; for a failure, report the actual and expected output and do not continue with later cases.
+
 # Project-specific requirements
 
 ## Java version: Java 25
