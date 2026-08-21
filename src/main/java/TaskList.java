@@ -7,13 +7,20 @@ public class TaskList {
         this.taskCount = 0;
     }
 
-    public void addTask(String input) {
-        if (taskCount >= 100) {
-            System.out.println("The list is full");
-            return;
-        }
+    public void addToDo(String description) {
+        Task newTask = new ToDo(description);
+        this.tasks[taskCount] = newTask;
+        this.taskCount++;
+    }
 
-        Task newTask = new Task(input);
+    public void addEvent(String description, String from, String to) {
+        Task newTask = new Event(description, from, to);
+        this.tasks[taskCount] = newTask;
+        this.taskCount++;
+    }
+
+    public void addDeadline(String description, String deadline) {
+        Task newTask = new Deadline(description, deadline);
         this.tasks[taskCount] = newTask;
         this.taskCount++;
     }

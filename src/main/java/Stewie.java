@@ -1,7 +1,7 @@
 import java.util.Scanner;
 
 enum Command {
-    LIST, BYE, ADD, MARK, UNMARK
+    LIST, ADD, BYE, MARK, UNMARK, TODO, EVENT, DEADLINE
 }
 
 public class Stewie {
@@ -49,23 +49,22 @@ public class Stewie {
                     this.taskList.printTaskList();
                     break;
                 case MARK:
-                    int index = getTaskIndex(input);
-                    if (index == -1) {
-                        System.out.println("Please enter a valid task number.");
-                        break;
-                    }
-                    this.taskList.markAsDone(index);
+                    this.markAsDone(input);
                     break;
                 case UNMARK:
-                    int idx = getTaskIndex(input);
-                    if (idx == -1) {
-                        System.out.println("Please enter a valid task number.");
-                        break;
-                    }
-                    this.taskList.markAsUndone(idx);
+                    this.markAsUndone(input);
+                    break;
+                case DEADLINE:
+                    this.addDeadline(input);
+                    break;
+                case EVENT:
+                    this.addEvent(input);
+                    break;
+                case TODO:
+                    this.addToDo(input);
                     break;
                 default:
-                    this.taskList.addTask(input);
+                    this.taskList.addToDo(input);
                     break;
             }
         }
@@ -86,7 +85,53 @@ public class Stewie {
         if (fInput.startsWith("unmark ")) {
             return Command.UNMARK;
         }
+        if (fInput.startsWith("deadline ")) {
+            return Command.DEADLINE;
+        }
+        if (fInput.startsWith("event ")) {
+            return Command.EVENT;
+        }
+        if (fInput.startsWith("todo ")) {
+            return Command.TODO;
+        }
         return Command.ADD;
+    }
+
+    private void addDeadline(String input) {
+        String[] words = input.split("deadline|/by");
+        String description = words[0].trim();
+        String deadline = words[1].trim();
+        this.taskList.addDeadline(description, deadline);
+    }
+
+    private void addEvent(String input) {
+        String[] words = input.split("event|/from|/to");
+        String description = words[0].trim();
+        String from = words[1].trim();
+        String to = words[2].trim();
+        this.taskList.addEvent(description, from, to);
+    }
+
+    private void addToDo(String input) {
+        String description = input.split("\\s+", 2)[1].trim();
+        this.taskList.addToDo(description);
+    }
+
+    private void markAsDone(String input) {
+        int index = this.getTaskIndex(input);
+        if (index == -1) {
+            System.out.println("Please enter a valid task number.");
+            return;
+        }
+        this.taskList.markAsDone(index);
+    }
+
+    private void markAsUndone(String input) {
+        int idx = getTaskIndex(input);
+        if (idx == -1) {
+            System.out.println("Please enter a valid task number.");
+        }
+        this.taskList.markAsUndone(idx);
     }
 
     private void printBye() {
