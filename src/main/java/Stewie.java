@@ -99,16 +99,16 @@ public class Stewie {
 
     private void addDeadline(String input) {
         String[] words = input.split("deadline|/by");
-        String description = words[0].trim();
-        String deadline = words[1].trim();
+        String description = words[1].trim();
+        String deadline = words[2].trim();
         this.taskList.addDeadline(description, deadline);
     }
 
     private void addEvent(String input) {
         String[] words = input.split("event|/from|/to");
-        String description = words[0].trim();
-        String from = words[1].trim();
-        String to = words[2].trim();
+        String description = words[1].trim();
+        String from = words[2].trim();
+        String to = words[3].trim();
         this.taskList.addEvent(description, from, to);
     }
 
