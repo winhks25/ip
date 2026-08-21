@@ -2,6 +2,7 @@ public class Deadline extends Task {
     private String deadline;
 
     public Deadline(String description, String deadline) {
+        validateArguemnt(deadline, "Deadline date or time");
         super(description);
         this.deadline = deadline;
     }

@@ -2,7 +2,9 @@ public class Event extends Task {
     private String from;
     private String to;
 
-    public Event(String description, String from, String to) {
+    public Event(String description, String from, String to) throws IllegalArgumentException{
+        validateArguemnt(from, "Event start time");
+        validateArguemnt(to, "Event end time");
         super(description);
         this.from = from;
         this.to = to;

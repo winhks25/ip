@@ -38,7 +38,7 @@ public class TaskList {
     }
 
     public void markAsDone(int index) {
-        if (index < 0 || index > this.taskCount || this.tasks[index] == null) {
+        if (index < 0 || index >= this.taskCount || this.tasks[index] == null) {
             System.out.printf("Task %d does not exist.\n", index + 1);
             return;
         }

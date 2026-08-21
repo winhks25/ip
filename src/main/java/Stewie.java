@@ -1,7 +1,7 @@
 import java.util.Scanner;
 
 enum Command {
-    LIST, ADD, BYE, MARK, UNMARK, TODO, EVENT, DEADLINE
+    LIST, ERROR, BYE, MARK, UNMARK, TODO, EVENT, DEADLINE
 }
 
 public class Stewie {
@@ -39,82 +39,97 @@ public class Stewie {
 
         // Conversation starts here
         while (scanner.hasNextLine()) {
-            String input = scanner.nextLine();
+            String input = scanner.nextLine().toLowerCase().trim();
             Command command = this.getCommand(input);
-            switch (command) {
-                case BYE:
-                    this.printBye();
-                    return;
-                case LIST:
-                    this.taskList.printTaskList();
-                    break;
-                case MARK:
-                    this.markAsDone(input);
-                    break;
-                case UNMARK:
-                    this.markAsUndone(input);
-                    break;
-                case DEADLINE:
-                    this.addDeadline(input);
-                    break;
-                case EVENT:
-                    this.addEvent(input);
-                    break;
-                case TODO:
-                    this.addToDo(input);
-                    break;
-                default:
-                    this.taskList.addToDo(input);
-                    break;
+            try {
+                switch (command) {
+                    case BYE:
+                        this.printBye();
+                        return;
+                    case LIST:
+                        this.taskList.printTaskList();
+                        break;
+                    case MARK:
+                        this.markAsDone(input);
+                        break;
+                    case UNMARK:
+                        this.markAsUndone(input);
+                        break;
+                    case DEADLINE:
+                        this.addDeadline(input);
+                        break;
+                    case EVENT:
+                        this.addEvent(input);
+                        break;
+                    case TODO:
+                        this.addToDo(input);
+                        break;
+                    default:
+                        System.out.println("Please add a command: todo, event, deadline, mark, unmark, list, bye + description!");
+                        break;
+                }
+            } catch (IllegalArgumentException e) {
+                System.out.println(e.getMessage());
             }
         }
     }
 
     // helper methods
     private Command getCommand(String input) {
-        String fInput = input.toLowerCase();
-        if (fInput.equals("bye")) {
+        if (input.equals("bye")) {
             return Command.BYE;
         }
-        if (fInput.equals("list")) {
+        if (input.equals("list")) {
             return Command.LIST;
         }
-        if (fInput.startsWith("mark ")) {
+        if (input.startsWith("mark ")) {
             return Command.MARK;
         }
-        if (fInput.startsWith("unmark ")) {
+        if (input.startsWith("unmark ")) {
             return Command.UNMARK;
         }
-        if (fInput.startsWith("deadline ")) {
+        if (input.startsWith("deadline ")) {
             return Command.DEADLINE;
         }
-        if (fInput.startsWith("event ")) {
+        if (input.startsWith("event ")) {
             return Command.EVENT;
         }
-        if (fInput.startsWith("todo ")) {
+        if (input.startsWith("todo ")) {
             return Command.TODO;
         }
-        return Command.ADD;
+        return Command.ERROR;
     }
 
     private void addDeadline(String input) {
-        String[] words = input.split("deadline|/by");
-        String description = words[1].trim();
-        String deadline = words[2].trim();
-        this.taskList.addDeadline(description, deadline);
+        try {
+            String[] words = input.split("deadline|/by");
+            String description = words[1].trim();
+            String deadline = words[2].trim();
+            this.taskList.addDeadline(description, deadline);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            System.out.println("Add deadline task in the format: deadline <description> /by <deadline>");
+        }
     }
 
     private void addEvent(String input) {
-        String[] words = input.split("event|/from|/to");
-        String description = words[1].trim();
-        String from = words[2].trim();
-        String to = words[3].trim();
-        this.taskList.addEvent(description, from, to);
+        try {
+            String[] words = input.split("event|/from|/to");
+            String description = words[1].trim();
+            String from = words[2].trim();
+            String to = words[3].trim();
+            this.taskList.addEvent(description, from, to);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            System.out.println("Add event tasks in the format: event <description> /from <date or time> /to<date or time>");
+        }
     }
 
     private void addToDo(String input) {
-        String description = input.split("\\s+", 2)[1].trim();
-        this.taskList.addToDo(description);
+        try {
+            String description = input.split("\\s+", 2)[1].trim();
+            this.taskList.addToDo(description);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            System.out.println("Please add a task description.");
+        }
     }
 
     private void markAsDone(String input) {
@@ -122,16 +137,18 @@ public class Stewie {
         if (index == -1) {
             System.out.println("Please enter a valid task number.");
             return;
+        } else {
+            this.taskList.markAsDone(index);
         }
-        this.taskList.markAsDone(index);
     }
 
     private void markAsUndone(String input) {
         int idx = getTaskIndex(input);
         if (idx == -1) {
             System.out.println("Please enter a valid task number.");
+        } else {
+            this.taskList.markAsUndone(idx);
         }
-        this.taskList.markAsUndone(idx);
     }
 
     private void printBye() {
