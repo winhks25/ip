@@ -1,7 +1,7 @@
 import java.util.Scanner;
 
 enum Command {
-    LIST, ERROR, BYE, MARK, UNMARK, TODO, EVENT, DEADLINE
+    LIST, ERROR, BYE, MARK, UNMARK, TODO, EVENT, DEADLINE, DELETE
 }
 
 public class Stewie {
@@ -64,6 +64,9 @@ public class Stewie {
                     case TODO:
                         this.addToDo(input);
                         break;
+                    case DELETE:
+                        this.deleteTask(input);
+                        break;
                     default:
                         System.out.println("Please add a command: todo, event, deadline, mark, unmark, list, bye + description!");
                         break;
@@ -96,6 +99,9 @@ public class Stewie {
         }
         if (input.startsWith("todo ")) {
             return Command.TODO;
+        }
+        if (input.startsWith("delete ")) {
+            return Command.DELETE;
         }
         return Command.ERROR;
     }
@@ -135,7 +141,7 @@ public class Stewie {
     private void markAsDone(String input) {
         int index = this.getTaskIndex(input);
         if (index == -1) {
-            System.out.println("Please enter a valid task number.");
+            System.out.println("Please enter a valid task number in the format: mark <number>.");
             return;
         } else {
             this.taskList.markAsDone(index);
@@ -145,9 +151,18 @@ public class Stewie {
     private void markAsUndone(String input) {
         int idx = getTaskIndex(input);
         if (idx == -1) {
-            System.out.println("Please enter a valid task number.");
+            System.out.println("Please enter a valid task number in the format: unmark <number>.");
         } else {
             this.taskList.markAsUndone(idx);
+        }
+    }
+
+    private void deleteTask(String input) {
+        int idx = getTaskIndex(input);
+        if (idx == -1) {
+            System.out.println("Please enter a valid task number in the format: delete <number>.");
+        } else {
+            this.taskList.deleteTask(idx);
         }
     }
 

@@ -50,6 +50,14 @@ public class TaskList {
         }
     }
 
+    public void deleteTask(int index) {
+        try {
+            this.tasks.remove(index);
+        } catch (IndexOutOfBoundsException e) {
+            System.out.println("Please enter a valid task number in the format: delete <number>");
+        }
+    }
+
     public void printTaskList() {
         System.out.println("Here is your list of tasks.");
         if (this.tasks.isEmpty()) {

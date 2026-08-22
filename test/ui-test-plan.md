@@ -112,10 +112,56 @@ Please add a command: todo, event, deadline, mark, unmark, list, bye + descripti
 Please add a command: todo, event, deadline, mark, unmark, list, bye + description!
 Add event tasks in the format: event <description> /from <date or time> /to<date or time>
 Add deadline task in the format: deadline <description> /by <deadline>
-Task 9 does not exist.
-Please enter a valid task number.
+Please type in a valid task number in the format: mark <number>
+Please enter a valid task number in the format: unmark <number>.
 Here is your list of tasks.
 You have no task saved.
+Bye, see you later!
+```
+
+## Test Case 6: Delete a task and handle invalid delete numbers
+
+### Aim
+
+Verify that `delete` removes the requested task, reindexes the remaining list, and handles invalid task numbers without ending the session.
+
+### Inputs
+
+```text
+todo first
+todo second
+delete 1
+list
+delete 9
+delete 0
+delete two
+bye
+```
+
+### Expected output
+
+```text
+███████╗ ████████╗ ███████╗ ██╗    ██╗ ██╗ ███████╗
+██╔════╝ ╚══██╔══╝ ██╔════╝ ██║    ██║ ██║ ██╔════╝
+███████╗    ██║    █████╗   ██║ █╗ ██║ ██║ █████╗
+╚════██║    ██║    ██╔══╝   ██║███╗██║ ██║ ██╔══╝
+███████║    ██║    ███████╗ ╚███╔███╔╝ ██║ ███████╗
+╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
+
+Hey there! I'm Stewie. 
+Wanna have a chat?
+Tell me whats on your list!!
+Got it! Added the following to your list.
+[T] [ ] first
+Now you have 1 tasks in the list. 
+Got it! Added the following to your list.
+[T] [ ] second
+Now you have 2 tasks in the list. 
+Here is your list of tasks.
+1. [T] [ ] second
+Please enter a valid task number in the format: delete <number>
+Please enter a valid task number in the format: delete <number>.
+Please enter a valid task number in the format: delete <number>.
 Bye, see you later!
 ```
 
