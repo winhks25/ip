@@ -1,3 +1,4 @@
+/** A task that takes place between a start time and an end time. */
 public class Event extends Task {
     private String from;
     private String to;
@@ -8,6 +9,16 @@ public class Event extends Task {
         super(description);
         this.from = from;
         this.to = to;
+    }
+
+    /** Returns the event's start time. */
+    public String getFrom() {
+        return this.from;
+    }
+
+    /** Returns the event's end time. */
+    public String getTo() {
+        return this.to;
     }
 
     @Override

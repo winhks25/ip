@@ -1,3 +1,4 @@
+/** Represents a task that can be stored in the task list. */
 public abstract class Task {
     protected String description;
     protected boolean isDone;
@@ -14,6 +15,11 @@ public abstract class Task {
 
     public String getDescription() {
         return this.description;
+    }
+
+    /** Returns whether this task has been completed. */
+    public boolean isDone() {
+        return this.isDone;
     }
 
     public void markAsDone() {

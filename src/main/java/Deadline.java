@@ -1,3 +1,4 @@
+/** A task that must be completed by a specified deadline. */
 public class Deadline extends Task {
     private String deadline;
 
@@ -5,6 +6,11 @@ public class Deadline extends Task {
         validateArguemnt(deadline, "Deadline date or time");
         super(description);
         this.deadline = deadline;
+    }
+
+    /** Returns the deadline used when this task was created. */
+    public String getDeadline() {
+        return this.deadline;
     }
 
     @Override
