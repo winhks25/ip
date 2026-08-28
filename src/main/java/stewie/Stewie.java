@@ -1,28 +1,49 @@
+package stewie;
+
 import java.util.Scanner;
 
+/**
+ * Types of commands users can give.
+ */
 enum Command {
     LIST, ERROR, BYE, MARK, UNMARK, TODO, EVENT, DEADLINE, DELETE
 }
 
+/**
+ * Represent the chatbot Stewie.
+ * Stewie has task list to stores the tasks users want to record.
+ * Stewie parses the text inputs and stores them as Task in task list.
+ */
 public class Stewie {
-    private TaskList taskList;
+    private final TaskList taskList;
 
+    /**
+     * Initialize a chatbot Stewie with a task list from local disk.
+     */
     public Stewie() {
         this.taskList = new TaskList();
     }
 
-    public void echoUserCommands(String byeMsg) {
+    /**
+     * Prints whatever users type in.
+     */
+    public void echoUserCommands() {
         Scanner scanner = new Scanner(System.in);
         while (scanner.hasNextLine()) {
             String input = scanner.nextLine();
             if (input.equals("bye")) {
-                System.out.println(byeMsg);
+                this.printBye();
                 break;
             }
             System.out.println("Stewie: " + input);
         }
     }
 
+    /**
+     * Runs the Chatbot.
+     * Prints the banner STEWIE and prompt the user to type in commands.
+     * Responds to the user based on their commands.
+     */
     public void run() {
         String banner = """
                 ███████╗ ████████╗ ███████╗ ██╗    ██╗ ██╗ ███████╗
@@ -78,6 +99,13 @@ public class Stewie {
     }
 
     // helper methods
+
+    /**
+     * Returns a type of command from user's input.
+     *
+     * @param input Input text string the user typed in.
+     * @return command A type of valid command.
+     */
     private Command getCommand(String input) {
         if (input.equals("bye")) {
             return Command.BYE;
@@ -106,6 +134,12 @@ public class Stewie {
         return Command.ERROR;
     }
 
+    /**
+     * Adds a task of type deadline to the task list.
+     * Records the description and deadline date in task list.
+     *
+     * @param input Input from user.
+     */
     private void addDeadline(String input) {
         try {
             String[] words = input.split("deadline|/by");
@@ -117,6 +151,12 @@ public class Stewie {
         }
     }
 
+    /**
+     * Adds a task of type event to the task list.
+     * Records description, starting time and ending time of the event.
+     *
+     * @param input Input from user.
+     */
     private void addEvent(String input) {
         try {
             String[] words = input.split("event|/from|/to");
@@ -129,6 +169,12 @@ public class Stewie {
         }
     }
 
+    /**
+     * Adds a task of type ToDo to the task list.
+     * Records description of the task.
+     *
+     * @param input Input from user.
+     */
     private void addToDo(String input) {
         try {
             String description = input.split("\\s+", 2)[1].trim();
@@ -138,6 +184,11 @@ public class Stewie {
         }
     }
 
+    /**
+     * Marks the task as done.
+     *
+     * @param input Input from user.
+     */
     private void markAsDone(String input) {
         int index = this.getTaskIndex(input);
         if (index == -1) {
@@ -148,6 +199,11 @@ public class Stewie {
         }
     }
 
+    /**
+     * Marks the task as not done.
+     *
+     * @param input Input from user.
+     */
     private void markAsUndone(String input) {
         int idx = getTaskIndex(input);
         if (idx == -1) {
@@ -157,6 +213,11 @@ public class Stewie {
         }
     }
 
+    /**
+     * Delete the task from the task list.
+     *
+     * @param input Input from user.
+     */
     private void deleteTask(String input) {
         int idx = getTaskIndex(input);
         if (idx == -1) {
@@ -166,10 +227,19 @@ public class Stewie {
         }
     }
 
+    /**
+     * Print goodbye statement.
+     */
     private void printBye() {
         System.out.println("Bye, see you later!");
     }
 
+    /**
+     * Returns the index of the task from the user input string.
+     *
+     * @param input Input from user.
+     * @return Index of the task from the input string.
+     */
     private int getTaskIndex(String input) {
         String[] parts = input.trim().split("\\s+");
 
