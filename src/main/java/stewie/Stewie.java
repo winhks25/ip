@@ -3,13 +3,6 @@ package stewie;
 import java.util.Scanner;
 
 /**
- * Types of commands users can give.
- */
-enum Command {
-    LIST, ERROR, BYE, MARK, UNMARK, TODO, EVENT, DEADLINE, DELETE
-}
-
-/**
  * Represent the chatbot Stewie.
  * Stewie has task list to stores the tasks users want to record.
  * Stewie parses the text inputs and stores them as Task in task list.
@@ -25,50 +18,25 @@ public class Stewie {
     }
 
     /**
-     * Prints whatever users type in.
-     */
-    public void echoUserCommands() {
-        Scanner scanner = new Scanner(System.in);
-        while (scanner.hasNextLine()) {
-            String input = scanner.nextLine();
-            if (input.equals("bye")) {
-                this.printBye();
-                break;
-            }
-            System.out.println("Stewie: " + input);
-        }
-    }
-
-    /**
      * Runs the Chatbot.
      * Prints the banner STEWIE and prompt the user to type in commands.
      * Responds to the user based on their commands.
      */
     public void run() {
-        String banner = """
-                ███████╗ ████████╗ ███████╗ ██╗    ██╗ ██╗ ███████╗
-                ██╔════╝ ╚══██╔══╝ ██╔════╝ ██║    ██║ ██║ ██╔════╝
-                ███████╗    ██║    █████╗   ██║ █╗ ██║ ██║ █████╗
-                ╚════██║    ██║    ██╔══╝   ██║███╗██║ ██║ ██╔══╝
-                ███████║    ██║    ███████╗ ╚███╔███╔╝ ██║ ███████╗
-                ╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
-                """;
-        System.out.println(banner);
-        System.out.println("Hey there! I'm Stewie. \nWanna have a chat?");
-        System.out.println("Tell me whats on your list!!");
+        Ui.greetUser();
         Scanner scanner = new Scanner(System.in);
 
         // Conversation starts here
         while (scanner.hasNextLine()) {
             String input = scanner.nextLine().toLowerCase().trim();
-            Command command = this.getCommand(input);
+            Command command = Parser.getCommand(input);
             try {
                 switch (command) {
                     case BYE:
-                        this.printBye();
+                        Ui.printBye();
                         return;
                     case LIST:
-                        this.taskList.printTaskList();
+                        Ui.printTaskList(this.taskList.produceTaskList());
                         break;
                     case MARK:
                         this.markAsDone(input);
@@ -99,53 +67,17 @@ public class Stewie {
     }
 
     // helper methods
-
-    /**
-     * Returns a type of command from user's input.
-     *
-     * @param input Input text string the user typed in.
-     * @return command A type of valid command.
-     */
-    private Command getCommand(String input) {
-        if (input.equals("bye")) {
-            return Command.BYE;
-        }
-        if (input.equals("list")) {
-            return Command.LIST;
-        }
-        if (input.startsWith("mark ")) {
-            return Command.MARK;
-        }
-        if (input.startsWith("unmark ")) {
-            return Command.UNMARK;
-        }
-        if (input.startsWith("deadline ")) {
-            return Command.DEADLINE;
-        }
-        if (input.startsWith("event ")) {
-            return Command.EVENT;
-        }
-        if (input.startsWith("todo ")) {
-            return Command.TODO;
-        }
-        if (input.startsWith("delete ")) {
-            return Command.DELETE;
-        }
-        return Command.ERROR;
-    }
-
     /**
      * Adds a task of type deadline to the task list.
-     * Records the description and deadline date in task list.
+     * Deadline task includes description and deadline date.
      *
      * @param input Input from user.
      */
     private void addDeadline(String input) {
         try {
-            String[] words = input.split("deadline|/by");
-            String description = words[1].trim();
-            String deadline = words[2].trim();
-            this.taskList.addDeadline(description, deadline);
+            String[] parsedInput = Parser.parseDeadline(input);
+            // parsedInput = {description, deadline}
+            this.taskList.addDeadline(parsedInput[0], parsedInput[1]);
         } catch (ArrayIndexOutOfBoundsException e) {
             System.out.println("Add deadline task in the format: deadline <description> /by <deadline>");
         }
@@ -153,17 +85,15 @@ public class Stewie {
 
     /**
      * Adds a task of type event to the task list.
-     * Records description, starting time and ending time of the event.
+     * An event has a description, starting time and ending time.
      *
      * @param input Input from user.
      */
     private void addEvent(String input) {
         try {
-            String[] words = input.split("event|/from|/to");
-            String description = words[1].trim();
-            String from = words[2].trim();
-            String to = words[3].trim();
-            this.taskList.addEvent(description, from, to);
+            String[] parsedInput = Parser.parseEvent(input);
+            // parsedInput = {description, form, to}
+            this.taskList.addEvent(parsedInput[0], parsedInput[1], parsedInput[2]);
         } catch (ArrayIndexOutOfBoundsException e) {
             System.out.println("Add event tasks in the format: event <description> /from <date or time> /to<date or time>");
         }
@@ -177,7 +107,7 @@ public class Stewie {
      */
     private void addToDo(String input) {
         try {
-            String description = input.split("\\s+", 2)[1].trim();
+            String description = Parser.parseTodo(input);
             this.taskList.addToDo(description);
         } catch (ArrayIndexOutOfBoundsException e) {
             System.out.println("Please add a task description.");
@@ -190,7 +120,7 @@ public class Stewie {
      * @param input Input from user.
      */
     private void markAsDone(String input) {
-        int index = this.getTaskIndex(input);
+        int index = Parser.getTaskIndex(input);
         if (index == -1) {
             System.out.println("Please enter a valid task number in the format: mark <number>.");
             return;
@@ -205,7 +135,7 @@ public class Stewie {
      * @param input Input from user.
      */
     private void markAsUndone(String input) {
-        int idx = getTaskIndex(input);
+        int idx = Parser.getTaskIndex(input);
         if (idx == -1) {
             System.out.println("Please enter a valid task number in the format: unmark <number>.");
         } else {
@@ -219,38 +149,11 @@ public class Stewie {
      * @param input Input from user.
      */
     private void deleteTask(String input) {
-        int idx = getTaskIndex(input);
+        int idx = Parser.getTaskIndex(input);
         if (idx == -1) {
             System.out.println("Please enter a valid task number in the format: delete <number>.");
         } else {
             this.taskList.deleteTask(idx);
-        }
-    }
-
-    /**
-     * Print goodbye statement.
-     */
-    private void printBye() {
-        System.out.println("Bye, see you later!");
-    }
-
-    /**
-     * Returns the index of the task from the user input string.
-     *
-     * @param input Input from user.
-     * @return Index of the task from the input string.
-     */
-    private int getTaskIndex(String input) {
-        String[] parts = input.trim().split("\\s+");
-
-        if (parts.length != 2) {
-            return -1;
-        }
-
-        try {
-            return Integer.parseInt(parts[1]) - 1;
-        } catch (NumberFormatException e) {
-            return -1;
         }
     }
 

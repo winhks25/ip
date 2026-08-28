@@ -5,7 +5,7 @@ package stewie;
  * Deadline class has a deadline of type Date.
  */
 public class Deadline extends Task {
-    private Date deadline;
+    private final Date deadline;
 
     /**
      * Initialize the Deadline object
@@ -14,7 +14,7 @@ public class Deadline extends Task {
      * @param deadline Deadline date of the task
      */
     public Deadline(String description, String deadline) {
-        validateArguemnt(deadline, "Deadline date or time");
+        validateArgument(deadline, "Deadline date or time");
         super(description);
         this.deadline = new Date(deadline);
     }

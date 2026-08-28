@@ -15,7 +15,7 @@ import java.util.Locale;
  */
 
 public class Date {
-    private LocalDate date;
+    private final LocalDate date;
     private static final List<DateTimeFormatter> FORMATTERS = List.of(
         DateTimeFormatter.ISO_LOCAL_DATE,
         DateTimeFormatter.ofPattern("d/M/uuuu"),

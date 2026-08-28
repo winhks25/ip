@@ -5,7 +5,7 @@ package stewie;
  * A task has description and the status "isDone"
  */
 public abstract class Task {
-    protected String description;
+    protected final String description;
     protected boolean isDone;
 
     /**
@@ -14,7 +14,7 @@ public abstract class Task {
      * @param description
      */
     public Task(String description) {
-        validateArguemnt(description, "Description");
+        validateArgument(description, "Description");
         this.description = description;
         this.isDone = false;
     }
