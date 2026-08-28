@@ -14,7 +14,7 @@ public abstract class Task {
      * @param description
      */
     public Task(String description) {
-        validateArguemnt(description, "Description");
+        validateArgument(description, "Description");
         this.description = description;
         this.isDone = false;
     }

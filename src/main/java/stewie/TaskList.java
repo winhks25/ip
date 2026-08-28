@@ -26,10 +26,7 @@ public class TaskList {
         Task newTask = new ToDo(description);
         this.tasks.add(newTask);
         Storage.saveToDisk(this.tasks);
-
-        System.out.println("Got it! Added the following to your list.");
-        System.out.println(newTask);
-        System.out.printf("Now you have %d tasks in the list. %n", this.tasks.size());
+        Ui.printTaskAddConfirmation(newTask, this.tasks.size());
     }
 
     /**
@@ -44,10 +41,7 @@ public class TaskList {
         Task newTask = new Event(description, from, to);
         this.tasks.add(newTask);
         Storage.saveToDisk(this.tasks);
-
-        System.out.println("Got it! Added the following to your list.");
-        System.out.println(newTask);
-        System.out.printf("Now you have %d tasks in the list. %n", this.tasks.size());
+        Ui.printTaskAddConfirmation(newTask, this.tasks.size());
     }
 
     /**
@@ -61,10 +55,7 @@ public class TaskList {
         Task newTask = new Deadline(description, deadline);
         this.tasks.add(newTask);
         Storage.saveToDisk(this.tasks);
-
-        System.out.println("Got it! Added the following to your list.");
-        System.out.println(newTask);
-        System.out.printf("Now you have %d tasks in the list. %n", this.tasks.size());
+        Ui.printTaskAddConfirmation(newTask, this.tasks.size());
     }
 
     /**
@@ -78,7 +69,7 @@ public class TaskList {
             this.tasks.get(index).markAsDone();
             Storage.saveToDisk(this.tasks);
         } catch (IndexOutOfBoundsException e) {
-            System.out.println("Please type in a valid task number in the format: mark <number>");
+            Ui.printNumberedCommandFormat("mark");
         }
     }
 
@@ -93,7 +84,7 @@ public class TaskList {
             this.tasks.get(index).markAsUndone();
             Storage.saveToDisk(this.tasks);
         } catch (IndexOutOfBoundsException e) {
-            System.out.println("Please type in a valid task number in the format: mark <number>");
+            Ui.printNumberedCommandFormat("unmark");
         }
     }
 
@@ -108,22 +99,21 @@ public class TaskList {
             this.tasks.remove(index);
             Storage.saveToDisk(this.tasks);
         } catch (IndexOutOfBoundsException e) {
-            System.out.println("Please enter a valid task number in the format: delete <number>");
+            Ui.printNumberedCommandFormat("delete");
         }
     }
 
     /**
-     * Print all the tasks in the task list
+     * Returns the tasks in string array.
+     *
+     * @return Tasks as a string array.
      */
-    public void printTaskList() {
-        System.out.println("Here is your list of tasks.");
-        if (this.tasks.isEmpty()) {
-            System.out.println("You have no task saved.");
-            return;
-        }
+    public String[] produceTaskList() {
+        String[] lst = new String[this.tasks.size()];
 
         for (int i = 0; i < this.tasks.size(); i++) {
-            System.out.println(i + 1 + ". " + this.tasks.get(i).toString());
+            lst[i] = this.tasks.get(i).toString();
         }
+        return lst;
     }
 }
