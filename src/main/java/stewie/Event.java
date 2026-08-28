@@ -5,8 +5,8 @@ package stewie;
  * An event has starting time (from) and ending time (to).
  */
 public class Event extends Task {
-    private Date from;
-    private Date to;
+    private final Date from;
+    private final Date to;
 
     /**
      * Initialize the Event object.

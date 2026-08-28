@@ -5,7 +5,7 @@ package stewie;
  * A task has description and the status "isDone"
  */
 public abstract class Task {
-    protected String description;
+    protected final String description;
     protected boolean isDone;
 
     /**

@@ -5,7 +5,7 @@ package stewie;
  * Deadline class has a deadline of type Date.
  */
 public class Deadline extends Task {
-    private Date deadline;
+    private final Date deadline;
 
     /**
      * Initialize the Deadline object
