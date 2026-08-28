@@ -3,13 +3,6 @@ package stewie;
 import java.util.Scanner;
 
 /**
- * Types of commands users can give.
- */
-enum Command {
-    LIST, ERROR, BYE, MARK, UNMARK, TODO, EVENT, DEADLINE, DELETE
-}
-
-/**
  * Represent the chatbot Stewie.
  * Stewie has task list to stores the tasks users want to record.
  * Stewie parses the text inputs and stores them as Task in task list.
