@@ -68,7 +68,7 @@ public class Ui {
     /**
      * Print all the tasks in the task list
      */
-    public void printTaskList(String[] tasks) {
+    public static void printTaskList(String[] tasks) {
         System.out.println("Here is your list of tasks.");
         if (tasks.length == 0) {
             System.out.println("You have no task saved.");

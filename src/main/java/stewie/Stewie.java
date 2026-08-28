@@ -36,7 +36,7 @@ public class Stewie {
                         Ui.printBye();
                         return;
                     case LIST:
-                        this.taskList.printTaskList();
+                        Ui.printTaskList(this.taskList.produceTaskList());
                         break;
                     case MARK:
                         this.markAsDone(input);
