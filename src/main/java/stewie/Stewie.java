@@ -69,16 +69,15 @@ public class Stewie {
     // helper methods
     /**
      * Adds a task of type deadline to the task list.
-     * Records the description and deadline date in task list.
+     * Deadline task includes description and deadline date.
      *
      * @param input Input from user.
      */
     private void addDeadline(String input) {
         try {
-            String[] words = input.split("deadline|/by");
-            String description = words[1].trim();
-            String deadline = words[2].trim();
-            this.taskList.addDeadline(description, deadline);
+            String[] parsedInput = Parser.parseDeadline(input);
+            // parsedInput = {description, deadline}
+            this.taskList.addDeadline(parsedInput[0], parsedInput[1]);
         } catch (ArrayIndexOutOfBoundsException e) {
             System.out.println("Add deadline task in the format: deadline <description> /by <deadline>");
         }
@@ -86,17 +85,15 @@ public class Stewie {
 
     /**
      * Adds a task of type event to the task list.
-     * Records description, starting time and ending time of the event.
+     * An event has a description, starting time and ending time.
      *
      * @param input Input from user.
      */
     private void addEvent(String input) {
         try {
-            String[] words = input.split("event|/from|/to");
-            String description = words[1].trim();
-            String from = words[2].trim();
-            String to = words[3].trim();
-            this.taskList.addEvent(description, from, to);
+            String[] parsedInput = Parser.parseEvent(input);
+            // parsedInput = {description, form, to}
+            this.taskList.addEvent(parsedInput[0], parsedInput[1], parsedInput[2]);
         } catch (ArrayIndexOutOfBoundsException e) {
             System.out.println("Add event tasks in the format: event <description> /from <date or time> /to<date or time>");
         }
@@ -110,7 +107,7 @@ public class Stewie {
      */
     private void addToDo(String input) {
         try {
-            String description = input.split("\\s+", 2)[1].trim();
+            String description = Parser.parseTodo(input);
             this.taskList.addToDo(description);
         } catch (ArrayIndexOutOfBoundsException e) {
             System.out.println("Please add a task description.");

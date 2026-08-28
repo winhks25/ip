@@ -57,4 +57,43 @@ public class Parser {
             return -1;
         }
     }
+
+    /**
+     * Parses a string into description and deadline.
+     * Returns description and deadline as a string array.
+     *
+     * @param input Input string from user.
+     * @return {description, deadline} in String[] format.
+     */
+    public static String[] parseDeadline(String input) {
+        String[] words = input.split("deadline|/by");
+        String description = words[1].trim();
+        String deadline = words[2].trim();
+        return new String[] {description, deadline};
+    }
+
+    /**
+     * Parses a string into description, from(date), and to(date).
+     * Returns them as a string array.
+     *
+     * @param input Input from user.
+     * @return {description, from, to} string array.
+     */
+    public static String[] parseEvent(String input) {
+        String[] words = input.split("event|/from|/to");
+        String description = words[1].trim();
+        String from = words[2].trim();
+        String to = words[3].trim();
+        return new String[] {description, from, to};
+    }
+
+    /**
+     * Parses a string into description.
+     *
+     * @param input Input from user.
+     * @return description extracted from user.
+     */
+    public static String parseTodo(String input) {
+        return input.split("\\s+", 2)[1].trim();
+    }
 }
