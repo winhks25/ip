@@ -36,7 +36,7 @@ public class Stewie {
         // Conversation starts here
         while (scanner.hasNextLine()) {
             String input = scanner.nextLine().toLowerCase().trim();
-            Command command = this.getCommand(input);
+            Command command = Parser.getCommand(input);
             try {
                 switch (command) {
                     case BYE:
@@ -74,41 +74,6 @@ public class Stewie {
     }
 
     // helper methods
-
-    /**
-     * Returns a type of command from user's input.
-     *
-     * @param input Input text string the user typed in.
-     * @return command A type of valid command.
-     */
-    private Command getCommand(String input) {
-        if (input.equals("bye")) {
-            return Command.BYE;
-        }
-        if (input.equals("list")) {
-            return Command.LIST;
-        }
-        if (input.startsWith("mark ")) {
-            return Command.MARK;
-        }
-        if (input.startsWith("unmark ")) {
-            return Command.UNMARK;
-        }
-        if (input.startsWith("deadline ")) {
-            return Command.DEADLINE;
-        }
-        if (input.startsWith("event ")) {
-            return Command.EVENT;
-        }
-        if (input.startsWith("todo ")) {
-            return Command.TODO;
-        }
-        if (input.startsWith("delete ")) {
-            return Command.DELETE;
-        }
-        return Command.ERROR;
-    }
-
     /**
      * Adds a task of type deadline to the task list.
      * Records the description and deadline date in task list.
@@ -165,7 +130,7 @@ public class Stewie {
      * @param input Input from user.
      */
     private void markAsDone(String input) {
-        int index = this.getTaskIndex(input);
+        int index = Parser.getTaskIndex(input);
         if (index == -1) {
             System.out.println("Please enter a valid task number in the format: mark <number>.");
             return;
@@ -180,7 +145,7 @@ public class Stewie {
      * @param input Input from user.
      */
     private void markAsUndone(String input) {
-        int idx = getTaskIndex(input);
+        int idx = Parser.getTaskIndex(input);
         if (idx == -1) {
             System.out.println("Please enter a valid task number in the format: unmark <number>.");
         } else {
@@ -194,31 +159,11 @@ public class Stewie {
      * @param input Input from user.
      */
     private void deleteTask(String input) {
-        int idx = getTaskIndex(input);
+        int idx = Parser.getTaskIndex(input);
         if (idx == -1) {
             System.out.println("Please enter a valid task number in the format: delete <number>.");
         } else {
             this.taskList.deleteTask(idx);
-        }
-    }
-
-    /**
-     * Returns the index of the task from the user input string.
-     *
-     * @param input Input from user.
-     * @return Index of the task from the input string.
-     */
-    private int getTaskIndex(String input) {
-        String[] parts = input.trim().split("\\s+");
-
-        if (parts.length != 2) {
-            return -1;
-        }
-
-        try {
-            return Integer.parseInt(parts[1]) - 1;
-        } catch (NumberFormatException e) {
-            return -1;
         }
     }
 
