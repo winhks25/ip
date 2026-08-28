@@ -25,37 +25,12 @@ public class Stewie {
     }
 
     /**
-     * Prints whatever users type in.
-     */
-    public void echoUserCommands() {
-        Scanner scanner = new Scanner(System.in);
-        while (scanner.hasNextLine()) {
-            String input = scanner.nextLine();
-            if (input.equals("bye")) {
-                this.printBye();
-                break;
-            }
-            System.out.println("Stewie: " + input);
-        }
-    }
-
-    /**
      * Runs the Chatbot.
      * Prints the banner STEWIE and prompt the user to type in commands.
      * Responds to the user based on their commands.
      */
     public void run() {
-        String banner = """
-                ███████╗ ████████╗ ███████╗ ██╗    ██╗ ██╗ ███████╗
-                ██╔════╝ ╚══██╔══╝ ██╔════╝ ██║    ██║ ██║ ██╔════╝
-                ███████╗    ██║    █████╗   ██║ █╗ ██║ ██║ █████╗
-                ╚════██║    ██║    ██╔══╝   ██║███╗██║ ██║ ██╔══╝
-                ███████║    ██║    ███████╗ ╚███╔███╔╝ ██║ ███████╗
-                ╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
-                """;
-        System.out.println(banner);
-        System.out.println("Hey there! I'm Stewie. \nWanna have a chat?");
-        System.out.println("Tell me whats on your list!!");
+        Ui.greetUser();
         Scanner scanner = new Scanner(System.in);
 
         // Conversation starts here
@@ -65,7 +40,7 @@ public class Stewie {
             try {
                 switch (command) {
                     case BYE:
-                        this.printBye();
+                        Ui.printBye();
                         return;
                     case LIST:
                         this.taskList.printTaskList();
@@ -225,13 +200,6 @@ public class Stewie {
         } else {
             this.taskList.deleteTask(idx);
         }
-    }
-
-    /**
-     * Print goodbye statement.
-     */
-    private void printBye() {
-        System.out.println("Bye, see you later!");
     }
 
     /**
