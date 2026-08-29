@@ -1,11 +1,11 @@
 package stewie;
 
 /**
- * Represent a Task.
+ * Represents a task.
  * A task has description and the status "isDone"
  */
 public abstract class Task {
-    protected final String description;
+    private final String description;
     protected boolean isDone;
 
     /**
@@ -20,7 +20,7 @@ public abstract class Task {
     }
 
     /**
-     * Return status icon X
+     * Returns the status icon X.
      *
      * @return String X if the task is done
      * @return Empty string if the task is not done
@@ -30,7 +30,7 @@ public abstract class Task {
     }
 
     /**
-     * Return the description of the task
+     * Returns the description of the task.
      *
      * @return description String
      */

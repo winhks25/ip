@@ -1,7 +1,7 @@
 package stewie;
 
 /**
- * Represent a task of type ToDo
+ * Represents a task of type ToDo.
  */
 public class ToDo extends Task {
     /**

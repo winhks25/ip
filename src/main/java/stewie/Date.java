@@ -1,16 +1,16 @@
-package  stewie;
+package stewie;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
 import java.time.format.ResolverStyle;
 
 import java.util.List;
 import java.util.Locale;
 
 /**
- * Represent a date.
+ * Represents a date.
  *
  * Date uses Java LocalDate object.
  */
@@ -57,13 +57,12 @@ public class Date {
     }
 
     /**
-     * Return a LocalDate object by parsing a string.
+     * Returns a LocalDate object by parsing a string.
      * If the given string is null or empty, it throws an IllegalArgumentException
      *
      * @param d Date in string
      * @return LocalDate object that represents the date
-     * @throws IllegalArgumentExcepiton if string is null or empty.
-     * @throws DateTimeParserException if the string cannot be parsed.
+     * @throws IllegalArgumentException if the string is null, empty, or cannot be parsed.
      */
     private LocalDate parseDate(String d) {
         if (d == null || d.isBlank()) {
