@@ -1,6 +1,7 @@
 package stewie;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Represents a task list.
@@ -115,5 +116,22 @@ public class TaskList {
             lst[i] = this.tasks.get(i).toString();
         }
         return lst;
+    }
+
+    /**
+     * Given an arbitrary number of keywords,
+     * returns tasks' strings that contains at least one of those keywords.
+     *
+     * @param keywords Keywords that tasks must contain.
+     * @return Array of task strings.
+     */
+    public String[] findTasks(String... keywords) {
+        ArrayList<String> matchingTasks = new ArrayList<>();
+        for (Task t : this.tasks) {
+            if (Arrays.stream(keywords).anyMatch(t.toString()::contains)) {
+                matchingTasks.add(t.toString());
+            }
+        }
+        return matchingTasks.toArray(String[]::new);
     }
 }

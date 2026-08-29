@@ -56,6 +56,9 @@ public class Stewie {
                     case DELETE:
                         this.deleteTask(input);
                         break;
+                    case FIND:
+                        this.findTasks(input);
+                        break;
                     default:
                         System.out.println("Please add a command: todo, event, deadline, mark, unmark, list, bye "
                                 + "+ description!");
@@ -157,6 +160,16 @@ public class Stewie {
         } else {
             this.taskList.deleteTask(idx);
         }
+    }
+
+    /**
+     * Prints the tasks that contains the keywords from input.
+     *
+     * @param input Input from user.
+     */
+    private void findTasks(String input) {
+        String[] keywords = Parser.parseFindKeywords(input);
+        Ui.printTaskList(this.taskList.findTasks(keywords));
     }
 
     public static void main(String[] args) {

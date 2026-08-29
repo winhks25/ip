@@ -1,5 +1,7 @@
 package stewie;
 
+import java.util.Arrays;
+
 /**
  * Contains methods to parse user input into commands that the chatbot understands
  */
@@ -34,6 +36,9 @@ public class Parser {
         }
         if (input.startsWith("delete ")) {
             return Command.DELETE;
+        }
+        if (input.startsWith("find ")) {
+            return Command.FIND;
         }
         return Command.ERROR;
     }
@@ -95,5 +100,16 @@ public class Parser {
      */
     public static String parseTodo(String input) {
         return input.split("\\s+", 2)[1].trim();
+    }
+
+    /**
+     * Parses a string to keywords string array.
+     *
+     * @param input Input string from user.
+     * @return Words starting from second word in input.
+     */
+    public static String[] parseFindKeywords(String input) {
+        String[] words = input.split("\\s+");
+        return Arrays.copyOfRange(words, 1, words.length);
     }
 }
