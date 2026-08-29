@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.ResolverStyle;
 
 import java.util.List;
 import java.util.Locale;
@@ -18,29 +19,33 @@ public class Date {
     private final LocalDate date;
     private static final List<DateTimeFormatter> FORMATTERS = List.of(
         DateTimeFormatter.ISO_LOCAL_DATE,
-        DateTimeFormatter.ofPattern("d/M/uuuu"),
-        DateTimeFormatter.ofPattern("d-M-uuuu"),
-        DateTimeFormatter.ofPattern("d.M.uuuu"),
+        DateTimeFormatter.ofPattern("d/M/uuuu").withResolverStyle(ResolverStyle.STRICT),
+        DateTimeFormatter.ofPattern("d-M-uuuu").withResolverStyle(ResolverStyle.STRICT),
+        DateTimeFormatter.ofPattern("d.M.uuuu").withResolverStyle(ResolverStyle.STRICT),
 
         new DateTimeFormatterBuilder()
             .parseCaseInsensitive()
             .appendPattern("d MMM uuuu")
-            .toFormatter(Locale.ENGLISH),
+            .toFormatter(Locale.ENGLISH)
+            .withResolverStyle(ResolverStyle.STRICT),
 
         new DateTimeFormatterBuilder()
             .parseCaseInsensitive()
             .appendPattern("d MMMM uuuu")
-            .toFormatter(Locale.ENGLISH),
+            .toFormatter(Locale.ENGLISH)
+            .withResolverStyle(ResolverStyle.STRICT),
 
         new DateTimeFormatterBuilder()
             .parseCaseInsensitive()
             .appendPattern("MMM d, uuuu")
-            .toFormatter(Locale.ENGLISH),
+            .toFormatter(Locale.ENGLISH)
+            .withResolverStyle(ResolverStyle.STRICT),
 
         new DateTimeFormatterBuilder()
             .parseCaseInsensitive()
             .appendPattern("MMMM d, uuuu")
             .toFormatter(Locale.ENGLISH)
+            .withResolverStyle(ResolverStyle.STRICT)
     );
 
     /**
