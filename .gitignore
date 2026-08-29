@@ -24,3 +24,6 @@ text-ui-test/EXPECTED-UNIX.TXT
 
 # TaskList Storage
 data/stewie.txt
+
+# jar files
+out/artifacts/ip_jar/ip.jar
