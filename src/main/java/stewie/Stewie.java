@@ -57,7 +57,8 @@ public class Stewie {
                         this.deleteTask(input);
                         break;
                     default:
-                        System.out.println("Please add a command: todo, event, deadline, mark, unmark, list, bye + description!");
+                        System.out.println("Please add a command: todo, event, deadline, mark, unmark, list, bye "
+                                + "+ description!");
                         break;
                 }
             } catch (IllegalArgumentException e) {
@@ -95,7 +96,8 @@ public class Stewie {
             // parsedInput = {description, form, to}
             this.taskList.addEvent(parsedInput[0], parsedInput[1], parsedInput[2]);
         } catch (ArrayIndexOutOfBoundsException e) {
-            System.out.println("Add event tasks in the format: event <description> /from <date or time> /to<date or time>");
+            System.out.println("Add event tasks in the format: event <description> /from <date or time> "
+                    + "/to<date or time>");
         }
     }
 

@@ -1,7 +1,7 @@
 package stewie;
 
 /**
- * Represent an event.
+ * Represents an event.
  * An event has starting time (from) and ending time (to).
  */
 public class Event extends Task {

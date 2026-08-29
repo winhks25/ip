@@ -13,7 +13,7 @@ public class Storage {
     private static final Path STORAGE_PATH = Path.of("./data/stewie.txt");
 
     /**
-     * Saves tasks in the current task list to the disk.
+     * Saves tasks in the current task list to disk.
      */
     public static void saveToDisk(ArrayList<Task> tasks) {
         try {
@@ -30,7 +30,7 @@ public class Storage {
     }
 
     /**
-     * Loads the tasks from the local disk to populate the task list of the object.
+     * Loads tasks from local disk to populate a task list.
      */
     public static ArrayList<Task> loadFromDisk() {
         ArrayList<Task> tasks = new ArrayList<>();
