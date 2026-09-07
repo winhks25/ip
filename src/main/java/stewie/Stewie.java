@@ -1,5 +1,10 @@
 package stewie;
 
+import stewie.model.TaskList;
+import stewie.parser.Command;
+import stewie.parser.Parser;
+import stewie.ui.cli.Ui;
+
 import java.util.Scanner;
 
 /**

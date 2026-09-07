@@ -1,8 +1,9 @@
 package stewie;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Test;
+import stewie.parser.Parser;
 
 public class ParserTest {
     @Test

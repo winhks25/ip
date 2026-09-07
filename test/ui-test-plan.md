@@ -8,14 +8,14 @@ From the repository root, use Java 25:
 
 ```sh
 mkdir -p out/ui-test
-javac -d out/ui-test src/main/java/*.java
+javac -d out/ui-test src/main/java/stewie/*.java
 ```
 
 Launch each test case with:
 
 ```sh
 rm -f data/stewie.txt
-java -cp out/ui-test Stewie
+java -cp out/ui-test stewie.Stewie
 ```
 
 The saved task file is removed before each case so the cases remain independent.
