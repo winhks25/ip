@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'application'
     id 'checkstyle'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
     id 'com.gradleup.shadow' version '9.5.1'
 }
 
@@ -27,6 +28,11 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.14.4'
 }
 
+javafx {
+    version = '25'
+    modules = ['javafx.controls', 'javafx.fxml']
+}
+
 test {
     useJUnitPlatform()
 
@@ -42,7 +48,7 @@ test {
 }
 
 application {
-    mainClass = 'stewie.Stewie'
+    mainClass = 'stewie.ui.gui.StewieApplication'
 }
 
 jar {
@@ -58,4 +64,30 @@ shadowJar {
 
 run {
     standardInput = System.in
+    jvmArgs '--enable-native-access=javafx.graphics'
+}
+
+tasks.register('runCli', JavaExec) {
+    group = 'application'
+    description = 'Runs the Stewie command-line application.'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'stewie.Stewie'
+    standardInput = System.in
+}
+
+tasks.register('runFx', JavaExec) {
+    group = 'application'
+    description = 'Runs the JavaFX application.'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'stewie.ui.gui.StewieApplication'
+    doFirst {
+        def javafxJars = classpath.filter { file ->
+            file.name.startsWith('javafx-') && file.name.endsWith('.jar')
+        }
+        classpath = classpath.filter { file ->
+            !(file.name.startsWith('javafx-') && file.name.endsWith('.jar'))
+        }
+        jvmArgs '--module-path', javafxJars.asPath, '--add-modules', 'javafx.controls,javafx.fxml',
+                '--enable-native-access=javafx.graphics'
+    }
 }

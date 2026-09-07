@@ -8,7 +8,7 @@ From the repository root, use Java 25:
 
 ```sh
 mkdir -p out/ui-test
-javac -d out/ui-test src/main/java/stewie/*.java
+javac -d out/ui-test $(find src/main/java -name '*.java' ! -path '*/stewie/ui/gui/*')
 ```
 
 Launch each test case with:
