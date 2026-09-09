@@ -32,8 +32,8 @@ Verify that todo, event, deadline, list, mark, and unmark commands work together
 
 ```text
 todo buy milk
-event team meeting /from 10am /to 11am
-deadline submit report /by friday
+event team meeting /from 10/08/2026 /to 11/08/2026
+deadline submit report /by 12/08/2026
 list
 mark 2
 list
@@ -59,23 +59,23 @@ Got it! Added the following to your list.
 [T] [ ] buy milk
 Now you have 1 tasks in the list. 
 Got it! Added the following to your list.
-[E] [ ] team meeting (from: 10am to: 11am)
+[E] [ ] team meeting (from: 10 Aug 2026 to: 11 Aug 2026)
 Now you have 2 tasks in the list. 
 Got it! Added the following to your list.
-[D] [ ] submit report (by: friday)
+[D] [ ] submit report (by: 12 Aug 2026)
 Now you have 3 tasks in the list. 
 Here is your list of tasks.
 1. [T] [ ] buy milk
-2. [E] [ ] team meeting (from: 10am to: 11am)
-3. [D] [ ] submit report (by: friday)
+2. [E] [ ] team meeting (from: 10 Aug 2026 to: 11 Aug 2026)
+3. [D] [ ] submit report (by: 12 Aug 2026)
 Here is your list of tasks.
 1. [T] [ ] buy milk
-2. [E] [X] team meeting (from: 10am to: 11am)
-3. [D] [ ] submit report (by: friday)
+2. [E] [X] team meeting (from: 10 Aug 2026 to: 11 Aug 2026)
+3. [D] [ ] submit report (by: 12 Aug 2026)
 Here is your list of tasks.
 1. [T] [ ] buy milk
-2. [E] [ ] team meeting (from: 10am to: 11am)
-3. [D] [ ] submit report (by: friday)
+2. [E] [ ] team meeting (from: 10 Aug 2026 to: 11 Aug 2026)
+3. [D] [ ] submit report (by: 12 Aug 2026)
 Bye, see you later!
 ```
 
@@ -162,7 +162,7 @@ Got it! Added the following to your list.
 Now you have 2 tasks in the list. 
 Here is your list of tasks.
 1. [T] [ ] second
-Please enter a valid task number in the format: delete <number>
+Please type in a valid task number in the format: delete <number>
 Please enter a valid task number in the format: delete <number>.
 Please enter a valid task number in the format: delete <number>.
 Bye, see you later!

@@ -1,7 +1,7 @@
 package stewie.model;
 
-import stewie.ui.cli.Ui;
 import stewie.storage.Storage;
+import stewie.ui.cli.Ui;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,10 +28,7 @@ public class TaskList {
      * @param description Description of the task.
      */
     public void addToDo(String description) {
-        Task newTask = new ToDo(description);
-        this.tasks.add(newTask);
-        Storage.saveToDisk(this.tasks);
-        Ui.printTaskAddConfirmation(newTask, this.tasks.size());
+        addTask(new ToDo(description));
     }
 
     /**
@@ -43,10 +40,7 @@ public class TaskList {
      * @param to End time of the event.
      */
     public void addEvent(String description, String from, String to) {
-        Task newTask = new Event(description, from, to);
-        this.tasks.add(newTask);
-        Storage.saveToDisk(this.tasks);
-        Ui.printTaskAddConfirmation(newTask, this.tasks.size());
+        addTask(new Event(description, from, to));
     }
 
     /**
@@ -57,10 +51,18 @@ public class TaskList {
      * @param deadline Deadline date of the task.
      */
     public void addDeadline(String description, String deadline) {
-        Task newTask = new Deadline(description, deadline);
-        this.tasks.add(newTask);
+        addTask(new Deadline(description, deadline));
+    }
+
+    /**
+     * Adds a task, persists the updated list, and confirms the addition.
+     *
+     * @param task Task to add.
+     */
+    private void addTask(Task task) {
+        this.tasks.add(task);
         Storage.saveToDisk(this.tasks);
-        Ui.printTaskAddConfirmation(newTask, this.tasks.size());
+        Ui.printTaskAddConfirmation(task, this.tasks.size());
     }
 
     /**
@@ -114,13 +116,13 @@ public class TaskList {
      * @return Tasks as a string array.
      */
     public String[] produceTaskList() {
-        String[] lst = new String[this.tasks.size()];
+        String[] taskDescriptions = new String[this.tasks.size()];
 
         for (int i = 0; i < this.tasks.size(); i++) {
             assert this.tasks.get(i) != null : "A task list must not contain null tasks";
-            lst[i] = this.tasks.get(i).toString();
+            taskDescriptions[i] = this.tasks.get(i).toString();
         }
-        return lst;
+        return taskDescriptions;
     }
 
     /**
@@ -132,9 +134,9 @@ public class TaskList {
      */
     public String[] findTasks(String... keywords) {
         ArrayList<String> matchingTasks = new ArrayList<>();
-        for (Task t : this.tasks) {
-            if (Arrays.stream(keywords).anyMatch(t.toString()::contains)) {
-                matchingTasks.add(t.toString());
+        for (Task task : this.tasks) {
+            if (Arrays.stream(keywords).anyMatch(task.toString()::contains)) {
+                matchingTasks.add(task.toString());
             }
         }
         return matchingTasks.toArray(String[]::new);
