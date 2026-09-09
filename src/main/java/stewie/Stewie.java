@@ -179,13 +179,28 @@ public class Stewie {
      */
     private void updateTask(String input) {
         int index = Parser.getUpdateTaskIndex(input);
-        String description = Parser.parseUpdateDescription(input);
-        if (index == -1 || description.isBlank()) {
-            System.out.println("Please enter a valid task number and description in the format: "
-                    + "update <number> <description>");
+        String[] updates = Parser.parseUpdate(input);
+        if (index == -1 || areAllUpdateFieldsMissing(updates)) {
+            System.out.println("Please enter fields to update in the format: update <number> [description] "
+                    + "[d/<deadline>] [from/<from>] [to/<to>]");
             return;
         }
-        this.taskList.updateTask(index, description);
+        this.taskList.updateTask(index, updates[0], updates[1], updates[2], updates[3]);
+    }
+
+    /**
+     * Checks whether an update command contains at least one field.
+     *
+     * @param updates Parsed update fields.
+     * @return True when no update field was supplied.
+     */
+    private boolean areAllUpdateFieldsMissing(String[] updates) {
+        for (String update : updates) {
+            if (update != null) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

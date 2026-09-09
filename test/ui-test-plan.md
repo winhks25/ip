@@ -183,10 +183,11 @@ event team meeting /from 10/08/2026 /to 11/08/2026
 deadline submit report /by 12/08/2026
 mark 2
 update 1 buy bread
-update 2 planning meeting
-update 3 file report
+update 2 planning meeting from/15/08/2026 to/16/08/2026
+update 3 file report d/20/08/2026
+update 2 from/17/08/2026
 list
-update 9 missing task
+update 9 d/20/08/2026
 update two invalid task
 update 1
 bye
@@ -217,16 +218,18 @@ Now you have 3 tasks in the list.
 Got it! Updated the following task.
 [T] [ ] buy bread
 Got it! Updated the following task.
-[E] [X] planning meeting (from: 10 Aug 2026 to: 11 Aug 2026)
+[E] [X] planning meeting (from: 17 Aug 2026 to: 16 Aug 2026)
 Got it! Updated the following task.
-[D] [ ] file report (by: 12 Aug 2026)
+[D] [ ] file report (by: 20 Aug 2026)
+Got it! Updated the following task.
+[E] [X] planning meeting (from: 17 Aug 2026 to: 16 Aug 2026)
 Here is your list of tasks.
 1. [T] [ ] buy bread
-2. [E] [X] planning meeting (from: 10 Aug 2026 to: 11 Aug 2026)
-3. [D] [ ] file report (by: 12 Aug 2026)
+2. [E] [X] planning meeting (from: 17 Aug 2026 to: 16 Aug 2026)
+3. [D] [ ] file report (by: 20 Aug 2026)
 Please type in a valid task number in the format: update <number>
-Please enter a valid task number and description in the format: update <number> <description>
-Please enter a valid task number and description in the format: update <number> <description>
+Please enter fields to update in the format: update <number> [description] [d/<deadline>] [from/<from>] [to/<to>]
+Please enter fields to update in the format: update <number> [description] [d/<deadline>] [from/<from>] [to/<to>]
 Bye, see you later!
 ```
 

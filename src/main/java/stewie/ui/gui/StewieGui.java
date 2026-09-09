@@ -369,15 +369,30 @@ public class StewieGui extends BorderPane {
      */
     private void updateTask(String input) {
         int index = Parser.getUpdateTaskIndex(input);
-        String description = Parser.parseUpdateDescription(input);
-        if (!isValidTaskIndex(index) || description.isBlank()) {
-            appendMessage(false, "Use `update <number> <description>`, such as `update 1 call Mum`.");
+        String[] updates = Parser.parseUpdate(input);
+        if (!isValidTaskIndex(index) || areAllUpdateFieldsMissing(updates)) {
+            appendMessage(false, "Use `update <number> [description] [d/<deadline>] [from/<from>] [to/<to>]`.");
             return;
         }
 
-        taskList.updateTask(index, description);
+        taskList.updateTask(index, updates[0], updates[1], updates[2], updates[3]);
         appendMessage(false, "Updated. The details are still safely attached. ✨");
         showTaskList("Here’s the refreshed view:");
+    }
+
+    /**
+     * Checks whether an update command contains at least one field.
+     *
+     * @param updates Parsed update fields.
+     * @return whether no update field was supplied
+     */
+    private boolean areAllUpdateFieldsMissing(String[] updates) {
+        for (String update : updates) {
+            if (update != null) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

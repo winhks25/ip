@@ -32,6 +32,11 @@ public class ParserTest {
     public void parseUpdate_success() {
         assertEquals(1, Parser.getUpdateTaskIndex("update 2 buy a book"));
         assertEquals("buy a book", Parser.parseUpdateDescription("update 2 buy a book"));
+
+        assertEquals("buy a book", Parser.parseUpdate("update 2 buy a book d/25 Dec 2026")[0]);
+        assertEquals("25 dec 2026", Parser.parseUpdate("update 2 buy a book d/25 dec 2026")[1]);
+        assertEquals("11 Aug 2026", Parser.parseUpdate("update 2 from/11 Aug 2026")[2]);
+        assertEquals("12 Aug 2026", Parser.parseUpdate("update 2 from/11 Aug 2026 to/12 Aug 2026")[3]);
     }
 
     @Test
