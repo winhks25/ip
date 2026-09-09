@@ -163,9 +163,11 @@ public class Parser {
         String[] markers = {" d/", " by/", " from/", " to/"};
         int firstMarker = body.length();
         for (String marker : markers) {
-            int markerIndex = body.indexOf(marker);
+            int markerIndex = body.indexOf(marker.trim());
             if (markerIndex >= 0 && markerIndex < firstMarker) {
-                firstMarker = markerIndex;
+                if (markerIndex == 0 || body.charAt(markerIndex - 1) == ' ') {
+                    firstMarker = markerIndex;
+                }
             }
         }
         description = body.substring(0, firstMarker).trim();
