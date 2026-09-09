@@ -218,7 +218,7 @@ Now you have 3 tasks in the list.
 Got it! Updated the following task.
 [T] [ ] buy bread
 Got it! Updated the following task.
-[E] [X] planning meeting (from: 17 Aug 2026 to: 16 Aug 2026)
+[E] [X] planning meeting (from: 15 Aug 2026 to: 16 Aug 2026)
 Got it! Updated the following task.
 [D] [ ] file report (by: 20 Aug 2026)
 Got it! Updated the following task.
