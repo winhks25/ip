@@ -64,7 +64,7 @@ public class Ui {
      * @param command Type of command: mark or unmark or delete
      */
     public static void printNumberedCommandFormat(String command) {
-        System.out.printf("Please type in a valid task number in the format: %s <number> %n", command);
+        System.out.printf("Please type in a valid task number in the format: %s <number>%n", command);
     }
 
     /**
@@ -82,4 +82,3 @@ public class Ui {
         }
     }
 }
-
