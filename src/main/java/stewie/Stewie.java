@@ -35,6 +35,7 @@ public class Stewie {
         while (scanner.hasNextLine()) {
             String input = scanner.nextLine().toLowerCase().trim();
             Command command = Parser.getCommand(input);
+            assert command != null : "Parser must classify every input command";
             try {
                 switch (command) {
                     case BYE:
