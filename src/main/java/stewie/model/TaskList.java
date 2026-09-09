@@ -111,6 +111,35 @@ public class TaskList {
     }
 
     /**
+     * Updates a task description while preserving its type, metadata, and completion status.
+     *
+     * @param index Index of the task to update.
+     * @param description Replacement description.
+     */
+    public void updateTask(int index, String description) {
+        try {
+            Task existingTask = this.tasks.get(index);
+            Task updatedTask;
+            if (existingTask instanceof Deadline deadline) {
+                updatedTask = new Deadline(description, deadline.getDeadline());
+            } else if (existingTask instanceof Event event) {
+                updatedTask = new Event(description, event.getFrom(), event.getTo());
+            } else {
+                updatedTask = new ToDo(description);
+            }
+
+            if (existingTask.isDone()) {
+                updatedTask.markAsDone();
+            }
+            this.tasks.set(index, updatedTask);
+            Storage.saveToDisk(this.tasks);
+            Ui.printTaskUpdateConfirmation(updatedTask);
+        } catch (IndexOutOfBoundsException e) {
+            Ui.printNumberedCommandFormat("update");
+        }
+    }
+
+    /**
      * Returns the tasks in string array.
      *
      * @return Tasks as a string array.

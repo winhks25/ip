@@ -60,6 +60,16 @@ public class Ui {
     }
 
     /**
+     * Prints the success message after a task is updated.
+     *
+     * @param task Updated task.
+     */
+    public static void printTaskUpdateConfirmation(Task task) {
+        System.out.println("Got it! Updated the following task.");
+        System.out.println(task);
+    }
+
+    /**
      * Print the format for mark and unmark commands
      * @param command Type of command: mark or unmark or delete
      */

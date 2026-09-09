@@ -27,4 +27,16 @@ public class ParserTest {
         // valid input with unmark and two-digit integer
         assertEquals(10, Parser.getTaskIndex("UNMARK 11"));
     }
+
+    @Test
+    public void parseUpdate_success() {
+        assertEquals(1, Parser.getUpdateTaskIndex("update 2 buy a book"));
+        assertEquals("buy a book", Parser.parseUpdateDescription("update 2 buy a book"));
+    }
+
+    @Test
+    public void parseUpdate_fail() {
+        assertEquals(-1, Parser.getUpdateTaskIndex("update two book"));
+        assertEquals("", Parser.parseUpdateDescription("update 2"));
+    }
 }

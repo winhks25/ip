@@ -41,6 +41,9 @@ public class Parser {
         if (input.startsWith("find ")) {
             return Command.FIND;
         }
+        if (input.startsWith("update ")) {
+            return Command.UPDATE;
+        }
         return Command.ERROR;
     }
 
@@ -102,6 +105,39 @@ public class Parser {
      */
     public static String parseTodo(String input) {
         return input.split("\\s+", 2)[1].trim();
+    }
+
+    /**
+     * Returns the task index from an update command.
+     *
+     * @param input Input from user.
+     * @return Zero-based task index, or -1 when the command has no valid index.
+     */
+    public static int getUpdateTaskIndex(String input) {
+        assert input != null : "Update parsing requires command input";
+        String[] parts = input.trim().split("\\s+");
+
+        if (parts.length < 3) {
+            return -1;
+        }
+
+        try {
+            return Integer.parseInt(parts[1]) - 1;
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
+    /**
+     * Returns the replacement description from an update command.
+     *
+     * @param input Input from user.
+     * @return Replacement task description, or an empty string when it is missing.
+     */
+    public static String parseUpdateDescription(String input) {
+        assert input != null : "Update parsing requires command input";
+        String[] parts = input.trim().split("\\s+", 3);
+        return parts.length == 3 ? parts[2].trim() : "";
     }
 
     /**

@@ -227,7 +227,8 @@ public class StewieGui extends BorderPane {
     private void handleCommand(String input) {
         if ("help".equals(input)) {
             appendMessage(false,
-                    "I can help with `todo`, `event`, `deadline`, `list`, `find`, `mark`, `unmark`, and `delete`. "
+                    "I can help with `todo`, `event`, `deadline`, `list`, `find`, `mark`, `unmark`, `delete`, and "
+                            + "`update`. "
                             + "For example: `todo call Mum`.");
             return;
         }
@@ -262,10 +263,13 @@ public class StewieGui extends BorderPane {
                 case FIND:
                     findTasks(input);
                     break;
+                case UPDATE:
+                    updateTask(input);
+                    break;
                 default:
                     appendMessage(false,
                             "I didn’t quite catch that. Try `todo`, `event`, `deadline`, `list`, `find`, "
-                                    + "`mark`, `unmark`, or `delete`.");
+                                    + "`mark`, `unmark`, `delete`, or `update`.");
                     break;
             }
         } catch (IllegalArgumentException exception) {
@@ -356,6 +360,24 @@ public class StewieGui extends BorderPane {
         taskList.deleteTask(index);
         appendMessage(false, "Removed. A little more breathing room. ✦");
         showTaskList("Here’s what remains:");
+    }
+
+    /**
+     * Updates a task description from a user command.
+     *
+     * @param input the normalized update command
+     */
+    private void updateTask(String input) {
+        int index = Parser.getUpdateTaskIndex(input);
+        String description = Parser.parseUpdateDescription(input);
+        if (!isValidTaskIndex(index) || description.isBlank()) {
+            appendMessage(false, "Use `update <number> <description>`, such as `update 1 call Mum`.");
+            return;
+        }
+
+        taskList.updateTask(index, description);
+        appendMessage(false, "Updated. The details are still safely attached. ✨");
+        showTaskList("Here’s the refreshed view:");
     }
 
     /**

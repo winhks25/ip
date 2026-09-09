@@ -111,8 +111,8 @@ bye
 Hey there! I'm Stewie. 
 Wanna have a chat?
 Tell me whats on your list!!
-Please add a command: todo, event, deadline, mark, unmark, list, bye + description!
-Please add a command: todo, event, deadline, mark, unmark, list, bye + description!
+Please add a command: todo, event, deadline, mark, unmark, delete, find, update, list, bye + description!
+Please add a command: todo, event, deadline, mark, unmark, delete, find, update, list, bye + description!
 Add event tasks in the format: event <description> /from <date or time> /to<date or time>
 Add deadline task in the format: deadline <description> /by <deadline>
 Please type in a valid task number in the format: mark <number>
@@ -165,6 +165,68 @@ Here is your list of tasks.
 Please type in a valid task number in the format: delete <number>
 Please enter a valid task number in the format: delete <number>.
 Please enter a valid task number in the format: delete <number>.
+Bye, see you later!
+```
+
+## Test Case 7: Update every task type
+
+### Aim
+
+Verify that `update` changes the description of todo, event, and deadline tasks while preserving their type,
+date/time details, and completion status.
+
+### Inputs
+
+```text
+todo buy milk
+event team meeting /from 10/08/2026 /to 11/08/2026
+deadline submit report /by 12/08/2026
+mark 2
+update 1 buy bread
+update 2 planning meeting
+update 3 file report
+list
+update 9 missing task
+update two invalid task
+update 1
+bye
+```
+
+### Expected output
+
+```text
+███████╗ ████████╗ ███████╗ ██╗    ██╗ ██╗ ███████╗
+██╔════╝ ╚══██╔══╝ ██╔════╝ ██║    ██║ ██║ ██╔════╝
+███████╗    ██║    █████╗   ██║ █╗ ██║ ██║ █████╗
+╚════██║    ██║    ██╔══╝   ██║███╗██║ ██║ ██╔══╝
+███████║    ██║    ███████╗ ╚███╔███╔╝ ██║ ███████╗
+╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
+
+Hey there! I'm Stewie. 
+Wanna have a chat?
+Tell me whats on your list!!
+Got it! Added the following to your list.
+[T] [ ] buy milk
+Now you have 1 tasks in the list. 
+Got it! Added the following to your list.
+[E] [ ] team meeting (from: 10 Aug 2026 to: 11 Aug 2026)
+Now you have 2 tasks in the list. 
+Got it! Added the following to your list.
+[D] [ ] submit report (by: 12 Aug 2026)
+Now you have 3 tasks in the list. 
+Got it! Updated the following task.
+[T] [ ] buy bread
+Got it! Updated the following task.
+[E] [X] planning meeting (from: 10 Aug 2026 to: 11 Aug 2026)
+Got it! Updated the following task.
+[D] [ ] file report (by: 12 Aug 2026)
+Here is your list of tasks.
+1. [T] [ ] buy bread
+2. [E] [X] planning meeting (from: 10 Aug 2026 to: 11 Aug 2026)
+3. [D] [ ] file report (by: 12 Aug 2026)
+Please type in a valid task number in the format: update <number>
+Please enter a valid task number and description in the format: update <number> <description>
+Please enter a valid task number and description in the format: update <number> <description>
 Bye, see you later!
 ```
 

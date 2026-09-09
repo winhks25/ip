@@ -65,8 +65,12 @@ public class Stewie {
                     case FIND:
                         this.findTasks(input);
                         break;
+                    case UPDATE:
+                        this.updateTask(input);
+                        break;
                     default:
-                        System.out.println("Please add a command: todo, event, deadline, mark, unmark, list, bye "
+                        System.out.println("Please add a command: todo, event, deadline, mark, unmark, delete, find, "
+                                + "update, list, bye "
                                 + "+ description!");
                         break;
                 }
@@ -166,6 +170,22 @@ public class Stewie {
         } else {
             this.taskList.deleteTask(idx);
         }
+    }
+
+    /**
+     * Updates a task description.
+     *
+     * @param input Input from user.
+     */
+    private void updateTask(String input) {
+        int index = Parser.getUpdateTaskIndex(input);
+        String description = Parser.parseUpdateDescription(input);
+        if (index == -1 || description.isBlank()) {
+            System.out.println("Please enter a valid task number and description in the format: "
+                    + "update <number> <description>");
+            return;
+        }
+        this.taskList.updateTask(index, description);
     }
 
     /**
