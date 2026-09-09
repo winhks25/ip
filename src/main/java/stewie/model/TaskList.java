@@ -117,15 +117,43 @@ public class TaskList {
      * @param description Replacement description.
      */
     public void updateTask(int index, String description) {
+        updateTask(index, description, null, null, null);
+    }
+
+    /**
+     * Updates selected fields of a task while preserving all omitted fields.
+     *
+     * @param index Index of the task to update.
+     * @param description Replacement description, or null to preserve it.
+     * @param deadlineValue Replacement deadline, or null to preserve it.
+     * @param from Replacement event start time, or null to preserve it.
+     * @param to Replacement event end time, or null to preserve it.
+     */
+    public void updateTask(int index, String description, String deadlineValue, String from, String to) {
         try {
             Task existingTask = this.tasks.get(index);
             Task updatedTask;
             if (existingTask instanceof Deadline deadline) {
-                updatedTask = new Deadline(description, deadline.getDeadline());
+                if (from != null || to != null) {
+                    throw new IllegalArgumentException("Deadline tasks only support descriptions and deadlines.");
+                }
+                String updatedDescription = description == null ? existingTask.getDescription() : description;
+                String updatedDeadline = deadlineValue == null ? deadline.getDeadline() : deadlineValue;
+                updatedTask = new Deadline(updatedDescription, updatedDeadline);
             } else if (existingTask instanceof Event event) {
-                updatedTask = new Event(description, event.getFrom(), event.getTo());
+                if (deadlineValue != null) {
+                    throw new IllegalArgumentException("Event tasks only support descriptions and event times.");
+                }
+                String updatedDescription = description == null ? existingTask.getDescription() : description;
+                String updatedFrom = from == null ? event.getFrom() : from;
+                String updatedTo = to == null ? event.getTo() : to;
+                updatedTask = new Event(updatedDescription, updatedFrom, updatedTo);
             } else {
-                updatedTask = new ToDo(description);
+                if (deadlineValue != null || from != null || to != null) {
+                    throw new IllegalArgumentException("Todo tasks only support descriptions.");
+                }
+                String updatedDescription = description == null ? existingTask.getDescription() : description;
+                updatedTask = new ToDo(updatedDescription);
             }
 
             if (existingTask.isDone()) {
