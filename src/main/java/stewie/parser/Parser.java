@@ -136,8 +136,88 @@ public class Parser {
      */
     public static String parseUpdateDescription(String input) {
         assert input != null : "Update parsing requires command input";
+        String[] updates = parseUpdate(input);
+        return updates[0] == null ? "" : updates[0];
+    }
+
+    /**
+     * Parses the optional fields in an update command.
+     * The returned values are description, deadline, from, and to, respectively.
+     * A null value means that the corresponding task field should be preserved.
+     *
+     * @param input Input from user.
+     * @return Updated task fields in the order description, deadline, from, and to.
+     */
+    public static String[] parseUpdate(String input) {
+        assert input != null : "Update parsing requires command input";
         String[] parts = input.trim().split("\\s+", 3);
-        return parts.length == 3 ? parts[2].trim() : "";
+        if (parts.length < 3) {
+            return new String[] {null, null, null, null};
+        }
+
+        String body = parts[2].trim();
+        String description = body;
+        String deadline = null;
+        String from = null;
+        String to = null;
+        String[] markers = {" d/", " by/", " from/", " to/"};
+        int firstMarker = body.length();
+        for (String marker : markers) {
+            int markerIndex = body.indexOf(marker);
+            if (markerIndex >= 0 && markerIndex < firstMarker) {
+                firstMarker = markerIndex;
+            }
+        }
+        description = body.substring(0, firstMarker).trim();
+
+        String fields = body.substring(firstMarker).trim();
+        while (!fields.isEmpty()) {
+            int slashIndex = fields.indexOf('/');
+            if (slashIndex <= 0) {
+                return new String[] {null, null, null, null};
+            }
+            String marker = fields.substring(0, slashIndex).trim();
+            int nextMarker = findNextUpdateMarker(fields, slashIndex + 1);
+            String value = fields.substring(slashIndex + 1, nextMarker).trim();
+            if (value.isEmpty()) {
+                return new String[] {null, null, null, null};
+            }
+            switch (marker) {
+                case "d":
+                case "by":
+                    deadline = value;
+                    break;
+                case "from":
+                    from = value;
+                    break;
+                case "to":
+                    to = value;
+                    break;
+                default:
+                    return new String[] {null, null, null, null};
+            }
+            fields = nextMarker == fields.length() ? "" : fields.substring(nextMarker).trim();
+        }
+        return new String[] {description.isEmpty() ? null : description, deadline, from, to};
+    }
+
+    /**
+     * Finds the next supported update field marker.
+     *
+     * @param fields Update fields to search.
+     * @param startIndex Position at which to start searching.
+     * @return Index of the next marker, or the end of the input.
+     */
+    private static int findNextUpdateMarker(String fields, int startIndex) {
+        int nextMarker = fields.length();
+        String[] markers = {" d/", " by/", " from/", " to/"};
+        for (String marker : markers) {
+            int markerIndex = fields.indexOf(marker, startIndex - 1);
+            if (markerIndex >= 0 && markerIndex < nextMarker) {
+                nextMarker = markerIndex;
+            }
+        }
+        return nextMarker;
     }
 
     /**
