@@ -15,10 +15,11 @@ Launch each test case with:
 
 ```sh
 rm -f data/stewie.txt
-java -cp out/ui-test stewie.Stewie
+java -ea -cp out/ui-test stewie.Stewie
 ```
 
 The saved task file is removed before each case so the cases remain independent.
+Assertions are enabled with `-ea` to check internal invariants during every session.
 
 The expected output below uses `LF` line endings and includes the final newline produced by the program. The skill may normalize `CRLF` to `LF` and one final trailing newline only.
 

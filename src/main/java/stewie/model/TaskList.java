@@ -72,6 +72,7 @@ public class TaskList {
     public void markAsDone(int index) {
         try {
             this.tasks.get(index).markAsDone();
+            assert this.tasks.get(index).isDone() : "Marking a task must set its done status";
             Storage.saveToDisk(this.tasks);
         } catch (IndexOutOfBoundsException e) {
             Ui.printNumberedCommandFormat("mark");
@@ -87,6 +88,7 @@ public class TaskList {
     public void markAsUndone(int index) {
         try {
             this.tasks.get(index).markAsUndone();
+            assert !this.tasks.get(index).isDone() : "Unmarking a task must clear its done status";
             Storage.saveToDisk(this.tasks);
         } catch (IndexOutOfBoundsException e) {
             Ui.printNumberedCommandFormat("unmark");
