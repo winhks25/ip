@@ -88,6 +88,7 @@ public class Storage {
             return String.format("E | %s | %s | %s | %s", status, task.getDescription(),
                     event.getFrom(), event.getTo());
         }
+        assert task instanceof ToDo : "Every stored task must be a todo, deadline, or event";
         return String.format("T | %s | %s", status, task.getDescription());
     }
 }
