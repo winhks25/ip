@@ -153,4 +153,20 @@ public class StorageTest {
         assertTrue(tasks.get(1).hasSameDetails(new Deadline("report", "2026-01-03")));
         assertTrue(storage.getLoadWarning().contains("lines 2, 3, 4, 5"));
     }
+    /** Verifies GUI revisions change only after successful writes and survive rejected actions. */
+    @Test
+    public void taskRevision_changesOnlyAfterSuccessfulSave() throws IOException {
+        Path file = directory.resolve("stewie.txt");
+        TaskList tasks = new TaskList(new Storage(file));
+        assertEquals(0, tasks.getRevision());
+        tasks.addToDo("first");
+        assertEquals(1, tasks.getRevision());
+        tasks.markAsDone(0);
+        assertEquals(2, tasks.getRevision());
+        assertThrows(IllegalArgumentException.class, () -> tasks.addToDo("first"));
+        assertEquals(2, tasks.getRevision());
+        Files.writeString(file, "T | 0 | external");
+        assertThrows(StorageException.class, () -> tasks.deleteTask(0));
+        assertEquals(2, tasks.getRevision());
+    }
 }

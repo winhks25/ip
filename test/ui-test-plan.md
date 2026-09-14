@@ -4,6 +4,13 @@ This plan tests the Stewie console application. Tests are run as separate sessio
 
 ## Additional GUI navigation checks
 
+- Add two tasks, enter `list`, then delete the first task. Click a checkbox or delete button
+  in the old chat list: show a refreshed list and an out-of-date notice; leave the surviving task unchanged.
+  Repeat after an update or a status change. Controls in the refreshed list must work normally.
+- Launch a test build without the portrait or stylesheet resources: show a text logo or default JavaFX
+  styling and keep command entry working. A corrupt portrait must also fall back to the text logo.
+
+
 - Start with a malformed or unreadable task file: show the startup warning in Chat.
   Attempt additions, updates, deletion, and checkbox actions: show an error without a success reply
   or a changed task. My List checkbox failures must show a visible error and restore the checkbox.

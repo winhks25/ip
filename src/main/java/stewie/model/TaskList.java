@@ -13,6 +13,7 @@ import stewie.ui.cli.Ui;
 public class TaskList {
     private final ArrayList<Task> tasks;
     private final Storage storage;
+    private long revision;
 
     /**
      * Initialize a task list with data from the disk.
@@ -30,6 +31,15 @@ public class TaskList {
         this.storage = storage;
         this.tasks = storage.loadFromDisk();
         assert this.tasks != null : "Storage must return a task list";
+    }
+
+    /**
+     * Returns the revision of the current task list to detect outdated GUI controls.
+     *
+     * @return Revision incremented after every successfully saved change.
+     */
+    public long getRevision() {
+        return revision;
     }
 
     /**
@@ -195,6 +205,7 @@ public class TaskList {
         storage.saveToDisk(proposed);
         tasks.clear();
         tasks.addAll(proposed);
+        revision++;
     }
 
     /** Copies a task before changing its status so failed saves cannot mutate the live list. */

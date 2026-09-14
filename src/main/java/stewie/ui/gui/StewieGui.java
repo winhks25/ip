@@ -1,5 +1,6 @@
 package stewie.ui.gui;
 
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -92,8 +93,7 @@ public class StewieGui extends BorderPane {
             Example: deadline submit report /by 12/08/2026
             """;
 
-    private final Image stewiePhoto = new Image(
-            StewieGui.class.getResource("/images/stewie_photo.png").toExternalForm());
+    private final Image stewiePhoto = loadPhoto();
     private final TaskList taskList;
     private final VBox conversation;
     private final ScrollPane conversationScroll;
@@ -345,6 +345,7 @@ public class StewieGui extends BorderPane {
      */
     private HBox createListTaskCard(int index, String taskText, boolean isDone, boolean isPending) {
         HBox card = createTaskCard(index + 1, taskText, false);
+        long cardRevision = taskList.getRevision();
         CheckBox statusBox = new CheckBox();
         statusBox.getStyleClass().addAll("task-check", "list-complete-check");
         statusBox.setSelected(isDone);
@@ -354,6 +355,11 @@ public class StewieGui extends BorderPane {
             card.setOpacity(0.4);
         }
         statusBox.setOnAction(event -> {
+            if (cardRevision != taskList.getRevision()) {
+                statusBox.setSelected(isDone);
+                refreshListPanel();
+                return;
+            }
             try {
                 if (isDone) {
                     taskList.markAsUndone(index);
@@ -724,10 +730,15 @@ public class StewieGui extends BorderPane {
         details.getChildren().addAll(taskLabel, numberLabel);
 
         if (isInteractive) {
+            long cardRevision = taskList.getRevision();
             CheckBox doneBox = new CheckBox();
             doneBox.setSelected(isDone);
             doneBox.getStyleClass().add("task-check");
             doneBox.setOnAction(event -> {
+                if (!isCurrentCard(cardRevision)) {
+                    doneBox.setSelected(isDone);
+                    return;
+                }
                 try {
                     if (doneBox.isSelected()) {
                         taskList.markAsDone(index - 1);
@@ -747,6 +758,9 @@ public class StewieGui extends BorderPane {
             Button deleteButton = new Button("×");
             deleteButton.getStyleClass().add("delete-button");
             deleteButton.setOnAction(event -> {
+                if (!isCurrentCard(cardRevision)) {
+                    return;
+                }
                 try {
                     taskList.deleteTask(index - 1);
                 } catch (StorageException exception) {
@@ -796,6 +810,16 @@ public class StewieGui extends BorderPane {
         taskSummary.setText(String.format("%d tasks  ·  %d done", tasks.length, completedTasks));
     }
 
+    /** Rejects stale chat controls before their old task numbers can affect another task. */
+    private boolean isCurrentCard(long cardRevision) {
+        if (cardRevision == taskList.getRevision()) {
+            return true;
+        }
+        showTaskList("That task card is out of date. Use the refreshed list below.");
+        scrollToBottom();
+        return false;
+    }
+
     /**
      * Returns whether a zero-based task index points to an existing task.
      *
@@ -827,6 +851,16 @@ public class StewieGui extends BorderPane {
         });
     }
 
+    /** Loads the optional portrait, allowing the interface to use a text logo if it is missing or corrupt. */
+    private Image loadPhoto() {
+        URL resource = StewieGui.class.getResource("/images/stewie_photo.png");
+        if (resource == null) {
+            return null;
+        }
+        Image image = new Image(resource.toExternalForm());
+        return image.isError() ? null : image;
+    }
+
     /**
      * Creates a Stewie image logo while preserving the original proportions.
      *
@@ -841,7 +875,7 @@ public class StewieGui extends BorderPane {
         portrait.setSmooth(true);
         portrait.setAccessibleText("Stewie");
 
-        StackPane logo = new StackPane(portrait);
+        StackPane logo = stewiePhoto == null ? new StackPane(new Label("S")) : new StackPane(portrait);
         logo.setMinSize(size, size);
         logo.setPrefSize(size, size);
         logo.setMaxSize(size, size);
