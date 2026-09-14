@@ -42,6 +42,48 @@ public class StewieGui extends BorderPane {
     private static final Pattern TASK_PATTERN = Pattern.compile("\\[([TDE])] \\[(X| )] (.*)");
     private static final String[] QUICK_COMMANDS = {"todo plan my week", "list", "help"};
 
+    private static final String COMMAND_HELP = """
+            todo <description>
+            Add a task without a date.
+
+            deadline <description> /by <date>
+            Add a task with a deadline.
+
+            event <description> /from <date> /to <date>
+            Add an event with start and end dates.
+
+            list
+            Show all tasks and their numbers.
+
+            find <keyword> [more keywords]
+            Find tasks matching keywords.
+
+            mark <number>
+            Mark a task as done.
+
+            unmark <number>
+            Mark a task as undone.
+
+            delete <number>
+            Remove a task.
+
+            update <number> [description] [d/<date>] [from/<date>] [to/<date>]
+            Change one or more fields; omitted fields stay unchanged.
+            Use d/ or by/ for deadlines, and from/ or to/ for events.
+
+            help
+            Show this command reference in Chat.
+
+            bye
+            Show a farewell message in Chat.
+
+            Replace <...> with your values; [...] means optional.
+            Task numbers start at 1. Use list to check the current numbers.
+            Dates include 2026-08-12, 12/08/2026, 12-08-2026, 12.08.2026,
+            12 Aug 2026, 12 August 2026, Aug 12, 2026, or August 12, 2026.
+            Example: deadline submit report /by 12/08/2026
+            """;
+
     private final TaskList taskList;
     private final VBox conversation;
     private final ScrollPane conversationScroll;
@@ -49,6 +91,7 @@ public class StewieGui extends BorderPane {
     private final TextField messageField;
     private final VBox chatPanel;
     private final VBox listPanel;
+    private final VBox helpPanel;
     private final VBox listTaskContainer;
     private Timeline scrollAnimation;
     // Keeps each newly completed task visible until its individual delay expires.
@@ -68,6 +111,7 @@ public class StewieGui extends BorderPane {
         this.chatPanel = createChatPanel();
         this.listTaskContainer = new VBox(8);
         this.listPanel = createListPanel();
+        this.helpPanel = createHelpPanel();
 
         setLeft(createSidebar());
         setCenter(chatPanel);
@@ -100,7 +144,9 @@ public class StewieGui extends BorderPane {
         VBox navigation = new VBox(8);
         Button chatButton = createNavigationButton("fth-message-circle", "Chat", true);
         Button listButton = createNavigationButton("fth-list", "My List", false);
+        Button helpButton = createNavigationButton("fth-help-circle", "Help", false);
         chatButton.setOnAction(event -> {
+            helpButton.getStyleClass().remove("navigation-button-active");
             completionDelays.values().forEach(PauseTransition::stop);
             completionDelays.clear();
             setCenter(chatPanel);
@@ -110,6 +156,7 @@ public class StewieGui extends BorderPane {
             }
         });
         listButton.setOnAction(event -> {
+            helpButton.getStyleClass().remove("navigation-button-active");
             if (getCenter() != listPanel) {
                 completionDelays.values().forEach(PauseTransition::stop);
                 completionDelays.clear();
@@ -121,10 +168,17 @@ public class StewieGui extends BorderPane {
                 listButton.getStyleClass().add("navigation-button-active");
             }
         });
-        navigation.getChildren().addAll(
-                chatButton,
-                listButton,
-                createNavigationButton("fth-help-circle", "Help", false));
+        helpButton.setOnAction(event -> {
+            completionDelays.values().forEach(PauseTransition::stop);
+            completionDelays.clear();
+            setCenter(helpPanel);
+            chatButton.getStyleClass().remove("navigation-button-active");
+            listButton.getStyleClass().remove("navigation-button-active");
+            if (!helpButton.getStyleClass().contains("navigation-button-active")) {
+                helpButton.getStyleClass().add("navigation-button-active");
+            }
+        });
+        navigation.getChildren().addAll(chatButton, listButton, helpButton);
 
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
@@ -212,6 +266,34 @@ public class StewieGui extends BorderPane {
 
         listPanelBox.getChildren().addAll(header, listScroll);
         return listPanelBox;
+    }
+
+    /**
+     * Creates a scrollable reference containing every GUI command format.
+     *
+     * @return The styled Help panel.
+     */
+    private VBox createHelpPanel() {
+        VBox panel = new VBox();
+        panel.getStyleClass().add("chat-panel");
+        HBox header = new HBox();
+        header.getStyleClass().add("chat-header");
+        Label title = new Label("Help — Command formats");
+        title.getStyleClass().add("chat-title");
+        header.getChildren().add(title);
+
+        Label commands = new Label(COMMAND_HELP);
+        commands.setWrapText(true);
+        commands.getStyleClass().addAll("message-bubble", "assistant-bubble");
+        VBox content = new VBox(commands);
+        content.setPadding(new Insets(28, 48, 28, 48));
+        ScrollPane scroll = new ScrollPane(content);
+        scroll.getStyleClass().add("conversation-scroll");
+        scroll.setFitToWidth(true);
+        scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        VBox.setVgrow(scroll, Priority.ALWAYS);
+        panel.getChildren().addAll(header, scroll);
+        return panel;
     }
 
     /**
@@ -381,10 +463,7 @@ public class StewieGui extends BorderPane {
      */
     private void handleCommand(String input) {
         if ("help".equals(input)) {
-            appendMessage(false,
-                    "I can help with `todo`, `event`, `deadline`, `list`, `find`, `mark`, `unmark`, `delete`, and "
-                            + "`update`. "
-                            + "For example: `todo call Mum`.");
+            appendMessage(false, COMMAND_HELP);
             return;
         }
 

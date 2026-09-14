@@ -10,6 +10,13 @@ These manual checks supplement the console cases below. Launch the GUI with Java
   selected command once, show its response, clear the input field, and smoothly scroll to the newest content.
   No additional Enter key or Send click is required. Return keyboard focus to the input field.
 
+- Click Help from Chat and My List: show "Help — Command formats" with formats for todo, deadline,
+  event, list, find, mark, unmark, delete, update, help, and bye. Show optional update fields,
+  the by/ alias, task numbering, and date examples. Scroll to reach the final example.
+- Click Help repeatedly: show one reference and only one active navigation highlight.
+  Return to Chat: preserve conversation and unsent input. Enter help: show the same command reference.
+- Switch from My List to Help during a completion delay, then return to My List: show the current
+  task state without a stale timer changing the displayed cards.
 - Click My List with no saved tasks: show the My List heading and
   "No unfinished tasks. Add a task in Chat to get started."
 - Add todo, event, and deadline tasks in Chat, then click My List: show unfinished tasks in order,
