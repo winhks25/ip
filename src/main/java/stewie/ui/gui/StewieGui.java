@@ -18,6 +18,8 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -84,6 +86,8 @@ public class StewieGui extends BorderPane {
             Example: deadline submit report /by 12/08/2026
             """;
 
+    private final Image stewiePhoto = new Image(
+            StewieGui.class.getResource("/images/stewie_photo.png").toExternalForm());
     private final TaskList taskList;
     private final VBox conversation;
     private final ScrollPane conversationScroll;
@@ -799,18 +803,20 @@ public class StewieGui extends BorderPane {
     }
 
     /**
-     * Creates a circular Stewie logo with a gradient-themed style class.
+     * Creates a Stewie image logo while preserving the original proportions.
      *
-     * @param size the diameter of the logo
+     * @param size the width and height available for the logo
      * @return a logo node
      */
     private StackPane createLogo(double size) {
-        Circle circle = new Circle(size / 2);
-        circle.getStyleClass().add("logo-circle");
-        Label mark = new Label("S");
-        mark.getStyleClass().add("logo-mark");
+        ImageView portrait = new ImageView(stewiePhoto);
+        portrait.setFitWidth(size);
+        portrait.setFitHeight(size);
+        portrait.setPreserveRatio(true);
+        portrait.setSmooth(true);
+        portrait.setAccessibleText("Stewie");
 
-        StackPane logo = new StackPane(circle, mark);
+        StackPane logo = new StackPane(portrait);
         logo.setMinSize(size, size);
         logo.setPrefSize(size, size);
         logo.setMaxSize(size, size);

@@ -6,6 +6,9 @@ This plan tests the Stewie console application. Tests are run as separate sessio
 
 These manual checks supplement the console cases below. Launch the GUI with Java 25 using `./gradlew run`.
 
+- Verify the sidebar brand and chat header show the Stewie resource image instead of the S logo.
+  The whole image should be visible with its original proportions, including after resizing the window.
+
 - Click each suggested command in Chat (`todo plan my week`, `list`, and `help`): immediately send the
   selected command once, show its response, clear the input field, and smoothly scroll to the newest content.
   No additional Enter key or Send click is required. Return keyboard focus to the input field.
