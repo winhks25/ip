@@ -10,6 +10,56 @@ import stewie.ui.Dialogue;
  */
 public class Ui {
     /**
+     * Prints a nonempty warning from loading saved tasks.
+     *
+     * @param warning Warning text, or an empty string after a clean load.
+     */
+    public static void printLoadWarning(String warning) {
+        if (!warning.isEmpty()) {
+            System.out.println(warning);
+        }
+    }
+
+    /**
+     * Prints a storage failure without confirming a task change.
+     *
+     * @param message Explanation of the storage failure.
+     */
+    public static void printStorageError(String message) {
+        System.out.println(message);
+    }
+
+    /**
+     * Prints guidance for invalid user input.
+     *
+     * @param message Explanation of the invalid input.
+     */
+    public static void printInputError(String message) {
+        System.out.println("A slight flaw in your plan: " + message);
+    }
+
+    /** Prints the supported commands when input cannot be classified. */
+    public static void printUnknownCommand() {
+        System.out.println("What precisely is the plan? Use a command: todo, event, deadline, "
+                + "mark, unmark, delete, find, update, list, bye + description!");
+    }
+
+    /**
+     * Prints guidance for a missing or malformed task number.
+     *
+     * @param command Command requiring a task number.
+     */
+    public static void printMissingTaskNumber(String command) {
+        System.out.println("Numbers, please. Use: " + command + " <number>.");
+    }
+
+    /** Prints the format for an update missing its task number or replacement fields. */
+    public static void printUpdateFormat() {
+        System.out.println("A revision needs details. Use: update <number> [description] "
+                + "[d/<deadline>] [from/<from>] [to/<to>]");
+    }
+
+    /**
      * Prints whatever users type in.
      */
     public static void echoUserCommands() {

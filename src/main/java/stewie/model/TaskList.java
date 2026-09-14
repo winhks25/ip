@@ -162,42 +162,69 @@ public class TaskList {
      */
     public void updateTask(int index, String description, String deadlineValue, String from, String to) {
         try {
-            Task existingTask = this.tasks.get(index);
-            Task updatedTask;
-            if (existingTask instanceof Deadline deadline) {
-                if (from != null || to != null) {
-                    throw new IllegalArgumentException("Deadline tasks only support descriptions and deadlines.");
-                }
-                String updatedDescription = description == null ? existingTask.getDescription() : description;
-                String updatedDeadline = deadlineValue == null ? deadline.getDeadline() : deadlineValue;
-                updatedTask = new Deadline(updatedDescription, updatedDeadline);
-            } else if (existingTask instanceof Event event) {
-                if (deadlineValue != null) {
-                    throw new IllegalArgumentException("Event tasks only support descriptions and event times.");
-                }
-                String updatedDescription = description == null ? existingTask.getDescription() : description;
-                String updatedFrom = from == null ? event.getFrom() : from;
-                String updatedTo = to == null ? event.getTo() : to;
-                updatedTask = new Event(updatedDescription, updatedFrom, updatedTo);
-            } else {
-                if (deadlineValue != null || from != null || to != null) {
-                    throw new IllegalArgumentException("Todo tasks only support descriptions.");
-                }
-                String updatedDescription = description == null ? existingTask.getDescription() : description;
-                updatedTask = new ToDo(updatedDescription);
-            }
-
-            if (existingTask.isDone()) {
-                updatedTask.markAsDone();
-            }
+            Task updatedTask = createUpdatedTask(tasks.get(index), description, deadlineValue, from, to);
             rejectDuplicate(updatedTask, index);
-            ArrayList<Task> proposed = new ArrayList<>(tasks);
-            proposed.set(index, updatedTask);
-            persist(proposed);
+            replaceTask(index, updatedTask);
             Ui.printTaskUpdateConfirmation(updatedTask);
         } catch (IndexOutOfBoundsException e) {
             Ui.printNumberedCommandFormat("update");
         }
+    }
+
+    /** Builds a replacement while preserving the original completion status. */
+    private Task createUpdatedTask(Task existing, String description, String deadline, String from, String to) {
+        Task replacement = createTaskWithUpdatedFields(existing, description, deadline, from, to);
+        if (existing.isDone()) {
+            replacement.markAsDone();
+        }
+        return replacement;
+    }
+
+    /** Selects the field-update rules for the existing task's type. */
+    private Task createTaskWithUpdatedFields(Task existing, String description, String deadline,
+            String from, String to) {
+        String updatedDescription = description == null ? existing.getDescription() : description;
+        if (existing instanceof Deadline deadlineTask) {
+            return createUpdatedDeadline(deadlineTask, updatedDescription, deadline, from, to);
+        }
+        if (existing instanceof Event event) {
+            return createUpdatedEvent(event, updatedDescription, deadline, from, to);
+        }
+        return createUpdatedTodo(updatedDescription, deadline, from, to);
+    }
+
+    /** Validates deadline fields and retains the date when it was omitted. */
+    private Task createUpdatedDeadline(Deadline existing, String description, String deadline, String from, String to) {
+        if (from != null || to != null) {
+            throw new IllegalArgumentException("Deadline tasks only support descriptions and deadlines.");
+        }
+        String updatedDeadline = deadline == null ? existing.getDeadline() : deadline;
+        return new Deadline(description, updatedDeadline);
+    }
+
+    /** Validates event fields and retains each boundary when it was omitted. */
+    private Task createUpdatedEvent(Event existing, String description, String deadline, String from, String to) {
+        if (deadline != null) {
+            throw new IllegalArgumentException("Event tasks only support descriptions and event times.");
+        }
+        String updatedFrom = from == null ? existing.getFrom() : from;
+        String updatedTo = to == null ? existing.getTo() : to;
+        return new Event(description, updatedFrom, updatedTo);
+    }
+
+    /** Rejects date fields for todos before constructing the replacement. */
+    private Task createUpdatedTodo(String description, String deadline, String from, String to) {
+        if (deadline != null || from != null || to != null) {
+            throw new IllegalArgumentException("Todo tasks only support descriptions.");
+        }
+        return new ToDo(description);
+    }
+
+    /** Saves a replacement in a proposed list before publishing it to the live list. */
+    private void replaceTask(int index, Task replacement) {
+        ArrayList<Task> proposed = new ArrayList<>(tasks);
+        proposed.set(index, replacement);
+        persist(proposed);
     }
 
     /** Publishes a proposed task list only after storage confirms a successful save. */
@@ -210,21 +237,11 @@ public class TaskList {
 
     /** Copies a task before changing its status so failed saves cannot mutate the live list. */
     private void changeStatus(int index, boolean isDone) {
-        Task existing = tasks.get(index);
-        Task replacement;
-        if (existing instanceof Deadline deadline) {
-            replacement = new Deadline(existing.getDescription(), deadline.getDeadline());
-        } else if (existing instanceof Event event) {
-            replacement = new Event(existing.getDescription(), event.getFrom(), event.getTo());
-        } else {
-            replacement = new ToDo(existing.getDescription());
-        }
+        Task replacement = createTaskWithUpdatedFields(tasks.get(index), null, null, null, null);
         if (isDone) {
             replacement.markAsDone();
         }
-        ArrayList<Task> proposed = new ArrayList<>(tasks);
-        proposed.set(index, replacement);
-        persist(proposed);
+        replaceTask(index, replacement);
     }
 
     /** Rejects duplicates while allowing an update to preserve its own details. */

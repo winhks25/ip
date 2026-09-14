@@ -138,11 +138,23 @@ public class StewieGui extends BorderPane {
      * @return the styled sidebar
      */
     private VBox createSidebar() {
+        VBox sidebar = createSidebarContainer();
+        sidebar.getChildren().addAll(createBrand(), createNavigation(), createSidebarSpacer(),
+                createSummaryCard(), createSidebarFooter());
+        return sidebar;
+    }
+
+    /** Creates the sidebar's outer layout. */
+    private VBox createSidebarContainer() {
         VBox sidebar = new VBox(24);
         sidebar.getStyleClass().add("sidebar");
         sidebar.setPadding(new Insets(30, 22, 26, 22));
         sidebar.setPrefWidth(270);
+        return sidebar;
+    }
 
+    /** Creates the sidebar portrait, brand name, and tagline. */
+    private HBox createBrand() {
         HBox brand = new HBox(12);
         brand.setAlignment(Pos.CENTER_LEFT);
         StackPane logo = createLogo(46);
@@ -154,48 +166,77 @@ public class StewieGui extends BorderPane {
         brandText.getChildren().addAll(brandName, brandTagline);
         brand.getChildren().addAll(logo, brandText);
 
+        return brand;
+    }
+
+    /** Creates navigation controls whose handlers only select a page and its highlight. */
+    private VBox createNavigation() {
         VBox navigation = new VBox(8);
         Button chatButton = createNavigationButton("fth-message-circle", "Chat", true);
         Button listButton = createNavigationButton("fth-list", "My List", false);
         Button helpButton = createNavigationButton("fth-help-circle", "Help", false);
         chatButton.setOnAction(event -> {
-            helpButton.getStyleClass().remove("navigation-button-active");
-            completionDelays.values().forEach(PauseTransition::stop);
-            completionDelays.clear();
-            setCenter(chatPanel);
-            listButton.getStyleClass().remove("navigation-button-active");
-            if (!chatButton.getStyleClass().contains("navigation-button-active")) {
-                chatButton.getStyleClass().add("navigation-button-active");
-            }
+            showChatPanel();
+            selectNavigation(chatButton, listButton, helpButton);
         });
         listButton.setOnAction(event -> {
-            helpButton.getStyleClass().remove("navigation-button-active");
-            if (getCenter() != listPanel) {
-                completionDelays.values().forEach(PauseTransition::stop);
-                completionDelays.clear();
-                refreshListPanel();
-            }
-            setCenter(listPanel);
-            chatButton.getStyleClass().remove("navigation-button-active");
-            if (!listButton.getStyleClass().contains("navigation-button-active")) {
-                listButton.getStyleClass().add("navigation-button-active");
-            }
+            showListPanel();
+            selectNavigation(listButton, chatButton, helpButton);
         });
         helpButton.setOnAction(event -> {
-            completionDelays.values().forEach(PauseTransition::stop);
-            completionDelays.clear();
-            setCenter(helpPanel);
-            chatButton.getStyleClass().remove("navigation-button-active");
-            listButton.getStyleClass().remove("navigation-button-active");
-            if (!helpButton.getStyleClass().contains("navigation-button-active")) {
-                helpButton.getStyleClass().add("navigation-button-active");
-            }
+            showHelpPanel();
+            selectNavigation(helpButton, chatButton, listButton);
         });
         navigation.getChildren().addAll(chatButton, listButton, helpButton);
+        return navigation;
+    }
 
+    /** Restores the conversation while discarding pending list animations. */
+    private void showChatPanel() {
+        cancelCompletionDelays();
+        setCenter(chatPanel);
+    }
+
+    /** Refreshes the list on entry, retaining delays when its selected tab is clicked again. */
+    private void showListPanel() {
+        if (getCenter() != listPanel) {
+            cancelCompletionDelays();
+            refreshListPanel();
+        }
+        setCenter(listPanel);
+    }
+
+    /** Opens the reference and stops timers belonging to the previous list view. */
+    private void showHelpPanel() {
+        cancelCompletionDelays();
+        setCenter(helpPanel);
+    }
+
+    /** Stops pending completion timers before discarding their callbacks. */
+    private void cancelCompletionDelays() {
+        completionDelays.values().forEach(PauseTransition::stop);
+        completionDelays.clear();
+    }
+
+    /** Keeps exactly one navigation button highlighted. */
+    private void selectNavigation(Button selected, Button... others) {
+        for (Button button : others) {
+            button.getStyleClass().remove("navigation-button-active");
+        }
+        if (!selected.getStyleClass().contains("navigation-button-active")) {
+            selected.getStyleClass().add("navigation-button-active");
+        }
+    }
+
+    /** Creates flexible space that keeps the summary near the bottom. */
+    private Region createSidebarSpacer() {
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
+        return spacer;
+    }
 
+    /** Creates the card containing the live task count and its explanatory labels. */
+    private VBox createSummaryCard() {
         VBox summaryCard = new VBox(12);
         summaryCard.getStyleClass().add("summary-card");
         Label summaryTitle = new Label("Your space");
@@ -206,11 +247,14 @@ public class StewieGui extends BorderPane {
         summaryHint.setWrapText(true);
         summaryCard.getChildren().addAll(summaryTitle, taskSummary, summaryHint);
 
+        return summaryCard;
+    }
+
+    /** Creates the sidebar's closing caption. */
+    private Label createSidebarFooter() {
         Label footer = new Label("supervised by a genius");
         footer.getStyleClass().add("muted-label");
-
-        sidebar.getChildren().addAll(brand, navigation, spacer, summaryCard, footer);
-        return sidebar;
+        return footer;
     }
 
     /**
@@ -345,43 +389,61 @@ public class StewieGui extends BorderPane {
      */
     private HBox createListTaskCard(int index, String taskText, boolean isDone, boolean isPending) {
         HBox card = createTaskCard(index + 1, taskText, false);
+        card.getChildren().add(createListStatusCheckbox(index, isDone, isPending));
+        if (isPending) {
+            card.setOpacity(0.4);
+        }
+        return card;
+    }
+
+    /** Creates a checkbox tied to the task revision shown in My List. */
+    private CheckBox createListStatusCheckbox(int index, boolean isDone, boolean isPending) {
         long cardRevision = taskList.getRevision();
         CheckBox statusBox = new CheckBox();
         statusBox.getStyleClass().addAll("task-check", "list-complete-check");
         statusBox.setSelected(isDone);
         statusBox.setDisable(isPending);
         statusBox.setAccessibleText("Mark task " + (index + 1) + (isDone ? " as undone" : " as done"));
-        if (isPending) {
-            card.setOpacity(0.4);
+        statusBox.setOnAction(event -> handleListStatusChange(index, isDone, cardRevision, statusBox));
+        return statusBox;
+    }
+
+    /** Applies a current list-card action and restores its checkbox if saving fails. */
+    private void handleListStatusChange(int index, boolean isDone, long cardRevision, CheckBox statusBox) {
+        if (cardRevision != taskList.getRevision()) {
+            statusBox.setSelected(isDone);
+            refreshListPanel();
+            return;
         }
-        statusBox.setOnAction(event -> {
-            if (cardRevision != taskList.getRevision()) {
-                statusBox.setSelected(isDone);
-                refreshListPanel();
-                return;
-            }
-            try {
-                if (isDone) {
-                    taskList.markAsUndone(index);
-                } else {
-                    taskList.markAsDone(index);
-                    PauseTransition removalDelay = new PauseTransition(Duration.seconds(3));
-                    completionDelays.put(index, removalDelay);
-                    removalDelay.setOnFinished(finishedEvent -> {
-                        completionDelays.remove(index);
-                        refreshListPanel();
-                    });
-                    removalDelay.play();
-                }
-            } catch (StorageException exception) {
-                statusBox.setSelected(isDone);
-                showStorageError(exception);
-            }
-            refreshTaskSummary();
+        try {
+            changeListTaskStatus(index, isDone);
+        } catch (StorageException exception) {
+            statusBox.setSelected(isDone);
+            showStorageError(exception);
+        }
+        refreshTaskSummary();
+        refreshListPanel();
+    }
+
+    /** Reopens a task immediately or completes it with a delay before regrouping its card. */
+    private void changeListTaskStatus(int index, boolean isDone) {
+        if (isDone) {
+            taskList.markAsUndone(index);
+        } else {
+            taskList.markAsDone(index);
+            scheduleCompletionRefresh(index);
+        }
+    }
+
+    /** Gives each completed task its own three-second display delay. */
+    private void scheduleCompletionRefresh(int index) {
+        PauseTransition removalDelay = new PauseTransition(Duration.seconds(3));
+        completionDelays.put(index, removalDelay);
+        removalDelay.setOnFinished(event -> {
+            completionDelays.remove(index);
             refreshListPanel();
         });
-        card.getChildren().add(statusBox);
-        return card;
+        removalDelay.play();
     }
 
     /** Displays a failed card action even when the user is currently viewing My List. */
@@ -705,21 +767,60 @@ public class StewieGui extends BorderPane {
      * @return the task card
      */
     private HBox createTaskCard(int index, String taskText, boolean isInteractive) {
-        Matcher matcher = TASK_PATTERN.matcher(taskText);
-        String type = matcher.matches() ? matcher.group(1) : "T";
-        boolean isDone = matcher.matches() && "X".equals(matcher.group(2));
-        String description = matcher.matches() ? matcher.group(3) : taskText;
+        TaskCardData data = parseTaskCardData(taskText);
+        HBox card = createTaskCardLayout(index, data);
+        if (isInteractive) {
+            addChatTaskControls(card, index, data.isDone());
+        }
+        return card;
+    }
 
+    /**
+     * Represents the display fields extracted from a formatted task.
+     *
+     * @param type Task type badge.
+     * @param isDone Whether the task is complete.
+     * @param description Task description including any dates.
+     */
+    private record TaskCardData(String type, boolean isDone, String description) {
+    }
+
+    /** Decodes task text once, retaining the existing fallback for unrecognized text. */
+    private TaskCardData parseTaskCardData(String taskText) {
+        Matcher matcher = TASK_PATTERN.matcher(taskText);
+        if (!matcher.matches()) {
+            return new TaskCardData("T", false, taskText);
+        }
+        return new TaskCardData(matcher.group(1), "X".equals(matcher.group(2)), matcher.group(3));
+    }
+
+    /** Assembles a task card from its styled container, badge, and description. */
+    private HBox createTaskCardLayout(int index, TaskCardData data) {
+        HBox card = createTaskCardContainer(data.isDone());
+        card.getChildren().addAll(createTaskTypeBadge(data.type()), createTaskDetails(index, data.description()));
+        return card;
+    }
+
+    /** Creates the outer card with its completion styling. */
+    private HBox createTaskCardContainer(boolean isDone) {
         HBox card = new HBox(12);
         card.getStyleClass().add("task-card");
         if (isDone) {
             card.getStyleClass().add("task-done");
         }
         card.setAlignment(Pos.CENTER_LEFT);
+        return card;
+    }
 
+    /** Creates a badge identifying the task type. */
+    private Label createTaskTypeBadge(String type) {
         Label typeBadge = new Label(type);
         typeBadge.getStyleClass().addAll("task-type", "task-type-" + type.toLowerCase());
+        return typeBadge;
+    }
 
+    /** Creates the task description and its original one-based number. */
+    private VBox createTaskDetails(int index, String description) {
         VBox details = new VBox(3);
         HBox.setHgrow(details, Priority.ALWAYS);
         Label taskLabel = new Label(description);
@@ -728,53 +829,73 @@ public class StewieGui extends BorderPane {
         Label numberLabel = new Label(String.format("task %02d", index));
         numberLabel.getStyleClass().add("task-number");
         details.getChildren().addAll(taskLabel, numberLabel);
+        return details;
+    }
 
-        if (isInteractive) {
-            long cardRevision = taskList.getRevision();
-            CheckBox doneBox = new CheckBox();
+    /** Adds actions that share the revision captured when their card was created. */
+    private void addChatTaskControls(HBox card, int index, boolean isDone) {
+        long cardRevision = taskList.getRevision();
+        card.getChildren().addAll(createChatStatusCheckbox(index, isDone, cardRevision),
+                createChatDeleteButton(index, cardRevision));
+    }
+
+    /** Creates the completion control for a chat task card. */
+    private CheckBox createChatStatusCheckbox(int index, boolean isDone, long cardRevision) {
+        CheckBox doneBox = new CheckBox();
+        doneBox.setSelected(isDone);
+        doneBox.getStyleClass().add("task-check");
+        doneBox.setOnAction(event -> handleChatStatusChange(index, isDone, cardRevision, doneBox));
+        return doneBox;
+    }
+
+    /** Applies a chat status change, restoring the old checkbox when the card is stale or saving fails. */
+    private void handleChatStatusChange(int index, boolean isDone, long cardRevision, CheckBox doneBox) {
+        if (!isCurrentCard(cardRevision)) {
             doneBox.setSelected(isDone);
-            doneBox.getStyleClass().add("task-check");
-            doneBox.setOnAction(event -> {
-                if (!isCurrentCard(cardRevision)) {
-                    doneBox.setSelected(isDone);
-                    return;
-                }
-                try {
-                    if (doneBox.isSelected()) {
-                        taskList.markAsDone(index - 1);
-                    } else {
-                        taskList.markAsUndone(index - 1);
-                    }
-                } catch (StorageException exception) {
-                    doneBox.setSelected(isDone);
-                    showStorageError(exception);
-                    return;
-                }
-                refreshTaskSummary();
-                showTaskList("Status revised. Our little operation advances:");
-                scrollToBottom();
-            });
-
-            Button deleteButton = new Button("×");
-            deleteButton.getStyleClass().add("delete-button");
-            deleteButton.setOnAction(event -> {
-                if (!isCurrentCard(cardRevision)) {
-                    return;
-                }
-                try {
-                    taskList.deleteTask(index - 1);
-                } catch (StorageException exception) {
-                    showStorageError(exception);
-                    return;
-                }
-                refreshTaskSummary();
-                showTaskList("Dismissed from the agenda. Here is what remains:");
-            });
-            card.getChildren().addAll(typeBadge, details, doneBox, deleteButton);
-        } else {
-            card.getChildren().addAll(typeBadge, details);
+            return;
         }
-        return card;
+        try {
+            changeTaskStatus(index - 1, doneBox.isSelected());
+        } catch (StorageException exception) {
+            doneBox.setSelected(isDone);
+            showStorageError(exception);
+            return;
+        }
+        refreshTaskSummary();
+        showTaskList("Status revised. Our little operation advances:");
+        scrollToBottom();
+    }
+
+    /** Saves a completion state using a zero-based task index. */
+    private void changeTaskStatus(int index, boolean isDone) {
+        if (isDone) {
+            taskList.markAsDone(index);
+        } else {
+            taskList.markAsUndone(index);
+        }
+    }
+
+    /** Creates a delete control for the revision shown in a chat card. */
+    private Button createChatDeleteButton(int index, long cardRevision) {
+        Button deleteButton = new Button("×");
+        deleteButton.getStyleClass().add("delete-button");
+        deleteButton.setOnAction(event -> handleChatDelete(index, cardRevision));
+        return deleteButton;
+    }
+
+    /** Deletes a task only while the card still identifies the current task list. */
+    private void handleChatDelete(int index, long cardRevision) {
+        if (!isCurrentCard(cardRevision)) {
+            return;
+        }
+        try {
+            taskList.deleteTask(index - 1);
+        } catch (StorageException exception) {
+            showStorageError(exception);
+            return;
+        }
+        refreshTaskSummary();
+        showTaskList("Dismissed from the agenda. Here is what remains:");
     }
 
     /**

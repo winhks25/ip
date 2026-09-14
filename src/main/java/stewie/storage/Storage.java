@@ -55,39 +55,63 @@ public class Storage {
      * @throws StorageException If saving is unsafe or fails; the caller must retain its old task list.
      */
     public void saveToDisk(ArrayList<Task> tasks) {
-        if (isReadOnly) {
-            throw new StorageException("Tasks are read-only. Back up and repair the task file, then restart.");
-        }
-        Path temporaryFile = null;
         try {
-            if (Files.isSymbolicLink(storagePath) || !Arrays.equals(savedContent, readExistingFile())) {
-                throw new StorageException("The task file changed outside Stewie. Restart before making changes.");
-            }
-            if (Files.exists(storagePath, LinkOption.NOFOLLOW_LINKS) && !Files.isWritable(storagePath)) {
-                throw new IOException("Task file is not writable");
-            }
-            Files.createDirectories(storagePath.getParent());
-            String content = tasks.stream().map(Storage::serializeTask).collect(Collectors.joining("\n"));
-            byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
-            temporaryFile = Files.createTempFile(storagePath.getParent(), ".stewie-", ".tmp");
-            Files.write(temporaryFile, bytes);
-            if (Files.exists(storagePath) && Files.getFileStore(storagePath).supportsFileAttributeView("posix")) {
-                Files.setPosixFilePermissions(temporaryFile, Files.getPosixFilePermissions(storagePath));
-            }
-            Files.move(temporaryFile, storagePath, StandardCopyOption.ATOMIC_MOVE,
-                    StandardCopyOption.REPLACE_EXISTING);
-            savedContent = bytes;
+            prepareForSave();
+            byte[] content = serializeTasks(tasks);
+            writeAtomically(content);
+            savedContent = content;
         } catch (IOException | SecurityException exception) {
             throw new StorageException("Unable to save tasks. No changes were applied. "
                     + "Check the task file, permissions, free space, and support for atomic file replacement.");
+        }
+    }
+
+    /** Rejects unsafe writes before creating the storage directory. */
+    private void prepareForSave() throws IOException {
+        if (isReadOnly) {
+            throw new StorageException("Tasks are read-only. Back up and repair the task file, then restart.");
+        }
+        if (Files.isSymbolicLink(storagePath) || !Arrays.equals(savedContent, readExistingFile())) {
+            throw new StorageException("The task file changed outside Stewie. Restart before making changes.");
+        }
+        if (Files.exists(storagePath, LinkOption.NOFOLLOW_LINKS) && !Files.isWritable(storagePath)) {
+            throw new IOException("Task file is not writable");
+        }
+        Files.createDirectories(storagePath.getParent());
+    }
+
+    /** Encodes all task records using the same UTF-8 format as the loader. */
+    private byte[] serializeTasks(ArrayList<Task> tasks) {
+        String content = tasks.stream().map(Storage::serializeTask).collect(Collectors.joining("\n"));
+        return content.getBytes(StandardCharsets.UTF_8);
+    }
+
+    /** Replaces the original only after writing a complete temporary file with matching permissions. */
+    private void writeAtomically(byte[] content) throws IOException {
+        Path temporaryFile = Files.createTempFile(storagePath.getParent(), ".stewie-", ".tmp");
+        try {
+            Files.write(temporaryFile, content);
+            copyPermissions(temporaryFile);
+            Files.move(temporaryFile, storagePath, StandardCopyOption.ATOMIC_MOVE,
+                    StandardCopyOption.REPLACE_EXISTING);
         } finally {
-            if (temporaryFile != null) {
-                try {
-                    Files.deleteIfExists(temporaryFile);
-                } catch (IOException | SecurityException exception) {
-                    // A leftover temporary file is safer than touching the original data.
-                }
-            }
+            deleteTemporaryFile(temporaryFile);
+        }
+    }
+
+    /** Retains POSIX permissions where an existing task file and filesystem support them. */
+    private void copyPermissions(Path temporaryFile) throws IOException {
+        if (Files.exists(storagePath) && Files.getFileStore(storagePath).supportsFileAttributeView("posix")) {
+            Files.setPosixFilePermissions(temporaryFile, Files.getPosixFilePermissions(storagePath));
+        }
+    }
+
+    /** Removes an unused temporary file without masking the outcome of the save. */
+    private void deleteTemporaryFile(Path temporaryFile) {
+        try {
+            Files.deleteIfExists(temporaryFile);
+        } catch (IOException | SecurityException exception) {
+            // A leftover temporary file is safer than touching the original data.
         }
     }
 
@@ -98,45 +122,79 @@ public class Storage {
      */
     public ArrayList<Task> loadFromDisk() {
         ArrayList<Task> tasks = new ArrayList<>();
-        isReadOnly = false;
-        loadWarning = "";
+        resetLoadState();
         try {
-            if (Files.isSymbolicLink(storagePath)) {
-                throw new IOException("Symbolic links are not supported for task files");
-            }
-            savedContent = readExistingFile();
-            if (savedContent == null) {
-                return tasks;
-            }
-            String content = StandardCharsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(savedContent)).toString();
-            String[] lines = content.split("\\R", -1);
-            ArrayList<String> invalidLines = new ArrayList<>();
-            for (int index = 0; index < lines.length; index++) {
-                if (index == lines.length - 1 && lines[index].isEmpty()) {
-                    continue;
-                }
-                try {
-                    Task task = parseTask(lines[index]);
-                    if (tasks.stream().anyMatch(task::hasSameDetails)) {
-                        throw new IllegalArgumentException("Duplicate task");
-                    }
-                    tasks.add(task);
-                } catch (IllegalArgumentException exception) {
-                    invalidLines.add(Integer.toString(index + 1));
-                }
-            }
-            if (!invalidLines.isEmpty()) {
-                isReadOnly = true;
-                loadWarning = "Storage warning: Invalid or duplicate records at lines "
-                        + String.join(", ", invalidLines) + ". Valid tasks are available read-only. "
-                        + "Back up and repair the task file, then restart.";
+            savedContent = readTaskFile();
+            if (savedContent != null) {
+                ArrayList<String> invalidLines = loadRecords(decodeLines(savedContent), tasks);
+                warnAboutInvalidRecords(invalidLines);
             }
         } catch (IOException | SecurityException exception) {
-            isReadOnly = true;
-            loadWarning = "Storage warning: Unable to read the task file. Tasks are read-only. "
-                    + "Check the file path, permissions, and UTF-8 content, then restart.";
+            warnAboutUnreadableFile();
         }
         return tasks;
+    }
+
+    /** Clears warnings before attempting a fresh load. */
+    private void resetLoadState() {
+        isReadOnly = false;
+        loadWarning = "";
+    }
+
+    /** Rejects symbolic links before retaining a snapshot of the existing file. */
+    private byte[] readTaskFile() throws IOException {
+        if (Files.isSymbolicLink(storagePath)) {
+            throw new IOException("Symbolic links are not supported for task files");
+        }
+        return readExistingFile();
+    }
+
+    /** Decodes UTF-8 strictly and retains empty records so corruption remains visible. */
+    private String[] decodeLines(byte[] content) throws IOException {
+        String decoded = StandardCharsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(content)).toString();
+        return decoded.split("\\R", -1);
+    }
+
+    /** Collects valid tasks and the one-based line numbers of rejected records. */
+    private ArrayList<String> loadRecords(String[] lines, ArrayList<Task> tasks) {
+        ArrayList<String> invalidLines = new ArrayList<>();
+        for (int index = 0; index < lines.length; index++) {
+            if (index == lines.length - 1 && lines[index].isEmpty()) {
+                continue;
+            }
+            try {
+                addUniqueRecord(lines[index], tasks);
+            } catch (IllegalArgumentException exception) {
+                invalidLines.add(Integer.toString(index + 1));
+            }
+        }
+        return invalidLines;
+    }
+
+    /** Adds a parsed record only when its task details are not already present. */
+    private void addUniqueRecord(String line, ArrayList<Task> tasks) {
+        Task task = parseTask(line);
+        if (tasks.stream().anyMatch(task::hasSameDetails)) {
+            throw new IllegalArgumentException("Duplicate task");
+        }
+        tasks.add(task);
+    }
+
+    /** Protects damaged input from overwrites while keeping its valid tasks available. */
+    private void warnAboutInvalidRecords(ArrayList<String> invalidLines) {
+        if (!invalidLines.isEmpty()) {
+            isReadOnly = true;
+            loadWarning = "Storage warning: Invalid or duplicate records at lines "
+                    + String.join(", ", invalidLines) + ". Valid tasks are available read-only. "
+                    + "Back up and repair the task file, then restart.";
+        }
+    }
+
+    /** Protects unread data and explains how the user can recover access. */
+    private void warnAboutUnreadableFile() {
+        isReadOnly = true;
+        loadWarning = "Storage warning: Unable to read the task file. Tasks are read-only. "
+                + "Check the file path, permissions, and UTF-8 content, then restart.";
     }
 
     /** Distinguishes a missing file from other I/O failures, which must never permit overwriting unread data. */

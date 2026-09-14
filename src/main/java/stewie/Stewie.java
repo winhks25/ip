@@ -29,65 +29,57 @@ public class Stewie {
      * Responds to the user based on their commands.
      */
     public void run() {
-        Ui.greetUser();
-        if (!taskList.getLoadWarning().isEmpty()) {
-            System.out.println(taskList.getLoadWarning());
-        }
-        Scanner scanner = new Scanner(System.in);
+        showStartupMessages();
+        readCommands(new Scanner(System.in));
+    }
 
-        // Conversation starts here
+    /** Displays the greeting and any warning from loading saved tasks. */
+    private void showStartupMessages() {
+        Ui.greetUser();
+        Ui.printLoadWarning(taskList.getLoadWarning());
+    }
+
+    /** Processes input until the user says goodbye or the input stream ends. */
+    private void readCommands(Scanner scanner) {
         while (scanner.hasNextLine()) {
-            String input = Parser.normalize(scanner.nextLine());
-            Command command = Parser.getCommand(input);
-            assert command != null : "Parser must classify every input command";
-            try {
-                switch (command) {
-                    case BYE:
-                        Ui.printBye();
-                        return;
-                    case LIST:
-                        Ui.printTaskList(this.taskList.produceTaskList());
-                        break;
-                    case MARK:
-                        this.markAsDone(input);
-                        break;
-                    case UNMARK:
-                        this.markAsUndone(input);
-                        break;
-                    case DEADLINE:
-                        this.addDeadline(input);
-                        break;
-                    case EVENT:
-                        this.addEvent(input);
-                        break;
-                    case TODO:
-                        this.addToDo(input);
-                        break;
-                    case DELETE:
-                        this.deleteTask(input);
-                        break;
-                    case FIND:
-                        this.findTasks(input);
-                        break;
-                    case UPDATE:
-                        this.updateTask(input);
-                        break;
-                    default:
-                        System.out.println("What precisely is the plan? Use a command: todo, event, deadline, "
-                                + "mark, unmark, delete, find, "
-                                + "update, list, bye "
-                                + "+ description!");
-                        break;
-                }
-            } catch (StorageException exception) {
-                System.out.println(exception.getMessage());
-            } catch (IllegalArgumentException e) {
-                System.out.println("A slight flaw in your plan: " + e.getMessage());
+            if (!processInput(scanner.nextLine())) {
+                return;
             }
         }
     }
 
-    // helper methods
+    /** Handles one input and reports recoverable errors; returns false after goodbye. */
+    private boolean processInput(String rawInput) {
+        String input = Parser.normalize(rawInput);
+        Command command = Parser.getCommand(input);
+        assert command != null : "Parser must classify every input command";
+        try {
+            executeCommand(command, input);
+        } catch (StorageException exception) {
+            Ui.printStorageError(exception.getMessage());
+        } catch (IllegalArgumentException exception) {
+            Ui.printInputError(exception.getMessage());
+        }
+        return command != Command.BYE;
+    }
+
+    /** Dispatches a classified command to its corresponding operation. */
+    private void executeCommand(Command command, String input) {
+        switch (command) {
+            case BYE -> Ui.printBye();
+            case LIST -> Ui.printTaskList(taskList.produceTaskList());
+            case MARK -> markAsDone(input);
+            case UNMARK -> markAsUndone(input);
+            case DEADLINE -> addDeadline(input);
+            case EVENT -> addEvent(input);
+            case TODO -> addToDo(input);
+            case DELETE -> deleteTask(input);
+            case FIND -> findTasks(input);
+            case UPDATE -> updateTask(input);
+            default -> Ui.printUnknownCommand();
+        }
+    }
+
     /**
      * Adds a task of type deadline to the task list.
      * Deadline task includes description and deadline date.
@@ -128,7 +120,7 @@ public class Stewie {
     private void markAsDone(String input) {
         int index = Parser.getTaskIndex(input);
         if (index == -1) {
-            System.out.println("Numbers, please. Use: mark <number>.");
+            Ui.printMissingTaskNumber("mark");
             return;
         } else {
             this.taskList.markAsDone(index);
@@ -143,7 +135,7 @@ public class Stewie {
     private void markAsUndone(String input) {
         int idx = Parser.getTaskIndex(input);
         if (idx == -1) {
-            System.out.println("Numbers, please. Use: unmark <number>.");
+            Ui.printMissingTaskNumber("unmark");
         } else {
             this.taskList.markAsUndone(idx);
         }
@@ -157,7 +149,7 @@ public class Stewie {
     private void deleteTask(String input) {
         int idx = Parser.getTaskIndex(input);
         if (idx == -1) {
-            System.out.println("Numbers, please. Use: delete <number>.");
+            Ui.printMissingTaskNumber("delete");
         } else {
             this.taskList.deleteTask(idx);
         }
@@ -172,8 +164,7 @@ public class Stewie {
         int index = Parser.getUpdateTaskIndex(input);
         String[] updates = Parser.parseUpdate(input);
         if (index == -1 || areAllUpdateFieldsMissing(updates)) {
-            System.out.println("A revision needs details. Use: update <number> [description] "
-                    + "[d/<deadline>] [from/<from>] [to/<to>]");
+            Ui.printUpdateFormat();
             return;
         }
         this.taskList.updateTask(index, updates[0], updates[1], updates[2], updates[3]);
