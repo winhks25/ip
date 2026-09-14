@@ -1,6 +1,13 @@
 # Stewie User Guide
 
-![Stewie desktop interface showing Chat and the navigation sidebar](images/stewie.png)
+                ███████╗ ████████╗ ███████╗ ██╗    ██╗ ██╗ ███████╗
+                ██╔════╝ ╚══██╔══╝ ██╔════╝ ██║    ██║ ██║ ██╔════╝
+                ███████╗    ██║    █████╗   ██║ █╗ ██║ ██║ █████╗
+                ╚════██║    ██║    ██╔══╝   ██║███╗██║ ██║ ██╔══╝
+                ███████║    ██║    ███████╗ ╚███╔███╔╝ ██║ ███████╗
+                ╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
+
+![Stewie desktop interface showing Chat and the navigation sidebar](images/Ui.png)
 
 Stewie is a personal task manager for keeping track of to-dos, deadlines, and
 events. Enter short commands to record tasks, find them, update their details,
