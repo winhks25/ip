@@ -11,14 +11,14 @@ These manual checks supplement the console cases below. Launch the GUI with Java
 - Add todo, event, and deadline tasks in Chat, then click My List: show unfinished tasks in order,
   including their types, dates, original task numbers, and a circular checkbox on the right.
 - Click a completion checkbox: mark that task done and update the sidebar count immediately; dim its card,
-  disable its checkbox, and remove the card after three seconds while the GUI remains responsive.
+  disable its checkbox, and move the card to Completed after three seconds while the GUI remains responsive.
   Complete another task after the first disappears: mark the correct original task, despite the filtered list.
 - Complete two tasks one second apart: each card stays dimmed for its own three seconds before disappearing.
   Clicking My List again while already selected must not shorten either delay.
 - Switch to Chat during a delay and reopen My List: show the current unfinished tasks; an old timer must not
   remove any newly displayed card.
-- Reopen My List and restart the app: completed tasks remain hidden. Chat's list command still shows them as done.
-- Complete all tasks: show the same empty-state message. Unmark a task in Chat: it reappears in My List.
+- Reopen My List and restart the app: completed tasks remain in Completed with checked circular checkboxes. Chat's list command still shows them as done.
+- Complete all tasks: show the unfinished empty-state message and all tasks under Completed. Unmark a task in Chat: it reappears in My List.
 - Tab to a completion checkbox and press Space: complete the task just as with a mouse click.
 - Switch back to Chat: preserve the conversation and any unsent input.
 - Change, mark, or delete a task in Chat and reopen My List: show the latest state without duplicate cards.
@@ -29,6 +29,11 @@ These manual checks supplement the console cases below. Launch the GUI with Java
   easing into and out of the motion so its newest cards are visible without an abrupt jump.
   Uncheck a task in the latest list and verify the same behavior. Repeat after manually scrolling upward.
 - Trigger another chat update during scrolling: replace the previous animation and settle at the newest bottom.
+
+- In Completed, uncheck a task: save it as undone, move it immediately to Unfinished, and update the sidebar count.
+  Restart the app and verify the task remains unfinished.
+- Reopen a completed task while other tasks are dimmed: their individual three-second delays remain intact.
+- With no completed tasks, show "No completed tasks yet." beneath the Completed heading.
 
 ## Shared setup and launch
 

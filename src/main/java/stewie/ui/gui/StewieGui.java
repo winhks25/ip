@@ -1,5 +1,7 @@
 package stewie.ui.gui;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -49,6 +51,8 @@ public class StewieGui extends BorderPane {
     private final VBox listPanel;
     private final VBox listTaskContainer;
     private Timeline scrollAnimation;
+    // Keeps each newly completed task visible until its individual delay expires.
+    private final Map<Integer, PauseTransition> completionDelays = new HashMap<>();
 
     /**
      * Creates a chat workspace connected to the supplied task list.
@@ -97,6 +101,8 @@ public class StewieGui extends BorderPane {
         Button chatButton = createNavigationButton("fth-message-circle", "Chat", true);
         Button listButton = createNavigationButton("fth-list", "My List", false);
         chatButton.setOnAction(event -> {
+            completionDelays.values().forEach(PauseTransition::stop);
+            completionDelays.clear();
             setCenter(chatPanel);
             listButton.getStyleClass().remove("navigation-button-active");
             if (!chatButton.getStyleClass().contains("navigation-button-active")) {
@@ -105,6 +111,8 @@ public class StewieGui extends BorderPane {
         });
         listButton.setOnAction(event -> {
             if (getCenter() != listPanel) {
+                completionDelays.values().forEach(PauseTransition::stop);
+                completionDelays.clear();
                 refreshListPanel();
             }
             setCenter(listPanel);
@@ -207,48 +215,85 @@ public class StewieGui extends BorderPane {
     }
 
     /**
-     * Displays unfinished tasks with completion controls, preserving their original task numbers.
+     * Displays unfinished and completed tasks while preserving their original task numbers.
      */
     private void refreshListPanel() {
         listTaskContainer.getChildren().clear();
+        VBox unfinishedTasks = new VBox(8);
+        VBox completedTasks = new VBox(8);
         String[] tasks = taskList.produceTaskList();
         for (int index = 0; index < tasks.length; index++) {
             Matcher matcher = TASK_PATTERN.matcher(tasks[index]);
-            if (matcher.matches() && "X".equals(matcher.group(2))) {
-                continue;
+            boolean isDone = matcher.matches() && "X".equals(matcher.group(2));
+            boolean isPending = completionDelays.containsKey(index);
+            HBox card = createListTaskCard(index, tasks[index], isDone, isPending);
+            if (isDone && !isPending) {
+                completedTasks.getChildren().add(card);
+            } else {
+                unfinishedTasks.getChildren().add(card);
             }
+        }
 
-            final int taskIndex = index;
-            HBox card = createTaskCard(index + 1, tasks[index], false);
-            CheckBox completeBox = new CheckBox();
-            completeBox.getStyleClass().addAll("task-check", "list-complete-check");
-            completeBox.setAccessibleText("Mark task " + (index + 1) + " as done");
-            completeBox.setOnAction(event -> {
-                taskList.markAsDone(taskIndex);
-                refreshTaskSummary();
-                completeBox.setDisable(true);
-                card.setOpacity(0.4);
+        addListSection("Unfinished", unfinishedTasks, "No unfinished tasks. Add a task in Chat to get started.");
+        addListSection("Completed", completedTasks, "No completed tasks yet.");
+    }
 
-                // Remove only this card so other completed cards keep their own three-second delay.
+    /**
+     * Creates a list card whose checkbox completes or reopens the original task.
+     *
+     * @param index the zero-based task index
+     * @param taskText the formatted task description
+     * @param isDone whether the task is complete
+     * @param isPending whether its completion delay is still running
+     * @return the task card with its status control
+     */
+    private HBox createListTaskCard(int index, String taskText, boolean isDone, boolean isPending) {
+        HBox card = createTaskCard(index + 1, taskText, false);
+        CheckBox statusBox = new CheckBox();
+        statusBox.getStyleClass().addAll("task-check", "list-complete-check");
+        statusBox.setSelected(isDone);
+        statusBox.setDisable(isPending);
+        statusBox.setAccessibleText("Mark task " + (index + 1) + (isDone ? " as undone" : " as done"));
+        if (isPending) {
+            card.setOpacity(0.4);
+        }
+        statusBox.setOnAction(event -> {
+            if (isDone) {
+                taskList.markAsUndone(index);
+            } else {
+                taskList.markAsDone(index);
                 PauseTransition removalDelay = new PauseTransition(Duration.seconds(3));
+                completionDelays.put(index, removalDelay);
                 removalDelay.setOnFinished(finishedEvent -> {
-                    if (listTaskContainer.getChildren().remove(card)
-                            && listTaskContainer.getChildren().isEmpty()) {
-                        refreshListPanel();
-                    }
+                    completionDelays.remove(index);
+                    refreshListPanel();
                 });
                 removalDelay.play();
-            });
-            card.getChildren().add(completeBox);
-            listTaskContainer.getChildren().add(card);
-        }
+            }
+            refreshTaskSummary();
+            refreshListPanel();
+        });
+        card.getChildren().add(statusBox);
+        return card;
+    }
 
-        if (listTaskContainer.getChildren().isEmpty()) {
-            Label emptyMessage = new Label("No unfinished tasks. Add a task in Chat to get started.");
+    /**
+     * Adds a titled task section, showing a message when it has no cards.
+     *
+     * @param title the section heading
+     * @param cards the task cards in this section
+     * @param emptyText the message for an empty section
+     */
+    private void addListSection(String title, VBox cards, String emptyText) {
+        Label heading = new Label(title);
+        heading.getStyleClass().add("chat-title");
+        if (cards.getChildren().isEmpty()) {
+            Label emptyMessage = new Label(emptyText);
             emptyMessage.setWrapText(true);
             emptyMessage.getStyleClass().add("muted-label");
-            listTaskContainer.getChildren().add(emptyMessage);
+            cards.getChildren().add(emptyMessage);
         }
+        listTaskContainer.getChildren().addAll(heading, cards);
     }
 
     /**
