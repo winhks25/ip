@@ -233,7 +233,7 @@ Very well. Do come back. I mean, someone must supervise your progress.
 ### Aim
 
 Verify that `update` changes the description of todo, event, and deadline tasks while preserving their type,
-date/time details, and completion status.
+date/time details, and completion status. Reject reversed dates without changing the existing event.
 
 ### Inputs
 
@@ -280,11 +280,10 @@ Revised to your specifications. Yes, even that detail.
 [E] [X] planning meeting (from: 15 Aug 2026 to: 16 Aug 2026)
 Revised to your specifications. Yes, even that detail.
 [D] [ ] file report (by: 20 Aug 2026)
-Revised to your specifications. Yes, even that detail.
-[E] [X] planning meeting (from: 17 Aug 2026 to: 16 Aug 2026)
+A slight flaw in your plan: Event start date must be before its end date.
 Behold, your agenda. Let us examine the scale of this undertaking.
 1. [T] [ ] buy bread
-2. [E] [X] planning meeting (from: 17 Aug 2026 to: 16 Aug 2026)
+2. [E] [X] planning meeting (from: 15 Aug 2026 to: 16 Aug 2026)
 3. [D] [ ] file report (by: 20 Aug 2026)
 That task exists only in your imagination. Use a listed number: update <number>
 A revision needs details. Use: update <number> [description] [d/<deadline>] [from/<from>] [to/<to>]
@@ -423,7 +422,7 @@ Behold, your agenda. Let us examine the scale of this undertaking.
 1. [T] [ ] buy milk
 Behold, your agenda. Let us examine the scale of this undertaking.
 No tasks to show. How suspiciously serene. Try adding a task or checking your search.
-A slight flaw in your plan: Date format is not recognized
+A slight flaw in your plan: Use a real calendar date, such as 2026-08-28 or 28/8/2026 (dates only).
 Behold, your agenda. Let us examine the scale of this undertaking.
 1. [T] [ ] buy milk
 Very well. Do come back. I mean, someone must supervise your progress.
@@ -492,5 +491,76 @@ Consider it recorded. A small triumph for competent administration.
 Your agenda now contains 1 task. Do try to keep up.
 Behold, your agenda. Let us examine the scale of this undertaking.
 1. [T] [ ] plan the event and deadline
+Very well. Do come back. I mean, someone must supervise your progress.
+```
+
+## Test Case 10: Preserve valid task data
+
+### Aim
+
+Reject duplicate additions and updates, unsafe descriptions, impossible dates, and invalid event ranges.
+Completion status does not permit duplicate details; invalid updates preserve the original task.
+
+### Inputs
+
+```text
+todo read book
+mark 1
+todo read   book
+todo other
+update 2 read book
+update 1 read book
+todo bad|description
+event trip /from 2026-01-02 /to 2026-01-01
+event trip /from 2026-01-01 /to 2026-01-01
+deadline report /by 2026-02-30
+deadline report /by 2025-02-29
+deadline report /by 0000-01-01
+event trip /from 2026-01-01 /to 2026-01-02
+event trip /from 1/1/2026 /to 2/1/2026
+update 3 to/2026-01-01
+update 2 d/2026-01-01
+list
+bye
+```
+
+### Expected output
+
+```text
+███████╗ ████████╗ ███████╗ ██╗    ██╗ ██╗ ███████╗
+██╔════╝ ╚══██╔══╝ ██╔════╝ ██║    ██║ ██║ ██╔════╝
+███████╗    ██║    █████╗   ██║ █╗ ██║ ██║ █████╗
+╚════██║    ██║    ██╔══╝   ██║███╗██║ ██║ ██╔══╝
+███████║    ██║    ███████╗ ╚███╔███╔╝ ██║ ███████╗
+╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
+
+Ah, there you are. I'm Stewie.
+Tell me your tasks. Clearly, this operation requires supervision.
+Consider it recorded. A small triumph for competent administration.
+[T] [ ] read book
+Your agenda now contains 1 task. Do try to keep up.
+A slight flaw in your plan: A task with these details already exists (task 1).
+Consider it recorded. A small triumph for competent administration.
+[T] [ ] other
+Your agenda now contains 2 tasks. Do try to keep up.
+A slight flaw in your plan: A task with these details already exists (task 1).
+Revised to your specifications. Yes, even that detail.
+[T] [X] read book
+A slight flaw in your plan: Descriptions cannot contain | or control characters.
+A slight flaw in your plan: Event start date must be before its end date.
+A slight flaw in your plan: Event start date must be before its end date.
+A slight flaw in your plan: Use a real calendar date, such as 2026-08-28 or 28/8/2026 (dates only).
+A slight flaw in your plan: Use a real calendar date, such as 2026-08-28 or 28/8/2026 (dates only).
+A slight flaw in your plan: Use a year between 0001 and 9999.
+Consider it recorded. A small triumph for competent administration.
+[E] [ ] trip (from: 01 Jan 2026 to: 02 Jan 2026)
+Your agenda now contains 3 tasks. Do try to keep up.
+A slight flaw in your plan: A task with these details already exists (task 3).
+A slight flaw in your plan: Event start date must be before its end date.
+A slight flaw in your plan: Todo tasks only support descriptions.
+Behold, your agenda. Let us examine the scale of this undertaking.
+1. [T] [X] read book
+2. [T] [ ] other
+3. [E] [ ] trip (from: 01 Jan 2026 to: 02 Jan 2026)
 Very well. Do come back. I mean, someone must supervise your progress.
 ```

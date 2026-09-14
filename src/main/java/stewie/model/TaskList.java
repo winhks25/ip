@@ -60,6 +60,7 @@ public class TaskList {
      * @param task Task to add.
      */
     private void addTask(Task task) {
+        rejectDuplicate(task, -1);
         this.tasks.add(task);
         Storage.saveToDisk(this.tasks);
         Ui.printTaskAddConfirmation(task, this.tasks.size());
@@ -161,11 +162,22 @@ public class TaskList {
             if (existingTask.isDone()) {
                 updatedTask.markAsDone();
             }
+            rejectDuplicate(updatedTask, index);
             this.tasks.set(index, updatedTask);
             Storage.saveToDisk(this.tasks);
             Ui.printTaskUpdateConfirmation(updatedTask);
         } catch (IndexOutOfBoundsException e) {
             Ui.printNumberedCommandFormat("update");
+        }
+    }
+
+    /** Rejects duplicates while allowing an update to preserve its own details. */
+    private void rejectDuplicate(Task candidate, int ignoredIndex) {
+        for (int index = 0; index < tasks.size(); index++) {
+            if (index != ignoredIndex && candidate.hasSameDetails(tasks.get(index))) {
+                throw new IllegalArgumentException(
+                        "A task with these details already exists (task " + (index + 1) + ").");
+            }
         }
     }
 

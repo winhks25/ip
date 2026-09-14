@@ -5,19 +5,22 @@ package stewie.model;
  * A task has description and the status "isDone"
  */
 public abstract class Task {
-    protected boolean isDone;
+    private boolean isDone;
     private final String description;
 
     /**
      * Initialize the task with description
      *
-     * @param description
+     * @param description Nonempty task description without storage separators or control characters.
      */
     public Task(String description) {
         validateArgument(description, "Description");
         assert description != null && !description.isBlank()
                 : "A task must have a non-blank description after validation";
-        this.description = description;
+        if (description.indexOf('|') >= 0 || description.chars().anyMatch(Character::isISOControl)) {
+            throw new IllegalArgumentException("Descriptions cannot contain | or control characters.");
+        }
+        this.description = description.strip().replaceAll("(?U)\\s+", " ");
         this.isDone = false;
     }
 
@@ -63,6 +66,27 @@ public abstract class Task {
     }
 
     /**
+     * Checks task identity using type, description, and dates, regardless of completion status.
+     * Description casing and repeated whitespace do not create a distinct task.
+     *
+     * @param other Task to compare with.
+     * @return True when both tasks represent the same details.
+     */
+    public boolean hasSameDetails(Task other) {
+        if (other == null || getClass() != other.getClass()
+                || !description.equalsIgnoreCase(other.description)) {
+            return false;
+        }
+        if (this instanceof Deadline deadline && other instanceof Deadline otherDeadline) {
+            return deadline.getDeadline().equals(otherDeadline.getDeadline());
+        }
+        if (this instanceof Event event && other instanceof Event otherEvent) {
+            return event.getFrom().equals(otherEvent.getFrom()) && event.getTo().equals(otherEvent.getTo());
+        }
+        return true;
+    }
+
+    /**
      * Check an argument is null or empty string
      * @param input Argument
      * @param type Type of argument
@@ -70,7 +94,7 @@ public abstract class Task {
      */
     protected static void validateArgument(String input, String type) {
         if (input == null || input.isBlank()) {
-            throw new IllegalArgumentException(type + "cannot be empty.");
+            throw new IllegalArgumentException(type + " cannot be empty.");
         }
     }
 }
