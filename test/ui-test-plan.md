@@ -10,8 +10,13 @@ These manual checks supplement the console cases below. Launch the GUI with Java
   "No unfinished tasks. Add a task in Chat to get started."
 - Add todo, event, and deadline tasks in Chat, then click My List: show unfinished tasks in order,
   including their types, dates, original task numbers, and a circular checkbox on the right.
-- Click a completion checkbox: mark that task done, remove its card immediately, and update the sidebar count.
+- Click a completion checkbox: mark that task done and update the sidebar count immediately; dim its card,
+  disable its checkbox, and remove the card after three seconds while the GUI remains responsive.
   Complete another task after the first disappears: mark the correct original task, despite the filtered list.
+- Complete two tasks one second apart: each card stays dimmed for its own three seconds before disappearing.
+  Clicking My List again while already selected must not shorten either delay.
+- Switch to Chat during a delay and reopen My List: show the current unfinished tasks; an old timer must not
+  remove any newly displayed card.
 - Reopen My List and restart the app: completed tasks remain hidden. Chat's list command still shows them as done.
 - Complete all tasks: show the same empty-state message. Unmark a task in Chat: it reappears in My List.
 - Tab to a completion checkbox and press Space: complete the task just as with a mouse click.

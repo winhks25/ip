@@ -3,6 +3,7 @@ package stewie.ui.gui;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -19,6 +20,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.util.Duration;
 import org.kordamp.ikonli.javafx.FontIcon;
 import stewie.model.TaskList;
 import stewie.parser.Command;
@@ -97,7 +99,9 @@ public class StewieGui extends BorderPane {
             }
         });
         listButton.setOnAction(event -> {
-            refreshListPanel();
+            if (getCenter() != listPanel) {
+                refreshListPanel();
+            }
             setCenter(listPanel);
             chatButton.getStyleClass().remove("navigation-button-active");
             if (!listButton.getStyleClass().contains("navigation-button-active")) {
@@ -216,8 +220,19 @@ public class StewieGui extends BorderPane {
             completeBox.setAccessibleText("Mark task " + (index + 1) + " as done");
             completeBox.setOnAction(event -> {
                 taskList.markAsDone(taskIndex);
-                refreshListPanel();
                 refreshTaskSummary();
+                completeBox.setDisable(true);
+                card.setOpacity(0.4);
+
+                // Remove only this card so other completed cards keep their own three-second delay.
+                PauseTransition removalDelay = new PauseTransition(Duration.seconds(3));
+                removalDelay.setOnFinished(finishedEvent -> {
+                    if (listTaskContainer.getChildren().remove(card)
+                            && listTaskContainer.getChildren().isEmpty()) {
+                        refreshListPanel();
+                    }
+                });
+                removalDelay.play();
             });
             card.getChildren().add(completeBox);
             listTaskContainer.getChildren().add(card);
