@@ -69,13 +69,14 @@ public class Stewie {
                         this.updateTask(input);
                         break;
                     default:
-                        System.out.println("Please add a command: todo, event, deadline, mark, unmark, delete, find, "
+                        System.out.println("What precisely is the plan? Use a command: todo, event, deadline, "
+                                + "mark, unmark, delete, find, "
                                 + "update, list, bye "
                                 + "+ description!");
                         break;
                 }
             } catch (IllegalArgumentException e) {
-                System.out.println(e.getMessage());
+                System.out.println("A slight flaw in your plan: " + e.getMessage());
             }
         }
     }
@@ -93,7 +94,7 @@ public class Stewie {
             // parsedInput = {description, deadline}
             this.taskList.addDeadline(parsedInput[0], parsedInput[1]);
         } catch (ArrayIndexOutOfBoundsException e) {
-            System.out.println("Add deadline task in the format: deadline <description> /by <deadline>");
+            System.out.println("Even I need a deadline. Use: deadline <description> /by <deadline>");
         }
     }
 
@@ -109,8 +110,8 @@ public class Stewie {
             // parsedInput = {description, form, to}
             this.taskList.addEvent(parsedInput[0], parsedInput[1], parsedInput[2]);
         } catch (ArrayIndexOutOfBoundsException e) {
-            System.out.println("Add event tasks in the format: event <description> /from <date or time> "
-                    + "/to<date or time>");
+            System.out.println("An event requires a schedule. Use: event <description> /from <date or time> "
+                    + "/to <date or time>");
         }
     }
 
@@ -125,7 +126,7 @@ public class Stewie {
             String description = Parser.parseTodo(input);
             this.taskList.addToDo(description);
         } catch (ArrayIndexOutOfBoundsException e) {
-            System.out.println("Please add a task description.");
+            System.out.println("A task without a description? Do give me something to work with.");
         }
     }
 
@@ -137,7 +138,7 @@ public class Stewie {
     private void markAsDone(String input) {
         int index = Parser.getTaskIndex(input);
         if (index == -1) {
-            System.out.println("Please enter a valid task number in the format: mark <number>.");
+            System.out.println("Numbers, please. Use: mark <number>.");
             return;
         } else {
             this.taskList.markAsDone(index);
@@ -152,7 +153,7 @@ public class Stewie {
     private void markAsUndone(String input) {
         int idx = Parser.getTaskIndex(input);
         if (idx == -1) {
-            System.out.println("Please enter a valid task number in the format: unmark <number>.");
+            System.out.println("Numbers, please. Use: unmark <number>.");
         } else {
             this.taskList.markAsUndone(idx);
         }
@@ -166,7 +167,7 @@ public class Stewie {
     private void deleteTask(String input) {
         int idx = Parser.getTaskIndex(input);
         if (idx == -1) {
-            System.out.println("Please enter a valid task number in the format: delete <number>.");
+            System.out.println("Numbers, please. Use: delete <number>.");
         } else {
             this.taskList.deleteTask(idx);
         }
@@ -181,7 +182,7 @@ public class Stewie {
         int index = Parser.getUpdateTaskIndex(input);
         String[] updates = Parser.parseUpdate(input);
         if (index == -1 || areAllUpdateFieldsMissing(updates)) {
-            System.out.println("Please enter fields to update in the format: update <number> [description] "
+            System.out.println("A revision needs details. Use: update <number> [description] "
                     + "[d/<deadline>] [from/<from>] [to/<to>]");
             return;
         }
@@ -213,6 +214,11 @@ public class Stewie {
         Ui.printTaskList(this.taskList.findTasks(keywords));
     }
 
+    /**
+     * Starts the console task assistant.
+     *
+     * @param args Command-line arguments, which are not used.
+     */
     public static void main(String[] args) {
         new Stewie().run();
     }

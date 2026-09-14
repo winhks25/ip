@@ -1,13 +1,26 @@
 package stewie.ui.gui;
 
-import javafx.animation.*;
+import javafx.animation.Interpolator;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.PauseTransition;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.util.Duration;
@@ -15,6 +28,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import stewie.model.TaskList;
 import stewie.parser.Command;
 import stewie.parser.Parser;
+import stewie.ui.Dialogue;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,6 +46,8 @@ public class StewieGui extends BorderPane {
     private static final String[] QUICK_COMMANDS = {"todo plan my week", "list", "help"};
 
     private static final String COMMAND_HELP = """
+            The instructions. A brief reading should spare us both a great deal of theatre.
+
             todo <description>
             Add a task without a date.
 
@@ -127,7 +143,7 @@ public class StewieGui extends BorderPane {
         VBox brandText = new VBox(2);
         Label brandName = new Label("stewie.");
         brandName.getStyleClass().add("brand-name");
-        Label brandTagline = new Label("your tiny task studio");
+        Label brandTagline = new Label("a modest command centre");
         brandTagline.getStyleClass().add("muted-label");
         brandText.getChildren().addAll(brandName, brandTagline);
         brand.getChildren().addAll(logo, brandText);
@@ -179,12 +195,12 @@ public class StewieGui extends BorderPane {
         Label summaryTitle = new Label("Your space");
         summaryTitle.getStyleClass().add("summary-title");
         taskSummary.getStyleClass().add("summary-value");
-        Label summaryHint = new Label("Keep the little things moving.");
+        Label summaryHint = new Label("Even grand plans need a list.");
         summaryHint.getStyleClass().add("summary-hint");
         summaryHint.setWrapText(true);
         summaryCard.getChildren().addAll(summaryTitle, taskSummary, summaryHint);
 
-        Label footer = new Label("made for small wins  ✦");
+        Label footer = new Label("supervised by a genius");
         footer.getStyleClass().add("muted-label");
 
         sidebar.getChildren().addAll(brand, navigation, spacer, summaryCard, footer);
@@ -211,7 +227,7 @@ public class StewieGui extends BorderPane {
         HBox status = new HBox(6);
         status.setAlignment(Pos.CENTER_LEFT);
         Circle onlineDot = new Circle(4, Color.web("#5de39b"));
-        Label statusText = new Label("online · ready to help");
+        Label statusText = new Label("online · awaiting your agenda");
         statusText.getStyleClass().add("muted-label");
         status.getChildren().addAll(onlineDot, statusText);
         identity.getChildren().addAll(title, status);
@@ -307,8 +323,9 @@ public class StewieGui extends BorderPane {
             }
         }
 
-        addListSection("Unfinished", unfinishedTasks, "No unfinished tasks. Add a task in Chat to get started.");
-        addListSection("Completed", completedTasks, "No completed tasks yet.");
+        addListSection("Unfinished", unfinishedTasks,
+                "No unfinished tasks. Remarkable. Add a task in Chat when ambition returns.");
+        addListSection("Completed", completedTasks, "No completed tasks yet. I await your first triumph.");
     }
 
     /**
@@ -410,7 +427,7 @@ public class StewieGui extends BorderPane {
 
         HBox inputRow = new HBox(10);
         inputRow.setAlignment(Pos.CENTER_LEFT);
-        messageField.setPromptText("Message Stewie about your next small win...");
+        messageField.setPromptText("Your next task, if you please...");
         messageField.getStyleClass().add("message-field");
         messageField.setOnAction(event -> sendMessage());
         HBox.setHgrow(messageField, Priority.ALWAYS);
@@ -427,8 +444,8 @@ public class StewieGui extends BorderPane {
      * Adds Stewie's initial greeting and command suggestions.
      */
     private void addWelcomeMessage() {
-        appendMessage(false, "Hey, I’m Stewie ✨\nTell me what you want to remember, plan, or find.");
-        appendMessage(false, "Try `todo buy groceries`, `list`, or `find groceries` to get started.");
+        appendMessage(false, Dialogue.GREETING);
+        appendMessage(false, "We shall start simply: `todo buy groceries`, `list`, or `find groceries`.");
     }
 
     /**
@@ -462,10 +479,10 @@ public class StewieGui extends BorderPane {
         try {
             switch (command) {
                 case BYE:
-                    appendMessage(false, "I’ll be here whenever your next idea shows up. ✦");
+                    appendMessage(false, Dialogue.GOODBYE);
                     break;
                 case LIST:
-                    showTaskList("Here’s what is currently on your list.");
+                    showTaskList(Dialogue.LIST);
                     break;
                 case MARK:
                     updateTaskStatus(input, true);
@@ -493,12 +510,12 @@ public class StewieGui extends BorderPane {
                     break;
                 default:
                     appendMessage(false,
-                            "I didn’t quite catch that. Try `todo`, `event`, `deadline`, `list`, `find`, "
+                            "What precisely is the plan? Try `todo`, `event`, `deadline`, `list`, `find`, "
                                     + "`mark`, `unmark`, `delete`, or `update`.");
                     break;
             }
         } catch (IllegalArgumentException exception) {
-            appendMessage(false, exception.getMessage());
+            appendMessage(false, "A slight flaw in your plan: " + exception.getMessage());
         }
     }
 
@@ -510,9 +527,9 @@ public class StewieGui extends BorderPane {
     private void addTodo(String input) {
         try {
             taskList.addToDo(Parser.parseTodo(input));
-            appendMessage(false, "Done — that’s on your list now ✨");
+            appendMessage(false, Dialogue.ADDED);
         } catch (ArrayIndexOutOfBoundsException exception) {
-            appendMessage(false, "Tell me what the todo is, for example: `todo call Mum`.");
+            appendMessage(false, "A task needs a description. Try `todo call Mum`. Yes, one must keep her informed.");
         }
     }
 
@@ -525,10 +542,11 @@ public class StewieGui extends BorderPane {
         try {
             String[] parsedInput = Parser.parseDeadline(input);
             taskList.addDeadline(parsedInput[0], parsedInput[1]);
-            appendMessage(false, "Deadline saved. Future you will be grateful. ⏳");
+            appendMessage(false, "Deadline recorded. Time is now officially judging you.");
         } catch (ArrayIndexOutOfBoundsException exception) {
             appendMessage(false,
-                    "Use `deadline <description> /by <date>`, such as `deadline submit report /by 25 Dec 2026`.");
+                    "Even I need a deadline. Use `deadline <description> /by <date>`, "
+                            + "e.g. `deadline report /by 25 Dec 2026`.");
         }
     }
 
@@ -541,9 +559,9 @@ public class StewieGui extends BorderPane {
         try {
             String[] parsedInput = Parser.parseEvent(input);
             taskList.addEvent(parsedInput[0], parsedInput[1], parsedInput[2]);
-            appendMessage(false, "Event added to your timeline. 📅");
+            appendMessage(false, "Event scheduled. I trust the occasion warrants all this organisation.");
         } catch (ArrayIndexOutOfBoundsException exception) {
-            appendMessage(false, "Use `event <description> /from <date> /to <date>`.");
+            appendMessage(false, "An event requires a schedule. Use `event <description> /from <date> /to <date>`.");
         }
     }
 
@@ -556,18 +574,19 @@ public class StewieGui extends BorderPane {
     private void updateTaskStatus(String input, boolean isDone) {
         int index = Parser.getTaskIndex(input);
         if (!isValidTaskIndex(index)) {
-            appendMessage(false, "Choose a task number that exists, such as `mark 1`.");
+            appendMessage(false,
+                    "That task exists only in your imagination. Use a listed number with `mark` or `unmark`.");
             return;
         }
 
         if (isDone) {
             taskList.markAsDone(index);
-            appendMessage(false, "That one is done — nice work. ✅");
+            appendMessage(false, "Completed. Rather well done, actually. Let us not make a scene.");
         } else {
             taskList.markAsUndone(index);
-            appendMessage(false, "Task reopened. Sometimes plans change.");
+            appendMessage(false, "Reopened. A strategic reconsideration, shall we call it?");
         }
-        showTaskList("Here’s the refreshed view:");
+        showTaskList("The revised agenda, for your inspection:");
     }
 
     /**
@@ -578,13 +597,13 @@ public class StewieGui extends BorderPane {
     private void deleteTask(String input) {
         int index = Parser.getTaskIndex(input);
         if (!isValidTaskIndex(index)) {
-            appendMessage(false, "Choose a task number that exists, such as `delete 1`.");
+            appendMessage(false, "I cannot delete an imaginary task. Use a listed number, such as `delete 1`.");
             return;
         }
 
         taskList.deleteTask(index);
-        appendMessage(false, "Removed. A little more breathing room. ✦");
-        showTaskList("Here’s what remains:");
+        appendMessage(false, "Deleted. I have dismissed it from our affairs.");
+        showTaskList("The surviving commitments:");
     }
 
     /**
@@ -596,13 +615,14 @@ public class StewieGui extends BorderPane {
         int index = Parser.getUpdateTaskIndex(input);
         String[] updates = Parser.parseUpdate(input);
         if (!isValidTaskIndex(index) || areAllUpdateFieldsMissing(updates)) {
-            appendMessage(false, "Use `update <number> [description] [d/<deadline>] [from/<from>] [to/<to>]`.");
+            appendMessage(false,
+                    "Details, please: `update <number> [description] [d/<deadline>] [from/<from>] [to/<to>]`.");
             return;
         }
 
         taskList.updateTask(index, updates[0], updates[1], updates[2], updates[3]);
-        appendMessage(false, "Updated. The details are still safely attached. ✨");
-        showTaskList("Here’s the refreshed view:");
+        appendMessage(false, Dialogue.UPDATED);
+        showTaskList("The revised agenda, for your inspection:");
     }
 
     /**
@@ -629,11 +649,11 @@ public class StewieGui extends BorderPane {
         String[] keywords = Parser.parseFindKeywords(input);
         String[] matches = taskList.findTasks(keywords);
         if (matches.length == 0) {
-            appendMessage(false, "No matches yet. Try a different keyword or `list` to see everything.");
+            appendMessage(false, "Nothing matches. Even my brilliance needs a clue. Try another keyword or `list`.");
             return;
         }
 
-        appendMessage(false, "I found these for you:");
+        appendMessage(false, "Aha. The evidence you requested:");
         VBox matchesBox = new VBox(8);
         matchesBox.getStyleClass().add("task-group");
         for (int index = 0; index < matches.length; index++) {
@@ -651,7 +671,7 @@ public class StewieGui extends BorderPane {
         appendMessage(false, response);
         String[] tasks = taskList.produceTaskList();
         if (tasks.length == 0) {
-            appendMessage(false, "Your list is clear. A perfect place for the next small win.");
+            appendMessage(false, Dialogue.EMPTY);
             return;
         }
 
@@ -707,7 +727,7 @@ public class StewieGui extends BorderPane {
                     taskList.markAsUndone(index - 1);
                 }
                 refreshTaskSummary();
-                showTaskList("Updated — your list is looking good:");
+                showTaskList("Status revised. Our little operation advances:");
                 scrollToBottom();
             });
 
@@ -716,7 +736,7 @@ public class StewieGui extends BorderPane {
             deleteButton.setOnAction(event -> {
                 taskList.deleteTask(index - 1);
                 refreshTaskSummary();
-                showTaskList("Removed — here’s the current view:");
+                showTaskList("Dismissed from the agenda. Here is what remains:");
             });
             card.getChildren().addAll(typeBadge, details, doneBox, deleteButton);
         } else {

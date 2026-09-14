@@ -1,6 +1,7 @@
 package stewie.ui.cli;
 
 import stewie.model.Task;
+import stewie.ui.Dialogue;
 
 import java.util.Scanner;
 
@@ -27,7 +28,7 @@ public class Ui {
      * Print goodbye statement.
      */
     public static void printBye() {
-        System.out.println("Bye, see you later!");
+        System.out.println(Dialogue.GOODBYE);
     }
 
     /**
@@ -43,8 +44,7 @@ public class Ui {
                 ╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
                 """;
         System.out.println(banner);
-        System.out.println("Hey there! I'm Stewie. \nWanna have a chat?");
-        System.out.println("Tell me whats on your list!!");
+        System.out.println(Dialogue.GREETING);
     }
 
     /**
@@ -54,9 +54,10 @@ public class Ui {
      * @param numTasks Number of tasks in the task list.
      */
     public static void printTaskAddConfirmation(Task t, int numTasks) {
-        System.out.println("Got it! Added the following to your list.");
+        System.out.println(Dialogue.ADDED);
         System.out.println(t);
-        System.out.printf("Now you have %d tasks in the list. %n", numTasks);
+        System.out.printf("Your agenda now contains %d %s. Do try to keep up.%n",
+                numTasks, numTasks == 1 ? "task" : "tasks");
     }
 
     /**
@@ -65,7 +66,7 @@ public class Ui {
      * @param task Updated task.
      */
     public static void printTaskUpdateConfirmation(Task task) {
-        System.out.println("Got it! Updated the following task.");
+        System.out.println(Dialogue.UPDATED);
         System.out.println(task);
     }
 
@@ -74,16 +75,18 @@ public class Ui {
      * @param command Type of command: mark or unmark or delete
      */
     public static void printNumberedCommandFormat(String command) {
-        System.out.printf("Please type in a valid task number in the format: %s <number>%n", command);
+        System.out.printf("That task exists only in your imagination. Use a listed number: %s <number>%n", command);
     }
 
     /**
-     * Print all the tasks in the task list
+     * Prints all tasks in the task list.
+     *
+     * @param tasks Formatted tasks to display.
      */
     public static void printTaskList(String[] tasks) {
-        System.out.println("Here is your list of tasks.");
+        System.out.println(Dialogue.LIST);
         if (tasks.length == 0) {
-            System.out.println("You have no task saved.");
+            System.out.println(Dialogue.EMPTY);
             return;
         }
 
