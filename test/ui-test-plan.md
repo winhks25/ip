@@ -4,6 +4,13 @@ This plan tests the Stewie console application. Tests are run as separate sessio
 
 ## Additional GUI navigation checks
 
+- Start with a malformed or unreadable task file: show the startup warning in Chat.
+  Attempt additions, updates, deletion, and checkbox actions: show an error without a success reply
+  or a changed task. My List checkbox failures must show a visible error and restore the checkbox.
+- Make the file unwritable while the GUI is running and retry a command or card action.
+  Restore permissions and retry: save successfully and retain the original data after the failed attempt.
+
+
 - Verify Chat opens with "Ah, there you are. I'm Stewie." and the supervision greeting.
   Send todo, deadline, event, list, mark, unmark, delete, update, find, help, and bye commands.
   Confirm replies use dry, theatrical phrasing while task cards retain their descriptions, dates, and statuses.
@@ -562,5 +569,241 @@ Behold, your agenda. Let us examine the scale of this undertaking.
 1. [T] [X] read book
 2. [T] [ ] other
 3. [E] [ ] trip (from: 01 Jan 2026 to: 02 Jan 2026)
+Very well. Do come back. I mean, someone must supervise your progress.
+```
+
+## Test Case 11: Recover valid records from damaged storage
+
+### Aim
+
+Report all damaged records, retain later valid tasks, and block changes to protect the original file.
+
+### Setup
+
+```sh
+mkdir -p data
+cat > data/stewie.txt <<'EOF'
+T | 0 | first
+D | 0 | invalid | 2026-02-30
+T | maybe | status
+X | 0 | unknown
+T | 0 | first
+E | 0 | reverse | 2026-01-02 | 2026-01-01
+T | 0 |
+T | 0 | extra | field
+T | 1 | last
+EOF
+```
+
+### Inputs
+
+```text
+list
+todo new
+mark 1
+unmark 2
+delete 1
+update 1 revised
+list
+bye
+```
+
+### Expected output
+
+```text
+███████╗ ████████╗ ███████╗ ██╗    ██╗ ██╗ ███████╗
+██╔════╝ ╚══██╔══╝ ██╔════╝ ██║    ██║ ██║ ██╔════╝
+███████╗    ██║    █████╗   ██║ █╗ ██║ ██║ █████╗
+╚════██║    ██║    ██╔══╝   ██║███╗██║ ██║ ██╔══╝
+███████║    ██║    ███████╗ ╚███╔███╔╝ ██║ ███████╗
+╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
+
+Ah, there you are. I'm Stewie.
+Tell me your tasks. Clearly, this operation requires supervision.
+Storage warning: Invalid or duplicate records at lines 2, 3, 4, 5, 6, 7, 8. Valid tasks are available read-only. Back up and repair the task file, then restart.
+Behold, your agenda. Let us examine the scale of this undertaking.
+1. [T] [ ] first
+2. [T] [X] last
+Tasks are read-only. Back up and repair the task file, then restart.
+Tasks are read-only. Back up and repair the task file, then restart.
+Tasks are read-only. Back up and repair the task file, then restart.
+Tasks are read-only. Back up and repair the task file, then restart.
+Tasks are read-only. Back up and repair the task file, then restart.
+Behold, your agenda. Let us examine the scale of this undertaking.
+1. [T] [ ] first
+2. [T] [X] last
+Very well. Do come back. I mean, someone must supervise your progress.
+```
+
+## Test Case 12: Handle a directory in place of the task file
+
+### Aim
+
+Explain invalid storage paths without crashing or replacing the directory.
+
+### Setup
+
+```sh
+mkdir -p data/stewie.txt
+```
+
+### Inputs
+
+```text
+todo new
+list
+bye
+```
+
+### Expected output
+
+```text
+███████╗ ████████╗ ███████╗ ██╗    ██╗ ██╗ ███████╗
+██╔════╝ ╚══██╔══╝ ██╔════╝ ██║    ██║ ██║ ██╔════╝
+███████╗    ██║    █████╗   ██║ █╗ ██║ ██║ █████╗
+╚════██║    ██║    ██╔══╝   ██║███╗██║ ██║ ██╔══╝
+███████║    ██║    ███████╗ ╚███╔███╔╝ ██║ ███████╗
+╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
+
+Ah, there you are. I'm Stewie.
+Tell me your tasks. Clearly, this operation requires supervision.
+Storage warning: Unable to read the task file. Tasks are read-only. Check the file path, permissions, and UTF-8 content, then restart.
+Tasks are read-only. Back up and repair the task file, then restart.
+Behold, your agenda. Let us examine the scale of this undertaking.
+No tasks to show. How suspiciously serene. Try adding a task or checking your search.
+Very well. Do come back. I mean, someone must supervise your progress.
+```
+
+## Test Case 13: Keep task state when saving is denied
+
+### Aim
+
+Reject all mutations without false success messages when an existing file is read-only.
+
+### Setup
+
+```sh
+mkdir -p data
+printf 'T | 0 | first\nT | 1 | second\n' > data/stewie.txt
+chmod 444 data/stewie.txt
+```
+
+### Inputs
+
+```text
+list
+todo new
+mark 1
+unmark 2
+delete 1
+update 1 revised
+list
+bye
+```
+
+### Expected output
+
+```text
+███████╗ ████████╗ ███████╗ ██╗    ██╗ ██╗ ███████╗
+██╔════╝ ╚══██╔══╝ ██╔════╝ ██║    ██║ ██║ ██╔════╝
+███████╗    ██║    █████╗   ██║ █╗ ██║ ██║ █████╗
+╚════██║    ██║    ██╔══╝   ██║███╗██║ ██║ ██╔══╝
+███████║    ██║    ███████╗ ╚███╔███╔╝ ██║ ███████╗
+╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
+
+Ah, there you are. I'm Stewie.
+Tell me your tasks. Clearly, this operation requires supervision.
+Behold, your agenda. Let us examine the scale of this undertaking.
+1. [T] [ ] first
+2. [T] [X] second
+Unable to save tasks. No changes were applied. Check the task file, permissions, free space, and support for atomic file replacement.
+Unable to save tasks. No changes were applied. Check the task file, permissions, free space, and support for atomic file replacement.
+Unable to save tasks. No changes were applied. Check the task file, permissions, free space, and support for atomic file replacement.
+Unable to save tasks. No changes were applied. Check the task file, permissions, free space, and support for atomic file replacement.
+Unable to save tasks. No changes were applied. Check the task file, permissions, free space, and support for atomic file replacement.
+Behold, your agenda. Let us examine the scale of this undertaking.
+1. [T] [ ] first
+2. [T] [X] second
+Very well. Do come back. I mean, someone must supervise your progress.
+```
+
+## Test Case 14: Handle denied reads
+
+### Aim
+
+Do not treat unreadable storage as an empty writable task file.
+
+### Setup
+
+```sh
+mkdir -p data
+printf 'T | 0 | secret\n' > data/stewie.txt
+chmod 000 data/stewie.txt
+```
+
+### Inputs
+
+```text
+todo new
+list
+bye
+```
+
+### Expected output
+
+```text
+███████╗ ████████╗ ███████╗ ██╗    ██╗ ██╗ ███████╗
+██╔════╝ ╚══██╔══╝ ██╔════╝ ██║    ██║ ██║ ██╔════╝
+███████╗    ██║    █████╗   ██║ █╗ ██║ ██║ █████╗
+╚════██║    ██║    ██╔══╝   ██║███╗██║ ██║ ██╔══╝
+███████║    ██║    ███████╗ ╚███╔███╔╝ ██║ ███████╗
+╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
+
+Ah, there you are. I'm Stewie.
+Tell me your tasks. Clearly, this operation requires supervision.
+Storage warning: Unable to read the task file. Tasks are read-only. Check the file path, permissions, and UTF-8 content, then restart.
+Tasks are read-only. Back up and repair the task file, then restart.
+Behold, your agenda. Let us examine the scale of this undertaking.
+No tasks to show. How suspiciously serene. Try adding a task or checking your search.
+Very well. Do come back. I mean, someone must supervise your progress.
+```
+
+## Test Case 15: Handle invalid UTF-8
+
+### Aim
+
+Reject undecodable file content and protect the original bytes.
+
+### Setup
+
+```sh
+mkdir -p data
+printf '\377' > data/stewie.txt
+```
+
+### Inputs
+
+```text
+todo new
+list
+bye
+```
+
+### Expected output
+
+```text
+███████╗ ████████╗ ███████╗ ██╗    ██╗ ██╗ ███████╗
+██╔════╝ ╚══██╔══╝ ██╔════╝ ██║    ██║ ██║ ██╔════╝
+███████╗    ██║    █████╗   ██║ █╗ ██║ ██║ █████╗
+╚════██║    ██║    ██╔══╝   ██║███╗██║ ██║ ██╔══╝
+███████║    ██║    ███████╗ ╚███╔███╔╝ ██║ ███████╗
+╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
+
+Ah, there you are. I'm Stewie.
+Tell me your tasks. Clearly, this operation requires supervision.
+Storage warning: Unable to read the task file. Tasks are read-only. Check the file path, permissions, and UTF-8 content, then restart.
+Tasks are read-only. Back up and repair the task file, then restart.
+Behold, your agenda. Let us examine the scale of this undertaking.
+No tasks to show. How suspiciously serene. Try adding a task or checking your search.
 Very well. Do come back. I mean, someone must supervise your progress.
 ```

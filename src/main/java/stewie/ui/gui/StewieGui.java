@@ -15,6 +15,7 @@ import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
@@ -34,6 +35,7 @@ import javafx.util.Duration;
 import stewie.model.TaskList;
 import stewie.parser.Command;
 import stewie.parser.Parser;
+import stewie.storage.StorageException;
 import stewie.ui.Dialogue;
 
 /**
@@ -124,6 +126,9 @@ public class StewieGui extends BorderPane {
         setLeft(createSidebar());
         setCenter(chatPanel);
         addWelcomeMessage();
+        if (!taskList.getLoadWarning().isEmpty()) {
+            appendMessage(false, taskList.getLoadWarning());
+        }
         refreshTaskSummary();
     }
 
@@ -349,23 +354,36 @@ public class StewieGui extends BorderPane {
             card.setOpacity(0.4);
         }
         statusBox.setOnAction(event -> {
-            if (isDone) {
-                taskList.markAsUndone(index);
-            } else {
-                taskList.markAsDone(index);
-                PauseTransition removalDelay = new PauseTransition(Duration.seconds(3));
-                completionDelays.put(index, removalDelay);
-                removalDelay.setOnFinished(finishedEvent -> {
-                    completionDelays.remove(index);
-                    refreshListPanel();
-                });
-                removalDelay.play();
+            try {
+                if (isDone) {
+                    taskList.markAsUndone(index);
+                } else {
+                    taskList.markAsDone(index);
+                    PauseTransition removalDelay = new PauseTransition(Duration.seconds(3));
+                    completionDelays.put(index, removalDelay);
+                    removalDelay.setOnFinished(finishedEvent -> {
+                        completionDelays.remove(index);
+                        refreshListPanel();
+                    });
+                    removalDelay.play();
+                }
+            } catch (StorageException exception) {
+                statusBox.setSelected(isDone);
+                showStorageError(exception);
             }
             refreshTaskSummary();
             refreshListPanel();
         });
         card.getChildren().add(statusBox);
         return card;
+    }
+
+    /** Displays a failed card action even when the user is currently viewing My List. */
+    private void showStorageError(StorageException exception) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setHeaderText("Task change was not saved");
+        alert.setContentText(exception.getMessage());
+        alert.showAndWait();
     }
 
     /**
@@ -515,6 +533,8 @@ public class StewieGui extends BorderPane {
                                     + "`mark`, `unmark`, `delete`, or `update`.");
                     break;
             }
+        } catch (StorageException exception) {
+            appendMessage(false, exception.getMessage());
         } catch (IllegalArgumentException exception) {
             appendMessage(false, "A slight flaw in your plan: " + exception.getMessage());
         }
@@ -708,10 +728,16 @@ public class StewieGui extends BorderPane {
             doneBox.setSelected(isDone);
             doneBox.getStyleClass().add("task-check");
             doneBox.setOnAction(event -> {
-                if (doneBox.isSelected()) {
-                    taskList.markAsDone(index - 1);
-                } else {
-                    taskList.markAsUndone(index - 1);
+                try {
+                    if (doneBox.isSelected()) {
+                        taskList.markAsDone(index - 1);
+                    } else {
+                        taskList.markAsUndone(index - 1);
+                    }
+                } catch (StorageException exception) {
+                    doneBox.setSelected(isDone);
+                    showStorageError(exception);
+                    return;
                 }
                 refreshTaskSummary();
                 showTaskList("Status revised. Our little operation advances:");
@@ -721,7 +747,12 @@ public class StewieGui extends BorderPane {
             Button deleteButton = new Button("×");
             deleteButton.getStyleClass().add("delete-button");
             deleteButton.setOnAction(event -> {
-                taskList.deleteTask(index - 1);
+                try {
+                    taskList.deleteTask(index - 1);
+                } catch (StorageException exception) {
+                    showStorageError(exception);
+                    return;
+                }
                 refreshTaskSummary();
                 showTaskList("Dismissed from the agenda. Here is what remains:");
             });

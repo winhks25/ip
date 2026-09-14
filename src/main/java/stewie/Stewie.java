@@ -5,6 +5,7 @@ import java.util.Scanner;
 import stewie.model.TaskList;
 import stewie.parser.Command;
 import stewie.parser.Parser;
+import stewie.storage.StorageException;
 import stewie.ui.cli.Ui;
 
 /**
@@ -29,6 +30,9 @@ public class Stewie {
      */
     public void run() {
         Ui.greetUser();
+        if (!taskList.getLoadWarning().isEmpty()) {
+            System.out.println(taskList.getLoadWarning());
+        }
         Scanner scanner = new Scanner(System.in);
 
         // Conversation starts here
@@ -75,6 +79,8 @@ public class Stewie {
                                 + "+ description!");
                         break;
                 }
+            } catch (StorageException exception) {
+                System.out.println(exception.getMessage());
             } catch (IllegalArgumentException e) {
                 System.out.println("A slight flaw in your plan: " + e.getMessage());
             }
