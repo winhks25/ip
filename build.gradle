@@ -17,9 +17,28 @@ jacoco {
 
 jacocoTestReport {
     dependsOn test
+    executionData file('build/jacoco/test.exec'), file('build/jacoco/cli.exec')
     reports {
         html.required = true
         xml.required = true
+    }
+}
+
+// Keep the complete report above; this companion report separates headless code from native GUI checks.
+tasks.register('jacocoCoreReport', JacocoReport) {
+    group = 'verification'
+    description = 'Reports model, parser, storage, and CLI coverage, excluding the native JavaFX interface.'
+    dependsOn test
+    executionData file('build/jacoco/test.exec'), file('build/jacoco/cli.exec')
+    sourceDirectories.setFrom(sourceSets.main.allSource.srcDirs)
+    classDirectories.setFrom(sourceSets.main.output.classesDirs.asFileTree.matching {
+        exclude 'stewie/ui/gui/**'
+    })
+    reports {
+        html.required = true
+        html.outputLocation = layout.buildDirectory.dir('reports/jacoco/core/html')
+        xml.required = true
+        xml.outputLocation = layout.buildDirectory.file('reports/jacoco/core/jacocoCoreReport.xml')
     }
 }
 
@@ -49,6 +68,10 @@ javafx {
 
 test {
     useJUnitPlatform()
+    systemProperty 'stewie.cliCoverageFile', layout.buildDirectory.file('jacoco/cli.exec').get().asFile.absolutePath
+    doFirst {
+        delete layout.buildDirectory.file('jacoco/cli.exec')
+    }
 
     testLogging {
         events 'passed', 'skipped', 'failed'

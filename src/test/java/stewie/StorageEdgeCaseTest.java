@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -149,6 +150,25 @@ public class StorageEdgeCaseTest {
         Files.delete(file);
         assertThrows(StorageException.class, () -> storage.saveToDisk(new ArrayList<>()));
         assertFalse(Files.exists(file));
+    }
+
+    /** Verifies a symlink substituted after loading cannot redirect a subsequent save. */
+    @Test
+    public void saveTasks_protectsAgainstSubstitutedSymbolicLink() throws IOException {
+        assumeTrue(Files.getFileStore(directory).supportsFileAttributeView("posix"),
+                "Symbolic-link checks require a POSIX test environment");
+        Path file = directory.resolve("stewie.txt");
+        Path target = directory.resolve("other.txt");
+        Files.writeString(file, "T | 0 | original");
+        Files.writeString(target, "T | 0 | original");
+        Storage storage = new Storage(file);
+        storage.loadFromDisk();
+        Files.delete(file);
+        Files.createSymbolicLink(file, target);
+        assertEquals("The task file changed outside Stewie. Restart before making changes.",
+                assertThrows(StorageException.class, () -> storage.saveToDisk(new ArrayList<>())).getMessage());
+        assertTrue(Files.isSymbolicLink(file));
+        assertEquals("T | 0 | original", Files.readString(target));
     }
 
     /** Verifies replacing the file with a directory yields a safe read or save error. */
