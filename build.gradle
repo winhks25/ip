@@ -23,9 +23,10 @@ dependencies {
     String jUnitVersion = '5.14.4'
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:${jUnitVersion}"
-
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${jUnitVersion}"
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.14.4'
+    implementation 'org.kordamp.ikonli:ikonli-javafx:12.4.0'
+    implementation 'org.kordamp.ikonli:ikonli-feather-pack:12.4.0'
 }
 
 javafx {
@@ -60,6 +61,7 @@ jar {
 
 shadowJar {
     archiveFileName = 'stewie.jar'
+    mergeServiceFiles()
 }
 
 run {

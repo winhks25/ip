@@ -1,16 +1,23 @@
 package stewie.ui.gui;
 
+import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.util.Duration;
+import org.kordamp.ikonli.javafx.FontIcon;
 import stewie.model.TaskList;
 import stewie.parser.Command;
 import stewie.parser.Parser;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,11 +31,62 @@ public class StewieGui extends BorderPane {
     private static final Pattern TASK_PATTERN = Pattern.compile("\\[([TDE])] \\[(X| )] (.*)");
     private static final String[] QUICK_COMMANDS = {"todo plan my week", "list", "help"};
 
+    private static final String COMMAND_HELP = """
+            todo <description>
+            Add a task without a date.
+
+            deadline <description> /by <date>
+            Add a task with a deadline.
+
+            event <description> /from <date> /to <date>
+            Add an event with start and end dates.
+
+            list
+            Show all tasks and their numbers.
+
+            find <keyword> [more keywords]
+            Find tasks matching keywords.
+
+            mark <number>
+            Mark a task as done.
+
+            unmark <number>
+            Mark a task as undone.
+
+            delete <number>
+            Remove a task.
+
+            update <number> [description] [d/<date>] [from/<date>] [to/<date>]
+            Change one or more fields; omitted fields stay unchanged.
+            Use d/ or by/ for deadlines, and from/ or to/ for events.
+
+            help
+            Show this command reference in Chat.
+
+            bye
+            Show a farewell message in Chat.
+
+            Replace <...> with your values; [...] means optional.
+            Task numbers start at 1. Use list to check the current numbers.
+            Dates include 2026-08-12, 12/08/2026, 12-08-2026, 12.08.2026,
+            12 Aug 2026, 12 August 2026, Aug 12, 2026, or August 12, 2026.
+            Example: deadline submit report /by 12/08/2026
+            """;
+
+    private final Image stewiePhoto = new Image(
+            StewieGui.class.getResource("/images/stewie_photo.png").toExternalForm());
     private final TaskList taskList;
     private final VBox conversation;
     private final ScrollPane conversationScroll;
     private final Label taskSummary;
     private final TextField messageField;
+    private final VBox chatPanel;
+    private final VBox listPanel;
+    private final VBox helpPanel;
+    private final VBox listTaskContainer;
+    private Timeline scrollAnimation;
+    // Keeps each newly completed task visible until its individual delay expires.
+    private final Map<Integer, PauseTransition> completionDelays = new HashMap<>();
 
     /**
      * Creates a chat workspace connected to the supplied task list.
@@ -41,9 +99,13 @@ public class StewieGui extends BorderPane {
         this.conversationScroll = createConversationScroll();
         this.taskSummary = new Label();
         this.messageField = new TextField();
+        this.chatPanel = createChatPanel();
+        this.listTaskContainer = new VBox(8);
+        this.listPanel = createListPanel();
+        this.helpPanel = createHelpPanel();
 
         setLeft(createSidebar());
-        setCenter(createChatPanel());
+        setCenter(chatPanel);
         addWelcomeMessage();
         refreshTaskSummary();
     }
@@ -71,10 +133,43 @@ public class StewieGui extends BorderPane {
         brand.getChildren().addAll(logo, brandText);
 
         VBox navigation = new VBox(8);
-        navigation.getChildren().addAll(
-                createNavigationButton("⌂", "Home", true),
-                createNavigationButton("⌕", "Discover", false),
-                createNavigationButton("♡", "Saved ideas", false));
+        Button chatButton = createNavigationButton("fth-message-circle", "Chat", true);
+        Button listButton = createNavigationButton("fth-list", "My List", false);
+        Button helpButton = createNavigationButton("fth-help-circle", "Help", false);
+        chatButton.setOnAction(event -> {
+            helpButton.getStyleClass().remove("navigation-button-active");
+            completionDelays.values().forEach(PauseTransition::stop);
+            completionDelays.clear();
+            setCenter(chatPanel);
+            listButton.getStyleClass().remove("navigation-button-active");
+            if (!chatButton.getStyleClass().contains("navigation-button-active")) {
+                chatButton.getStyleClass().add("navigation-button-active");
+            }
+        });
+        listButton.setOnAction(event -> {
+            helpButton.getStyleClass().remove("navigation-button-active");
+            if (getCenter() != listPanel) {
+                completionDelays.values().forEach(PauseTransition::stop);
+                completionDelays.clear();
+                refreshListPanel();
+            }
+            setCenter(listPanel);
+            chatButton.getStyleClass().remove("navigation-button-active");
+            if (!listButton.getStyleClass().contains("navigation-button-active")) {
+                listButton.getStyleClass().add("navigation-button-active");
+            }
+        });
+        helpButton.setOnAction(event -> {
+            completionDelays.values().forEach(PauseTransition::stop);
+            completionDelays.clear();
+            setCenter(helpPanel);
+            chatButton.getStyleClass().remove("navigation-button-active");
+            listButton.getStyleClass().remove("navigation-button-active");
+            if (!helpButton.getStyleClass().contains("navigation-button-active")) {
+                helpButton.getStyleClass().add("navigation-button-active");
+            }
+        });
+        navigation.getChildren().addAll(chatButton, listButton, helpButton);
 
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
@@ -134,6 +229,147 @@ public class StewieGui extends BorderPane {
     }
 
     /**
+     * Creates the My List panel with a heading and a scrollable task container.
+     *
+     * @return the styled list panel
+     */
+    private VBox createListPanel() {
+        VBox listPanelBox = new VBox();
+        listPanelBox.getStyleClass().add("chat-panel");
+
+        HBox header = new HBox(14);
+        header.getStyleClass().add("chat-header");
+        header.setAlignment(Pos.CENTER_LEFT);
+
+        Label title = new Label("My List");
+        title.getStyleClass().add("chat-title");
+
+        header.getChildren().add(title);
+        listTaskContainer.getStyleClass().add("task-group");
+        listTaskContainer.setPadding(new Insets(28, 48, 28, 48));
+
+        ScrollPane listScroll = new ScrollPane(listTaskContainer);
+        listScroll.getStyleClass().add("conversation-scroll");
+        listScroll.setFitToWidth(true);
+        listScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        listScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        VBox.setVgrow(listScroll, Priority.ALWAYS);
+
+        listPanelBox.getChildren().addAll(header, listScroll);
+        return listPanelBox;
+    }
+
+    /**
+     * Creates a scrollable reference containing every GUI command format.
+     *
+     * @return The styled Help panel.
+     */
+    private VBox createHelpPanel() {
+        VBox panel = new VBox();
+        panel.getStyleClass().add("chat-panel");
+        HBox header = new HBox();
+        header.getStyleClass().add("chat-header");
+        Label title = new Label("Help — Command formats");
+        title.getStyleClass().add("chat-title");
+        header.getChildren().add(title);
+
+        Label commands = new Label(COMMAND_HELP);
+        commands.setWrapText(true);
+        commands.getStyleClass().addAll("message-bubble", "assistant-bubble");
+        VBox content = new VBox(commands);
+        content.setPadding(new Insets(28, 48, 28, 48));
+        ScrollPane scroll = new ScrollPane(content);
+        scroll.getStyleClass().add("conversation-scroll");
+        scroll.setFitToWidth(true);
+        scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        VBox.setVgrow(scroll, Priority.ALWAYS);
+        panel.getChildren().addAll(header, scroll);
+        return panel;
+    }
+
+    /**
+     * Displays unfinished and completed tasks while preserving their original task numbers.
+     */
+    private void refreshListPanel() {
+        listTaskContainer.getChildren().clear();
+        VBox unfinishedTasks = new VBox(8);
+        VBox completedTasks = new VBox(8);
+        String[] tasks = taskList.produceTaskList();
+        for (int index = 0; index < tasks.length; index++) {
+            Matcher matcher = TASK_PATTERN.matcher(tasks[index]);
+            boolean isDone = matcher.matches() && "X".equals(matcher.group(2));
+            boolean isPending = completionDelays.containsKey(index);
+            HBox card = createListTaskCard(index, tasks[index], isDone, isPending);
+            if (isDone && !isPending) {
+                completedTasks.getChildren().add(card);
+            } else {
+                unfinishedTasks.getChildren().add(card);
+            }
+        }
+
+        addListSection("Unfinished", unfinishedTasks, "No unfinished tasks. Add a task in Chat to get started.");
+        addListSection("Completed", completedTasks, "No completed tasks yet.");
+    }
+
+    /**
+     * Creates a list card whose checkbox completes or reopens the original task.
+     *
+     * @param index the zero-based task index
+     * @param taskText the formatted task description
+     * @param isDone whether the task is complete
+     * @param isPending whether its completion delay is still running
+     * @return the task card with its status control
+     */
+    private HBox createListTaskCard(int index, String taskText, boolean isDone, boolean isPending) {
+        HBox card = createTaskCard(index + 1, taskText, false);
+        CheckBox statusBox = new CheckBox();
+        statusBox.getStyleClass().addAll("task-check", "list-complete-check");
+        statusBox.setSelected(isDone);
+        statusBox.setDisable(isPending);
+        statusBox.setAccessibleText("Mark task " + (index + 1) + (isDone ? " as undone" : " as done"));
+        if (isPending) {
+            card.setOpacity(0.4);
+        }
+        statusBox.setOnAction(event -> {
+            if (isDone) {
+                taskList.markAsUndone(index);
+            } else {
+                taskList.markAsDone(index);
+                PauseTransition removalDelay = new PauseTransition(Duration.seconds(3));
+                completionDelays.put(index, removalDelay);
+                removalDelay.setOnFinished(finishedEvent -> {
+                    completionDelays.remove(index);
+                    refreshListPanel();
+                });
+                removalDelay.play();
+            }
+            refreshTaskSummary();
+            refreshListPanel();
+        });
+        card.getChildren().add(statusBox);
+        return card;
+    }
+
+    /**
+     * Adds a titled task section, showing a message when it has no cards.
+     *
+     * @param title the section heading
+     * @param cards the task cards in this section
+     * @param emptyText the message for an empty section
+     */
+    private void addListSection(String title, VBox cards, String emptyText) {
+        Label heading = new Label(title);
+        heading.getStyleClass().add("chat-title");
+        if (cards.getChildren().isEmpty()) {
+            Label emptyMessage = new Label(emptyText);
+            emptyMessage.setWrapText(true);
+            emptyMessage.getStyleClass().add("muted-label");
+            cards.getChildren().add(emptyMessage);
+        }
+        listTaskContainer.getChildren().addAll(heading, cards);
+    }
+
+    /**
      * Creates the scrollable message area.
      *
      * @return a scroll pane containing the conversation
@@ -166,6 +402,7 @@ public class StewieGui extends BorderPane {
             chip.getStyleClass().add("quick-chip");
             chip.setOnAction(event -> {
                 messageField.setText(command);
+                sendMessage();
                 messageField.requestFocus();
             });
             quickCommands.getChildren().add(chip);
@@ -217,10 +454,7 @@ public class StewieGui extends BorderPane {
      */
     private void handleCommand(String input) {
         if ("help".equals(input)) {
-            appendMessage(false,
-                    "I can help with `todo`, `event`, `deadline`, `list`, `find`, `mark`, `unmark`, `delete`, and "
-                            + "`update`. "
-                            + "For example: `todo call Mum`.");
+            appendMessage(false, COMMAND_HELP);
             return;
         }
 
@@ -474,6 +708,7 @@ public class StewieGui extends BorderPane {
                 }
                 refreshTaskSummary();
                 showTaskList("Updated — your list is looking good:");
+                scrollToBottom();
             });
 
             Button deleteButton = new Button("×");
@@ -534,25 +769,41 @@ public class StewieGui extends BorderPane {
     }
 
     /**
-     * Scrolls the conversation to its newest content.
+     * Smoothly scrolls the conversation to its newest content after measuring new cards.
      */
     private void scrollToBottom() {
-        Platform.runLater(() -> conversationScroll.setVvalue(1.0));
+        Platform.runLater(() -> {
+            if (scrollAnimation != null) {
+                scrollAnimation.stop();
+            }
+            // Measure newly added cards before scrolling to the updated bottom edge.
+            chatPanel.applyCss();
+            chatPanel.layout();
+            scrollAnimation = new Timeline(
+                    new KeyFrame(Duration.ZERO,
+                            new KeyValue(conversationScroll.vvalueProperty(), conversationScroll.getVvalue())),
+                    new KeyFrame(Duration.millis(450),
+                            new KeyValue(conversationScroll.vvalueProperty(), conversationScroll.getVmax(),
+                                    Interpolator.EASE_BOTH)));
+            scrollAnimation.play();
+        });
     }
 
     /**
-     * Creates a circular Stewie logo with a gradient-themed style class.
+     * Creates a Stewie image logo while preserving the original proportions.
      *
-     * @param size the diameter of the logo
+     * @param size the width and height available for the logo
      * @return a logo node
      */
     private StackPane createLogo(double size) {
-        Circle circle = new Circle(size / 2);
-        circle.getStyleClass().add("logo-circle");
-        Label mark = new Label("S");
-        mark.getStyleClass().add("logo-mark");
+        ImageView portrait = new ImageView(stewiePhoto);
+        portrait.setFitWidth(size);
+        portrait.setFitHeight(size);
+        portrait.setPreserveRatio(true);
+        portrait.setSmooth(true);
+        portrait.setAccessibleText("Stewie");
 
-        StackPane logo = new StackPane(circle, mark);
+        StackPane logo = new StackPane(portrait);
         logo.setMinSize(size, size);
         logo.setPrefSize(size, size);
         logo.setMaxSize(size, size);
@@ -568,7 +819,11 @@ public class StewieGui extends BorderPane {
      * @return a navigation button
      */
     private Button createNavigationButton(String icon, String labelText, boolean isActive) {
-        Button button = new Button(icon + "    " + labelText);
+        FontIcon navigationIcon = new FontIcon(icon);
+        navigationIcon.setIconSize(20);
+        Button button = new Button(labelText, navigationIcon);
+        button.setGraphicTextGap(16);
+        navigationIcon.iconColorProperty().bind(button.textFillProperty());
         button.setMaxWidth(Double.MAX_VALUE);
         button.setAlignment(Pos.CENTER_LEFT);
         button.getStyleClass().add("navigation-button");

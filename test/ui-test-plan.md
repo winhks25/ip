@@ -2,6 +2,53 @@
 
 This plan tests the Stewie console application. Tests are run as separate sessions so each case starts with an empty task list.
 
+## Additional GUI navigation checks
+
+These manual checks supplement the console cases below. Launch the GUI with Java 25 using `./gradlew run`.
+
+- Verify the sidebar brand and chat header show the Stewie resource image instead of the S logo.
+  The whole image should be visible with its original proportions, including after resizing the window.
+
+- Click each suggested command in Chat (`todo plan my week`, `list`, and `help`): immediately send the
+  selected command once, show its response, clear the input field, and smoothly scroll to the newest content.
+  No additional Enter key or Send click is required. Return keyboard focus to the input field.
+
+- Click Help from Chat and My List: show "Help — Command formats" with formats for todo, deadline,
+  event, list, find, mark, unmark, delete, update, help, and bye. Show optional update fields,
+  the by/ alias, task numbering, and date examples. Scroll to reach the final example.
+- Click Help repeatedly: show one reference and only one active navigation highlight.
+  Return to Chat: preserve conversation and unsent input. Enter help: show the same command reference.
+- Switch from My List to Help during a completion delay, then return to My List: show the current
+  task state without a stale timer changing the displayed cards.
+- Click My List with no saved tasks: show the My List heading and
+  "No unfinished tasks. Add a task in Chat to get started."
+- Add todo, event, and deadline tasks in Chat, then click My List: show unfinished tasks in order,
+  including their types, dates, original task numbers, and a circular checkbox on the right.
+- Click a completion checkbox: mark that task done and update the sidebar count immediately; dim its card,
+  disable its checkbox, and move the card to Completed after three seconds while the GUI remains responsive.
+  Complete another task after the first disappears: mark the correct original task, despite the filtered list.
+- Complete two tasks one second apart: each card stays dimmed for its own three seconds before disappearing.
+  Clicking My List again while already selected must not shorten either delay.
+- Switch to Chat during a delay and reopen My List: show the current unfinished tasks; an old timer must not
+  remove any newly displayed card.
+- Reopen My List and restart the app: completed tasks remain in Completed with checked circular checkboxes. Chat's list command still shows them as done.
+- Complete all tasks: show the unfinished empty-state message and all tasks under Completed. Unmark a task in Chat: it reappears in My List.
+- Tab to a completion checkbox and press Space: complete the task just as with a mouse click.
+- Switch back to Chat: preserve the conversation and any unsent input.
+- Change, mark, or delete a task in Chat and reopen My List: show the latest state without duplicate cards.
+- Click the selected tab repeatedly: retain one active highlight and one copy of each task.
+- With enough tasks to exceed the window height, scroll to reach the last task.
+- In Chat, enter `list` with enough conversation history to require scrolling, then check a task:
+  append the updated list and smoothly scroll to the bottom over approximately 450 milliseconds,
+  easing into and out of the motion so its newest cards are visible without an abrupt jump.
+  Uncheck a task in the latest list and verify the same behavior. Repeat after manually scrolling upward.
+- Trigger another chat update during scrolling: replace the previous animation and settle at the newest bottom.
+
+- In Completed, uncheck a task: save it as undone, move it immediately to Unfinished, and update the sidebar count.
+  Restart the app and verify the task remains unfinished.
+- Reopen a completed task while other tasks are dimmed: their individual three-second delays remain intact.
+- With no completed tasks, show "No completed tasks yet." beneath the Completed heading.
+
 ## Shared setup and launch
 
 From the repository root, use Java 25:
