@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -88,8 +89,10 @@ public class StorageTest {
         TaskList tasks = new TaskList(new Storage(file));
         tasks.addToDo("first");
         byte[] before = Files.readAllBytes(file);
+        assumeTrue(Files.getFileStore(file).supportsFileAttributeView("posix"), "Requires POSIX permissions");
         Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("r--r--r--"));
         try {
+            assumeTrue(!Files.isWritable(file), "Requires a user subject to file permissions");
             assertThrows(StorageException.class, () -> tasks.deleteTask(0));
             assertEquals(1, tasks.produceTaskList().length);
             assertArrayEquals(before, Files.readAllBytes(file));
@@ -108,8 +111,10 @@ public class StorageTest {
         TaskList tasks = new TaskList(new Storage(file));
         tasks.addToDo("first");
         byte[] before = Files.readAllBytes(file);
+        assumeTrue(Files.getFileStore(data).supportsFileAttributeView("posix"), "Requires POSIX permissions");
         Files.setPosixFilePermissions(data, PosixFilePermissions.fromString("r-x------"));
         try {
+            assumeTrue(!Files.isWritable(data), "Requires a user subject to directory permissions");
             assertThrows(StorageException.class, () -> tasks.addToDo("second"));
             assertArrayEquals(before, Files.readAllBytes(file));
             assertEquals(1, tasks.produceTaskList().length);
@@ -122,7 +127,7 @@ public class StorageTest {
         }
     }
 
-    /** Verifies invalid bytes and symbolic links cannot be overwritten as apparently empty data. */
+    /** Verifies invalid bytes cannot be overwritten as apparently empty data. */
     @Test
     public void loadTasks_protectsUnreadableSources() throws IOException {
         Path file = directory.resolve("stewie.txt");
@@ -132,12 +137,22 @@ public class StorageTest {
         assertFalse(tasks.getLoadWarning().isEmpty());
         assertThrows(StorageException.class, () -> tasks.addToDo("new"));
         assertArrayEquals(invalidBytes, Files.readAllBytes(file));
+    }
+
+    /** Verifies symbolic links cannot redirect reads or writes to another task file. */
+    @Test
+    public void loadTasks_protectsSymbolicLinks() throws IOException {
+        assumeTrue(Files.getFileStore(directory).supportsFileAttributeView("posix"),
+                "Symbolic-link checks require a POSIX test environment");
+        Path file = directory.resolve("stewie.txt");
+        Files.writeString(file, "T | 0 | original");
         Path link = directory.resolve("link.txt");
         Files.createSymbolicLink(link, file);
         Storage storage = new Storage(link);
         storage.loadFromDisk();
         assertThrows(StorageException.class, () -> storage.saveToDisk(new ArrayList<>()));
         assertTrue(Files.isSymbolicLink(link));
+        assertEquals("T | 0 | original", Files.readString(file));
     }
 
     /** Verifies duplicate records, invalid statuses, field counts, and event ranges are diagnosed individually. */

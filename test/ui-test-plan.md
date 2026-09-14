@@ -2,6 +2,11 @@
 
 This plan tests the Stewie console application. Tests are run as separate sessions so each case starts with an empty task list.
 
+JUnit coverage and the OS, language, resolution, and scaling matrix are documented in
+[the testing guide](README.md). The exact console expectations below use an English JVM locale.
+Under a Burmese JVM locale, task-count confirmations use Burmese digits (for example, `၁`);
+task dates still use English month names. `CliTest` checks both locale behaviors separately.
+
 ## Additional GUI navigation checks
 
 - Add two tasks, enter `list`, then delete the first task. Click a checkbox or delete button
