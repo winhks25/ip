@@ -53,3 +53,6 @@ Run the console regression plan with Java 25 using
 `python3 test/run-ui-tests.py out/ui-test-session.txt`. Cases run in temporary
 directories and preserve your real task file. The session record contains every
 input, expected-output comparison result, stdout, stderr, and exit status.
+
+For JUnit tests, coverage reports, and the cross-platform manual checklist, see
+[the testing guide](test/README.md).
