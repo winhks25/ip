@@ -587,6 +587,7 @@ public class StewieGui extends BorderPane {
                 }
                 refreshTaskSummary();
                 showTaskList("Updated — your list is looking good:");
+                scrollToBottom();
             });
 
             Button deleteButton = new Button("×");
@@ -650,7 +651,12 @@ public class StewieGui extends BorderPane {
      * Scrolls the conversation to its newest content.
      */
     private void scrollToBottom() {
-        Platform.runLater(() -> conversationScroll.setVvalue(1.0));
+        Platform.runLater(() -> {
+            // Measure newly added cards before scrolling to the updated bottom edge.
+            chatPanel.applyCss();
+            chatPanel.layout();
+            conversationScroll.setVvalue(conversationScroll.getVmax());
+        });
     }
 
     /**

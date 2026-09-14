@@ -1,6 +1,4 @@
 T | 1 | read book
-T | 0 | eat food
+T | 1 | eat food
 E | 0 | hangout with friends | 07 Aug 2026 | 09 Sep 1999
-T | 1 | go to poojana and read book
-T | 0 | return book at clb
-T | 0 | read book after meeting
+T | 0 | finish 2103

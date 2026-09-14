@@ -24,6 +24,9 @@ These manual checks supplement the console cases below. Launch the GUI with Java
 - Change, mark, or delete a task in Chat and reopen My List: show the latest state without duplicate cards.
 - Click the selected tab repeatedly: retain one active highlight and one copy of each task.
 - With enough tasks to exceed the window height, scroll to reach the last task.
+- In Chat, enter `list` with enough conversation history to require scrolling, then check a task:
+  append the updated list and automatically scroll to the bottom so its newest cards are visible.
+  Uncheck a task in the latest list and verify the same behavior. Repeat after manually scrolling upward.
 
 ## Shared setup and launch
 
