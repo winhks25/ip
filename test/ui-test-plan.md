@@ -25,8 +25,10 @@ These manual checks supplement the console cases below. Launch the GUI with Java
 - Click the selected tab repeatedly: retain one active highlight and one copy of each task.
 - With enough tasks to exceed the window height, scroll to reach the last task.
 - In Chat, enter `list` with enough conversation history to require scrolling, then check a task:
-  append the updated list and automatically scroll to the bottom so its newest cards are visible.
+  append the updated list and smoothly scroll to the bottom over approximately 450 milliseconds,
+  easing into and out of the motion so its newest cards are visible without an abrupt jump.
   Uncheck a task in the latest list and verify the same behavior. Repeat after manually scrolling upward.
+- Trigger another chat update during scrolling: replace the previous animation and settle at the newest bottom.
 
 ## Shared setup and launch
 

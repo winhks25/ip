@@ -3,7 +3,11 @@ package stewie.ui.gui;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javafx.animation.Interpolator;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
 import javafx.animation.PauseTransition;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -44,6 +48,7 @@ public class StewieGui extends BorderPane {
     private final VBox chatPanel;
     private final VBox listPanel;
     private final VBox listTaskContainer;
+    private Timeline scrollAnimation;
 
     /**
      * Creates a chat workspace connected to the supplied task list.
@@ -648,14 +653,23 @@ public class StewieGui extends BorderPane {
     }
 
     /**
-     * Scrolls the conversation to its newest content.
+     * Smoothly scrolls the conversation to its newest content after measuring new cards.
      */
     private void scrollToBottom() {
         Platform.runLater(() -> {
+            if (scrollAnimation != null) {
+                scrollAnimation.stop();
+            }
             // Measure newly added cards before scrolling to the updated bottom edge.
             chatPanel.applyCss();
             chatPanel.layout();
-            conversationScroll.setVvalue(conversationScroll.getVmax());
+            scrollAnimation = new Timeline(
+                    new KeyFrame(Duration.ZERO,
+                            new KeyValue(conversationScroll.vvalueProperty(), conversationScroll.getVvalue())),
+                    new KeyFrame(Duration.millis(450),
+                            new KeyValue(conversationScroll.vvalueProperty(), conversationScroll.getVmax(),
+                                    Interpolator.EASE_BOTH)));
+            scrollAnimation.play();
         });
     }
 
