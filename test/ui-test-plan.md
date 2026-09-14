@@ -4,6 +4,17 @@ This plan tests the Stewie console application. Tests are run as separate sessio
 
 ## Additional GUI navigation checks
 
+- Verify Chat opens with "Ah, there you are. I'm Stewie." and the supervision greeting.
+  Send todo, deadline, event, list, mark, unmark, delete, update, find, help, and bye commands.
+  Confirm replies use dry, theatrical phrasing while task cards retain their descriptions, dates, and statuses.
+  Completion should say "Completed. Rather well done, actually. Let us not make a scene."
+  Bye should say "Very well. Do come back. I mean, someone must supervise your progress."
+- Send an unknown command, invalid task number, malformed event/deadline, and invalid date.
+  Confirm errors retain usable command guidance; invalid dates begin "A slight flaw in your plan:".
+  Search for an absent keyword: show "Nothing matches. Even my brilliance needs a clue. Try another keyword or `list`."
+- Verify Help in the sidebar and Chat includes the theatrical introduction and the unchanged command formats.
+
+
 These manual checks supplement the console cases below. Launch the GUI with Java 25 using `./gradlew run`.
 
 - Verify the sidebar brand and chat header show the Stewie resource image instead of the S logo.
@@ -21,7 +32,7 @@ These manual checks supplement the console cases below. Launch the GUI with Java
 - Switch from My List to Help during a completion delay, then return to My List: show the current
   task state without a stale timer changing the displayed cards.
 - Click My List with no saved tasks: show the My List heading and
-  "No unfinished tasks. Add a task in Chat to get started."
+  "No unfinished tasks. Remarkable. Add a task in Chat when ambition returns."
 - Add todo, event, and deadline tasks in Chat, then click My List: show unfinished tasks in order,
   including their types, dates, original task numbers, and a circular checkbox on the right.
 - Click a completion checkbox: mark that task done and update the sidebar count immediately; dim its card,
@@ -47,7 +58,7 @@ These manual checks supplement the console cases below. Launch the GUI with Java
 - In Completed, uncheck a task: save it as undone, move it immediately to Unfinished, and update the sidebar count.
   Restart the app and verify the task remains unfinished.
 - Reopen a completed task while other tasks are dimmed: their individual three-second delays remain intact.
-- With no completed tasks, show "No completed tasks yet." beneath the Completed heading.
+- With no completed tasks, show "No completed tasks yet. I await your first triumph." beneath the Completed heading.
 
 ## Shared setup and launch
 
@@ -100,31 +111,30 @@ bye
 ███████║    ██║    ███████╗ ╚███╔███╔╝ ██║ ███████╗
 ╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
 
-Hey there! I'm Stewie. 
-Wanna have a chat?
-Tell me whats on your list!!
-Got it! Added the following to your list.
+Ah, there you are. I'm Stewie.
+Tell me your tasks. Clearly, this operation requires supervision.
+Consider it recorded. A small triumph for competent administration.
 [T] [ ] buy milk
-Now you have 1 tasks in the list. 
-Got it! Added the following to your list.
+Your agenda now contains 1 task. Do try to keep up.
+Consider it recorded. A small triumph for competent administration.
 [E] [ ] team meeting (from: 10 Aug 2026 to: 11 Aug 2026)
-Now you have 2 tasks in the list. 
-Got it! Added the following to your list.
+Your agenda now contains 2 tasks. Do try to keep up.
+Consider it recorded. A small triumph for competent administration.
 [D] [ ] submit report (by: 12 Aug 2026)
-Now you have 3 tasks in the list. 
-Here is your list of tasks.
+Your agenda now contains 3 tasks. Do try to keep up.
+Behold, your agenda. Let us examine the scale of this undertaking.
 1. [T] [ ] buy milk
 2. [E] [ ] team meeting (from: 10 Aug 2026 to: 11 Aug 2026)
 3. [D] [ ] submit report (by: 12 Aug 2026)
-Here is your list of tasks.
+Behold, your agenda. Let us examine the scale of this undertaking.
 1. [T] [ ] buy milk
 2. [E] [X] team meeting (from: 10 Aug 2026 to: 11 Aug 2026)
 3. [D] [ ] submit report (by: 12 Aug 2026)
-Here is your list of tasks.
+Behold, your agenda. Let us examine the scale of this undertaking.
 1. [T] [ ] buy milk
 2. [E] [ ] team meeting (from: 10 Aug 2026 to: 11 Aug 2026)
 3. [D] [ ] submit report (by: 12 Aug 2026)
-Bye, see you later!
+Very well. Do come back. I mean, someone must supervise your progress.
 ```
 
 ## Test Case 4: Handle malformed and invalid commands
@@ -156,18 +166,17 @@ bye
 ███████║    ██║    ███████╗ ╚███╔███╔╝ ██║ ███████╗
 ╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
 
-Hey there! I'm Stewie. 
-Wanna have a chat?
-Tell me whats on your list!!
-Please add a command: todo, event, deadline, mark, unmark, delete, find, update, list, bye + description!
-Please add a command: todo, event, deadline, mark, unmark, delete, find, update, list, bye + description!
-Add event tasks in the format: event <description> /from <date or time> /to<date or time>
-Add deadline task in the format: deadline <description> /by <deadline>
-Please type in a valid task number in the format: mark <number>
-Please enter a valid task number in the format: unmark <number>.
-Here is your list of tasks.
-You have no task saved.
-Bye, see you later!
+Ah, there you are. I'm Stewie.
+Tell me your tasks. Clearly, this operation requires supervision.
+What precisely is the plan? Use a command: todo, event, deadline, mark, unmark, delete, find, update, list, bye + description!
+What precisely is the plan? Use a command: todo, event, deadline, mark, unmark, delete, find, update, list, bye + description!
+An event requires a schedule. Use: event <description> /from <date or time> /to <date or time>
+Even I need a deadline. Use: deadline <description> /by <deadline>
+That task exists only in your imagination. Use a listed number: mark <number>
+Numbers, please. Use: unmark <number>.
+Behold, your agenda. Let us examine the scale of this undertaking.
+No tasks to show. How suspiciously serene. Try adding a task or checking your search.
+Very well. Do come back. I mean, someone must supervise your progress.
 ```
 
 ## Test Case 6: Delete a task and handle invalid delete numbers
@@ -199,21 +208,20 @@ bye
 ███████║    ██║    ███████╗ ╚███╔███╔╝ ██║ ███████╗
 ╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
 
-Hey there! I'm Stewie. 
-Wanna have a chat?
-Tell me whats on your list!!
-Got it! Added the following to your list.
+Ah, there you are. I'm Stewie.
+Tell me your tasks. Clearly, this operation requires supervision.
+Consider it recorded. A small triumph for competent administration.
 [T] [ ] first
-Now you have 1 tasks in the list. 
-Got it! Added the following to your list.
+Your agenda now contains 1 task. Do try to keep up.
+Consider it recorded. A small triumph for competent administration.
 [T] [ ] second
-Now you have 2 tasks in the list. 
-Here is your list of tasks.
+Your agenda now contains 2 tasks. Do try to keep up.
+Behold, your agenda. Let us examine the scale of this undertaking.
 1. [T] [ ] second
-Please type in a valid task number in the format: delete <number>
-Please enter a valid task number in the format: delete <number>.
-Please enter a valid task number in the format: delete <number>.
-Bye, see you later!
+That task exists only in your imagination. Use a listed number: delete <number>
+Numbers, please. Use: delete <number>.
+Numbers, please. Use: delete <number>.
+Very well. Do come back. I mean, someone must supervise your progress.
 ```
 
 ## Test Case 7: Update every task type
@@ -251,34 +259,33 @@ bye
 ███████║    ██║    ███████╗ ╚███╔███╔╝ ██║ ███████╗
 ╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
 
-Hey there! I'm Stewie. 
-Wanna have a chat?
-Tell me whats on your list!!
-Got it! Added the following to your list.
+Ah, there you are. I'm Stewie.
+Tell me your tasks. Clearly, this operation requires supervision.
+Consider it recorded. A small triumph for competent administration.
 [T] [ ] buy milk
-Now you have 1 tasks in the list. 
-Got it! Added the following to your list.
+Your agenda now contains 1 task. Do try to keep up.
+Consider it recorded. A small triumph for competent administration.
 [E] [ ] team meeting (from: 10 Aug 2026 to: 11 Aug 2026)
-Now you have 2 tasks in the list. 
-Got it! Added the following to your list.
+Your agenda now contains 2 tasks. Do try to keep up.
+Consider it recorded. A small triumph for competent administration.
 [D] [ ] submit report (by: 12 Aug 2026)
-Now you have 3 tasks in the list. 
-Got it! Updated the following task.
+Your agenda now contains 3 tasks. Do try to keep up.
+Revised to your specifications. Yes, even that detail.
 [T] [ ] buy bread
-Got it! Updated the following task.
+Revised to your specifications. Yes, even that detail.
 [E] [X] planning meeting (from: 15 Aug 2026 to: 16 Aug 2026)
-Got it! Updated the following task.
+Revised to your specifications. Yes, even that detail.
 [D] [ ] file report (by: 20 Aug 2026)
-Got it! Updated the following task.
+Revised to your specifications. Yes, even that detail.
 [E] [X] planning meeting (from: 17 Aug 2026 to: 16 Aug 2026)
-Here is your list of tasks.
+Behold, your agenda. Let us examine the scale of this undertaking.
 1. [T] [ ] buy bread
 2. [E] [X] planning meeting (from: 17 Aug 2026 to: 16 Aug 2026)
 3. [D] [ ] file report (by: 20 Aug 2026)
-Please type in a valid task number in the format: update <number>
-Please enter fields to update in the format: update <number> [description] [d/<deadline>] [from/<from>] [to/<to>]
-Please enter fields to update in the format: update <number> [description] [d/<deadline>] [from/<from>] [to/<to>]
-Bye, see you later!
+That task exists only in your imagination. Use a listed number: update <number>
+A revision needs details. Use: update <number> [description] [d/<deadline>] [from/<from>] [to/<to>]
+A revision needs details. Use: update <number> [description] [d/<deadline>] [from/<from>] [to/<to>]
+Very well. Do come back. I mean, someone must supervise your progress.
 ```
 
 ## Test Case 5: Handle case and surrounding whitespace
@@ -305,15 +312,14 @@ BYE
 ███████║    ██║    ███████╗ ╚███╔███╔╝ ██║ ███████╗
 ╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
 
-Hey there! I'm Stewie. 
-Wanna have a chat?
-Tell me whats on your list!!
-Got it! Added the following to your list.
+Ah, there you are. I'm Stewie.
+Tell me your tasks. Clearly, this operation requires supervision.
+Consider it recorded. A small triumph for competent administration.
 [T] [ ] read book
-Now you have 1 tasks in the list. 
-Here is your list of tasks.
+Your agenda now contains 1 task. Do try to keep up.
+Behold, your agenda. Let us examine the scale of this undertaking.
 1. [T] [ ] read book
-Bye, see you later!
+Very well. Do come back. I mean, someone must supervise your progress.
 ```
 
 ## Test Case 1: Start and exit
@@ -338,10 +344,9 @@ bye
 ███████║    ██║    ███████╗ ╚███╔███╔╝ ██║ ███████╗
 ╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
 
-Hey there! I'm Stewie. 
-Wanna have a chat?
-Tell me whats on your list!!
-Bye, see you later!
+Ah, there you are. I'm Stewie.
+Tell me your tasks. Clearly, this operation requires supervision.
+Very well. Do come back. I mean, someone must supervise your progress.
 ```
 
 ## Test Case 2: Add and list a todo
@@ -368,13 +373,54 @@ bye
 ███████║    ██║    ███████╗ ╚███╔███╔╝ ██║ ███████╗
 ╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
 
-Hey there! I'm Stewie. 
-Wanna have a chat?
-Tell me whats on your list!!
-Got it! Added the following to your list.
+Ah, there you are. I'm Stewie.
+Tell me your tasks. Clearly, this operation requires supervision.
+Consider it recorded. A small triumph for competent administration.
 [T] [ ] read book
-Now you have 1 tasks in the list. 
-Here is your list of tasks.
+Your agenda now contains 1 task. Do try to keep up.
+Behold, your agenda. Let us examine the scale of this undertaking.
 1. [T] [ ] read book
-Bye, see you later!
+Very well. Do come back. I mean, someone must supervise your progress.
+```
+
+## Test Case 8: Find tasks and recover from invalid dates
+
+### Aim
+
+Verify searches keep their results and personality, and a date error explains the problem without adding a task.
+
+### Inputs
+
+```text
+todo buy milk
+find milk
+find absent
+deadline report /by impossible
+list
+bye
+```
+
+### Expected output
+
+```text
+███████╗ ████████╗ ███████╗ ██╗    ██╗ ██╗ ███████╗
+██╔════╝ ╚══██╔══╝ ██╔════╝ ██║    ██║ ██║ ██╔════╝
+███████╗    ██║    █████╗   ██║ █╗ ██║ ██║ █████╗
+╚════██║    ██║    ██╔══╝   ██║███╗██║ ██║ ██╔══╝
+███████║    ██║    ███████╗ ╚███╔███╔╝ ██║ ███████╗
+╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
+
+Ah, there you are. I'm Stewie.
+Tell me your tasks. Clearly, this operation requires supervision.
+Consider it recorded. A small triumph for competent administration.
+[T] [ ] buy milk
+Your agenda now contains 1 task. Do try to keep up.
+Behold, your agenda. Let us examine the scale of this undertaking.
+1. [T] [ ] buy milk
+Behold, your agenda. Let us examine the scale of this undertaking.
+No tasks to show. How suspiciously serene. Try adding a task or checking your search.
+A slight flaw in your plan: Date format is not recognized
+Behold, your agenda. Let us examine the scale of this undertaking.
+1. [T] [ ] buy milk
+Very well. Do come back. I mean, someone must supervise your progress.
 ```
