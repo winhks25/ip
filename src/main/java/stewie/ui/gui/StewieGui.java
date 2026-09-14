@@ -329,6 +329,7 @@ public class StewieGui extends BorderPane {
             chip.getStyleClass().add("quick-chip");
             chip.setOnAction(event -> {
                 messageField.setText(command);
+                sendMessage();
                 messageField.requestFocus();
             });
             quickCommands.getChildren().add(chip);

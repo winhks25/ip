@@ -6,6 +6,10 @@ This plan tests the Stewie console application. Tests are run as separate sessio
 
 These manual checks supplement the console cases below. Launch the GUI with Java 25 using `./gradlew run`.
 
+- Click each suggested command in Chat (`todo plan my week`, `list`, and `help`): immediately send the
+  selected command once, show its response, clear the input field, and smoothly scroll to the newest content.
+  No additional Enter key or Send click is required. Return keyboard focus to the input field.
+
 - Click My List with no saved tasks: show the My List heading and
   "No unfinished tasks. Add a task in Chat to get started."
 - Add todo, event, and deadline tasks in Chat, then click My List: show unfinished tasks in order,
