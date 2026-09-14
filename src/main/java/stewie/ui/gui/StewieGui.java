@@ -19,6 +19,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import org.kordamp.ikonli.javafx.FontIcon;
 import stewie.model.TaskList;
 import stewie.parser.Command;
 import stewie.parser.Parser;
@@ -38,6 +39,9 @@ public class StewieGui extends BorderPane {
     private final ScrollPane conversationScroll;
     private final Label taskSummary;
     private final TextField messageField;
+    private final VBox chatPanel;
+    private final VBox listPanel;
+    private final VBox listTaskContainer;
 
     /**
      * Creates a chat workspace connected to the supplied task list.
@@ -50,9 +54,12 @@ public class StewieGui extends BorderPane {
         this.conversationScroll = createConversationScroll();
         this.taskSummary = new Label();
         this.messageField = new TextField();
+        this.chatPanel = createChatPanel();
+        this.listTaskContainer = new VBox(8);
+        this.listPanel = createListPanel();
 
         setLeft(createSidebar());
-        setCenter(createChatPanel());
+        setCenter(chatPanel);
         addWelcomeMessage();
         refreshTaskSummary();
     }
@@ -81,9 +88,9 @@ public class StewieGui extends BorderPane {
 
         VBox navigation = new VBox(8);
         navigation.getChildren().addAll(
-                createNavigationButton("⌂", "Home", true),
-                createNavigationButton("⌕", "Discover", false),
-                createNavigationButton("♡", "Saved ideas", false));
+                createNavigationButton("fth-message-circle", "Chat", true),
+                createNavigationButton("fth-list", "My List", false),
+                createNavigationButton("fth-help-circle", "Help", false));
 
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
@@ -140,6 +147,37 @@ public class StewieGui extends BorderPane {
         VBox composer = createComposer();
         chatPanel.getChildren().addAll(header, conversationScroll, composer);
         return chatPanel;
+    }
+
+    /**
+     * Creates the My List panel with a heading and a scrollable task container.
+     *
+     * @return the styled list panel
+     */
+    private VBox createListPanel() {
+        VBox listPanelBox = new VBox();
+        listPanelBox.getStyleClass().add("chat-panel");
+
+        HBox header = new HBox(14);
+        header.getStyleClass().add("chat-header");
+        header.setAlignment(Pos.CENTER_LEFT);
+
+        Label title = new Label("My List");
+        title.getStyleClass().add("chat-title");
+
+        header.getChildren().add(title);
+        listTaskContainer.getStyleClass().add("task-group");
+        listTaskContainer.setPadding(new Insets(28, 48, 28, 48));
+
+        ScrollPane listScroll = new ScrollPane(listTaskContainer);
+        listScroll.getStyleClass().add("conversation-scroll");
+        listScroll.setFitToWidth(true);
+        listScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        listScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        VBox.setVgrow(listScroll, Priority.ALWAYS);
+
+        listPanelBox.getChildren().addAll(header, listScroll);
+        return listPanelBox;
     }
 
     /**
@@ -577,7 +615,11 @@ public class StewieGui extends BorderPane {
      * @return a navigation button
      */
     private Button createNavigationButton(String icon, String labelText, boolean isActive) {
-        Button button = new Button(icon + "    " + labelText);
+        FontIcon navigationIcon = new FontIcon(icon);
+        navigationIcon.setIconSize(20);
+        Button button = new Button(labelText, navigationIcon);
+        button.setGraphicTextGap(16);
+        navigationIcon.iconColorProperty().bind(button.textFillProperty());
         button.setMaxWidth(Double.MAX_VALUE);
         button.setAlignment(Pos.CENTER_LEFT);
         button.getStyleClass().add("navigation-button");
