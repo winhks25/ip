@@ -198,21 +198,36 @@ public class StewieGui extends BorderPane {
     }
 
     /**
-     * Replaces the list panel contents with a fresh snapshot of the current tasks.
+     * Displays unfinished tasks with completion controls, preserving their original task numbers.
      */
     private void refreshListPanel() {
         listTaskContainer.getChildren().clear();
         String[] tasks = taskList.produceTaskList();
-        if (tasks.length == 0) {
-            Label emptyMessage = new Label("You have no tasks yet. Add a task in Chat to get started.");
+        for (int index = 0; index < tasks.length; index++) {
+            Matcher matcher = TASK_PATTERN.matcher(tasks[index]);
+            if (matcher.matches() && "X".equals(matcher.group(2))) {
+                continue;
+            }
+
+            final int taskIndex = index;
+            HBox card = createTaskCard(index + 1, tasks[index], false);
+            CheckBox completeBox = new CheckBox();
+            completeBox.getStyleClass().addAll("task-check", "list-complete-check");
+            completeBox.setAccessibleText("Mark task " + (index + 1) + " as done");
+            completeBox.setOnAction(event -> {
+                taskList.markAsDone(taskIndex);
+                refreshListPanel();
+                refreshTaskSummary();
+            });
+            card.getChildren().add(completeBox);
+            listTaskContainer.getChildren().add(card);
+        }
+
+        if (listTaskContainer.getChildren().isEmpty()) {
+            Label emptyMessage = new Label("No unfinished tasks. Add a task in Chat to get started.");
             emptyMessage.setWrapText(true);
             emptyMessage.getStyleClass().add("muted-label");
             listTaskContainer.getChildren().add(emptyMessage);
-            return;
-        }
-
-        for (int index = 0; index < tasks.length; index++) {
-            listTaskContainer.getChildren().add(createTaskCard(index + 1, tasks[index], false));
         }
     }
 

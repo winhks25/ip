@@ -198,6 +198,21 @@
     -fx-background-color: #e13b91;
 }
 
+.list-complete-check .box {
+    -fx-min-width: 22px;
+    -fx-pref-width: 22px;
+    -fx-max-width: 22px;
+    -fx-min-height: 22px;
+    -fx-pref-height: 22px;
+    -fx-max-height: 22px;
+    -fx-background-radius: 50%;
+    -fx-border-radius: 50%;
+}
+
+.list-complete-check:focused .box {
+    -fx-border-color: #e13b91;
+}
+
 .delete-button {
     -fx-background-color: transparent;
     -fx-text-fill: #8e8da0;
