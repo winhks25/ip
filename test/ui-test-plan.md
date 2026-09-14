@@ -2,6 +2,19 @@
 
 This plan tests the Stewie console application. Tests are run as separate sessions so each case starts with an empty task list.
 
+## Additional GUI navigation checks
+
+These manual checks supplement the console cases below. Launch the GUI with Java 25 using `./gradlew run`.
+
+- Click My List with no saved tasks: show the My List heading and
+  "You have no tasks yet. Add a task in Chat to get started."
+- Add todo, event, and deadline tasks in Chat, then click My List: show every current task in order,
+  including its type, dates, and completion status. Cards in this panel are read-only.
+- Switch back to Chat: preserve the conversation and any unsent input.
+- Change, mark, or delete a task in Chat and reopen My List: show the latest state without duplicate cards.
+- Click the selected tab repeatedly: retain one active highlight and one copy of each task.
+- With enough tasks to exceed the window height, scroll to reach the last task.
+
 ## Shared setup and launch
 
 From the repository root, use Java 25:

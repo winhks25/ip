@@ -87,9 +87,26 @@ public class StewieGui extends BorderPane {
         brand.getChildren().addAll(logo, brandText);
 
         VBox navigation = new VBox(8);
+        Button chatButton = createNavigationButton("fth-message-circle", "Chat", true);
+        Button listButton = createNavigationButton("fth-list", "My List", false);
+        chatButton.setOnAction(event -> {
+            setCenter(chatPanel);
+            listButton.getStyleClass().remove("navigation-button-active");
+            if (!chatButton.getStyleClass().contains("navigation-button-active")) {
+                chatButton.getStyleClass().add("navigation-button-active");
+            }
+        });
+        listButton.setOnAction(event -> {
+            refreshListPanel();
+            setCenter(listPanel);
+            chatButton.getStyleClass().remove("navigation-button-active");
+            if (!listButton.getStyleClass().contains("navigation-button-active")) {
+                listButton.getStyleClass().add("navigation-button-active");
+            }
+        });
         navigation.getChildren().addAll(
-                createNavigationButton("fth-message-circle", "Chat", true),
-                createNavigationButton("fth-list", "My List", false),
+                chatButton,
+                listButton,
                 createNavigationButton("fth-help-circle", "Help", false));
 
         Region spacer = new Region();
@@ -178,6 +195,25 @@ public class StewieGui extends BorderPane {
 
         listPanelBox.getChildren().addAll(header, listScroll);
         return listPanelBox;
+    }
+
+    /**
+     * Replaces the list panel contents with a fresh snapshot of the current tasks.
+     */
+    private void refreshListPanel() {
+        listTaskContainer.getChildren().clear();
+        String[] tasks = taskList.produceTaskList();
+        if (tasks.length == 0) {
+            Label emptyMessage = new Label("You have no tasks yet. Add a task in Chat to get started.");
+            emptyMessage.setWrapText(true);
+            emptyMessage.getStyleClass().add("muted-label");
+            listTaskContainer.getChildren().add(emptyMessage);
+            return;
+        }
+
+        for (int index = 0; index < tasks.length; index++) {
+            listTaskContainer.getChildren().add(createTaskCard(index + 1, tasks[index], false));
+        }
     }
 
     /**
