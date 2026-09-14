@@ -4,6 +4,20 @@ This plan tests the Stewie console application. Tests are run as separate sessio
 
 ## Additional GUI navigation checks
 
+- Add two tasks, enter `list`, then delete the first task. Click a checkbox or delete button
+  in the old chat list: show a refreshed list and an out-of-date notice; leave the surviving task unchanged.
+  Repeat after an update or a status change. Controls in the refreshed list must work normally.
+- Launch a test build without the portrait or stylesheet resources: show a text logo or default JavaFX
+  styling and keep command entry working. A corrupt portrait must also fall back to the text logo.
+
+
+- Start with a malformed or unreadable task file: show the startup warning in Chat.
+  Attempt additions, updates, deletion, and checkbox actions: show an error without a success reply
+  or a changed task. My List checkbox failures must show a visible error and restore the checkbox.
+- Make the file unwritable while the GUI is running and retry a command or card action.
+  Restore permissions and retry: save successfully and retain the original data after the failed attempt.
+
+
 - Verify Chat opens with "Ah, there you are. I'm Stewie." and the supervision greeting.
   Send todo, deadline, event, list, mark, unmark, delete, update, find, help, and bye commands.
   Confirm replies use dry, theatrical phrasing while task cards retain their descriptions, dates, and statuses.
@@ -72,11 +86,15 @@ javac -d out/ui-test $(find src/main/java -name '*.java' ! -path '*/stewie/ui/gu
 Launch each test case with:
 
 ```sh
-rm -f data/stewie.txt
-java -ea -cp out/ui-test stewie.Stewie
+repo_root="$PWD"
+case_dir=$(mktemp -d)
+cd "$case_dir"
+java -ea -cp "$repo_root/out/ui-test" stewie.Stewie
 ```
 
-The saved task file is removed before each case so the cases remain independent.
+Each case runs in a fresh temporary directory, preserving the real task file.
+Run `python3 test/run-ui-tests.py <record-path>` to compile with Java 25 and execute the cases in order.
+Optional case setup commands run in that temporary directory before launching the application.
 Assertions are enabled with `-ea` to check internal invariants during every session.
 
 The expected output below uses `LF` line endings and includes the final newline produced by the program. The skill may normalize `CRLF` to `LF` and one final trailing newline only.
@@ -169,9 +187,9 @@ bye
 Ah, there you are. I'm Stewie.
 Tell me your tasks. Clearly, this operation requires supervision.
 What precisely is the plan? Use a command: todo, event, deadline, mark, unmark, delete, find, update, list, bye + description!
-What precisely is the plan? Use a command: todo, event, deadline, mark, unmark, delete, find, update, list, bye + description!
-An event requires a schedule. Use: event <description> /from <date or time> /to <date or time>
-Even I need a deadline. Use: deadline <description> /by <deadline>
+A slight flaw in your plan: Use: todo <description>.
+A slight flaw in your plan: Use: event <description> /from <date> /to <date>. Supply each field once in this order.
+A slight flaw in your plan: Use: deadline <description> /by <date>. Supply each field once.
 That task exists only in your imagination. Use a listed number: mark <number>
 Numbers, please. Use: unmark <number>.
 Behold, your agenda. Let us examine the scale of this undertaking.
@@ -229,7 +247,7 @@ Very well. Do come back. I mean, someone must supervise your progress.
 ### Aim
 
 Verify that `update` changes the description of todo, event, and deadline tasks while preserving their type,
-date/time details, and completion status.
+date/time details, and completion status. Reject reversed dates without changing the existing event.
 
 ### Inputs
 
@@ -276,11 +294,10 @@ Revised to your specifications. Yes, even that detail.
 [E] [X] planning meeting (from: 15 Aug 2026 to: 16 Aug 2026)
 Revised to your specifications. Yes, even that detail.
 [D] [ ] file report (by: 20 Aug 2026)
-Revised to your specifications. Yes, even that detail.
-[E] [X] planning meeting (from: 17 Aug 2026 to: 16 Aug 2026)
+A slight flaw in your plan: Event start date must be before its end date.
 Behold, your agenda. Let us examine the scale of this undertaking.
 1. [T] [ ] buy bread
-2. [E] [X] planning meeting (from: 17 Aug 2026 to: 16 Aug 2026)
+2. [E] [X] planning meeting (from: 15 Aug 2026 to: 16 Aug 2026)
 3. [D] [ ] file report (by: 20 Aug 2026)
 That task exists only in your imagination. Use a listed number: update <number>
 A revision needs details. Use: update <number> [description] [d/<deadline>] [from/<from>] [to/<to>]
@@ -419,8 +436,381 @@ Behold, your agenda. Let us examine the scale of this undertaking.
 1. [T] [ ] buy milk
 Behold, your agenda. Let us examine the scale of this undertaking.
 No tasks to show. How suspiciously serene. Try adding a task or checking your search.
-A slight flaw in your plan: Date format is not recognized
+A slight flaw in your plan: Use a real calendar date, such as 2026-08-28 or 28/8/2026 (dates only).
 Behold, your agenda. Let us examine the scale of this undertaking.
 1. [T] [ ] buy milk
+Very well. Do come back. I mean, someone must supervise your progress.
+```
+
+## Test Case 9: Reject ambiguous command fields
+
+### Aim
+
+Reject missing, repeated, misplaced, and unknown fields; accept tabs and command words inside descriptions.
+
+### Inputs
+
+```text
+deadline
+event
+find
+mark
+mark -2147483648
+delete +1
+unmark 999999999999999
+deadline report /by 1/1/2026 /by 2/1/2026
+deadline report /by
+event trip /to 2/1/2026 /from 1/1/2026
+event trip /from 1/1/2026 /to 2/1/2026 /to 3/1/2026
+update 1 d/1/1/2026 by/2/1/2026
+update 1 from/
+update 1 bogus/value
+list extra
+bye extra
+  todo	  plan the event and deadline
+list
+bye
+```
+
+### Expected output
+
+```text
+███████╗ ████████╗ ███████╗ ██╗    ██╗ ██╗ ███████╗
+██╔════╝ ╚══██╔══╝ ██╔════╝ ██║    ██║ ██║ ██╔════╝
+███████╗    ██║    █████╗   ██║ █╗ ██║ ██║ █████╗
+╚════██║    ██║    ██╔══╝   ██║███╗██║ ██║ ██╔══╝
+███████║    ██║    ███████╗ ╚███╔███╔╝ ██║ ███████╗
+╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
+
+Ah, there you are. I'm Stewie.
+Tell me your tasks. Clearly, this operation requires supervision.
+A slight flaw in your plan: Use: deadline <description> /by <date>. Supply each field once.
+A slight flaw in your plan: Use: event <description> /from <date> /to <date>. Supply each field once in this order.
+A slight flaw in your plan: Use: find <keyword> [more keywords].
+Numbers, please. Use: mark <number>.
+Numbers, please. Use: mark <number>.
+Numbers, please. Use: delete <number>.
+Numbers, please. Use: unmark <number>.
+A slight flaw in your plan: Use: deadline <description> /by <date>. Supply each field once.
+A slight flaw in your plan: Use: deadline <description> /by <date>. Supply each field once.
+A slight flaw in your plan: Use: event <description> /from <date> /to <date>. Supply each field once in this order.
+A slight flaw in your plan: Use: event <description> /from <date> /to <date>. Supply each field once in this order.
+A slight flaw in your plan: Supply each update field only once; d/ and by/ are aliases.
+A slight flaw in your plan: Update fields cannot be empty.
+A slight flaw in your plan: Use update fields: d/ (or by/), from/, to/.
+What precisely is the plan? Use a command: todo, event, deadline, mark, unmark, delete, find, update, list, bye + description!
+What precisely is the plan? Use a command: todo, event, deadline, mark, unmark, delete, find, update, list, bye + description!
+Consider it recorded. A small triumph for competent administration.
+[T] [ ] plan the event and deadline
+Your agenda now contains 1 task. Do try to keep up.
+Behold, your agenda. Let us examine the scale of this undertaking.
+1. [T] [ ] plan the event and deadline
+Very well. Do come back. I mean, someone must supervise your progress.
+```
+
+## Test Case 10: Preserve valid task data
+
+### Aim
+
+Reject duplicate additions and updates, unsafe descriptions, impossible dates, and invalid event ranges.
+Completion status does not permit duplicate details; invalid updates preserve the original task.
+
+### Inputs
+
+```text
+todo read book
+mark 1
+todo read   book
+todo other
+update 2 read book
+update 1 read book
+todo bad|description
+event trip /from 2026-01-02 /to 2026-01-01
+event trip /from 2026-01-01 /to 2026-01-01
+deadline report /by 2026-02-30
+deadline report /by 2025-02-29
+deadline report /by 0000-01-01
+event trip /from 2026-01-01 /to 2026-01-02
+event trip /from 1/1/2026 /to 2/1/2026
+update 3 to/2026-01-01
+update 2 d/2026-01-01
+list
+bye
+```
+
+### Expected output
+
+```text
+███████╗ ████████╗ ███████╗ ██╗    ██╗ ██╗ ███████╗
+██╔════╝ ╚══██╔══╝ ██╔════╝ ██║    ██║ ██║ ██╔════╝
+███████╗    ██║    █████╗   ██║ █╗ ██║ ██║ █████╗
+╚════██║    ██║    ██╔══╝   ██║███╗██║ ██║ ██╔══╝
+███████║    ██║    ███████╗ ╚███╔███╔╝ ██║ ███████╗
+╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
+
+Ah, there you are. I'm Stewie.
+Tell me your tasks. Clearly, this operation requires supervision.
+Consider it recorded. A small triumph for competent administration.
+[T] [ ] read book
+Your agenda now contains 1 task. Do try to keep up.
+A slight flaw in your plan: A task with these details already exists (task 1).
+Consider it recorded. A small triumph for competent administration.
+[T] [ ] other
+Your agenda now contains 2 tasks. Do try to keep up.
+A slight flaw in your plan: A task with these details already exists (task 1).
+Revised to your specifications. Yes, even that detail.
+[T] [X] read book
+A slight flaw in your plan: Descriptions cannot contain | or control characters.
+A slight flaw in your plan: Event start date must be before its end date.
+A slight flaw in your plan: Event start date must be before its end date.
+A slight flaw in your plan: Use a real calendar date, such as 2026-08-28 or 28/8/2026 (dates only).
+A slight flaw in your plan: Use a real calendar date, such as 2026-08-28 or 28/8/2026 (dates only).
+A slight flaw in your plan: Use a year between 0001 and 9999.
+Consider it recorded. A small triumph for competent administration.
+[E] [ ] trip (from: 01 Jan 2026 to: 02 Jan 2026)
+Your agenda now contains 3 tasks. Do try to keep up.
+A slight flaw in your plan: A task with these details already exists (task 3).
+A slight flaw in your plan: Event start date must be before its end date.
+A slight flaw in your plan: Todo tasks only support descriptions.
+Behold, your agenda. Let us examine the scale of this undertaking.
+1. [T] [X] read book
+2. [T] [ ] other
+3. [E] [ ] trip (from: 01 Jan 2026 to: 02 Jan 2026)
+Very well. Do come back. I mean, someone must supervise your progress.
+```
+
+## Test Case 11: Recover valid records from damaged storage
+
+### Aim
+
+Report all damaged records, retain later valid tasks, and block changes to protect the original file.
+
+### Setup
+
+```sh
+mkdir -p data
+cat > data/stewie.txt <<'EOF'
+T | 0 | first
+D | 0 | invalid | 2026-02-30
+T | maybe | status
+X | 0 | unknown
+T | 0 | first
+E | 0 | reverse | 2026-01-02 | 2026-01-01
+T | 0 |
+T | 0 | extra | field
+T | 1 | last
+EOF
+```
+
+### Inputs
+
+```text
+list
+todo new
+mark 1
+unmark 2
+delete 1
+update 1 revised
+list
+bye
+```
+
+### Expected output
+
+```text
+███████╗ ████████╗ ███████╗ ██╗    ██╗ ██╗ ███████╗
+██╔════╝ ╚══██╔══╝ ██╔════╝ ██║    ██║ ██║ ██╔════╝
+███████╗    ██║    █████╗   ██║ █╗ ██║ ██║ █████╗
+╚════██║    ██║    ██╔══╝   ██║███╗██║ ██║ ██╔══╝
+███████║    ██║    ███████╗ ╚███╔███╔╝ ██║ ███████╗
+╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
+
+Ah, there you are. I'm Stewie.
+Tell me your tasks. Clearly, this operation requires supervision.
+Storage warning: Invalid or duplicate records at lines 2, 3, 4, 5, 6, 7, 8. Valid tasks are available read-only. Back up and repair the task file, then restart.
+Behold, your agenda. Let us examine the scale of this undertaking.
+1. [T] [ ] first
+2. [T] [X] last
+Tasks are read-only. Back up and repair the task file, then restart.
+Tasks are read-only. Back up and repair the task file, then restart.
+Tasks are read-only. Back up and repair the task file, then restart.
+Tasks are read-only. Back up and repair the task file, then restart.
+Tasks are read-only. Back up and repair the task file, then restart.
+Behold, your agenda. Let us examine the scale of this undertaking.
+1. [T] [ ] first
+2. [T] [X] last
+Very well. Do come back. I mean, someone must supervise your progress.
+```
+
+## Test Case 12: Handle a directory in place of the task file
+
+### Aim
+
+Explain invalid storage paths without crashing or replacing the directory.
+
+### Setup
+
+```sh
+mkdir -p data/stewie.txt
+```
+
+### Inputs
+
+```text
+todo new
+list
+bye
+```
+
+### Expected output
+
+```text
+███████╗ ████████╗ ███████╗ ██╗    ██╗ ██╗ ███████╗
+██╔════╝ ╚══██╔══╝ ██╔════╝ ██║    ██║ ██║ ██╔════╝
+███████╗    ██║    █████╗   ██║ █╗ ██║ ██║ █████╗
+╚════██║    ██║    ██╔══╝   ██║███╗██║ ██║ ██╔══╝
+███████║    ██║    ███████╗ ╚███╔███╔╝ ██║ ███████╗
+╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
+
+Ah, there you are. I'm Stewie.
+Tell me your tasks. Clearly, this operation requires supervision.
+Storage warning: Unable to read the task file. Tasks are read-only. Check the file path, permissions, and UTF-8 content, then restart.
+Tasks are read-only. Back up and repair the task file, then restart.
+Behold, your agenda. Let us examine the scale of this undertaking.
+No tasks to show. How suspiciously serene. Try adding a task or checking your search.
+Very well. Do come back. I mean, someone must supervise your progress.
+```
+
+## Test Case 13: Keep task state when saving is denied
+
+### Aim
+
+Reject all mutations without false success messages when an existing file is read-only.
+
+### Setup
+
+```sh
+mkdir -p data
+printf 'T | 0 | first\nT | 1 | second\n' > data/stewie.txt
+chmod 444 data/stewie.txt
+```
+
+### Inputs
+
+```text
+list
+todo new
+mark 1
+unmark 2
+delete 1
+update 1 revised
+list
+bye
+```
+
+### Expected output
+
+```text
+███████╗ ████████╗ ███████╗ ██╗    ██╗ ██╗ ███████╗
+██╔════╝ ╚══██╔══╝ ██╔════╝ ██║    ██║ ██║ ██╔════╝
+███████╗    ██║    █████╗   ██║ █╗ ██║ ██║ █████╗
+╚════██║    ██║    ██╔══╝   ██║███╗██║ ██║ ██╔══╝
+███████║    ██║    ███████╗ ╚███╔███╔╝ ██║ ███████╗
+╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
+
+Ah, there you are. I'm Stewie.
+Tell me your tasks. Clearly, this operation requires supervision.
+Behold, your agenda. Let us examine the scale of this undertaking.
+1. [T] [ ] first
+2. [T] [X] second
+Unable to save tasks. No changes were applied. Check the task file, permissions, free space, and support for atomic file replacement.
+Unable to save tasks. No changes were applied. Check the task file, permissions, free space, and support for atomic file replacement.
+Unable to save tasks. No changes were applied. Check the task file, permissions, free space, and support for atomic file replacement.
+Unable to save tasks. No changes were applied. Check the task file, permissions, free space, and support for atomic file replacement.
+Unable to save tasks. No changes were applied. Check the task file, permissions, free space, and support for atomic file replacement.
+Behold, your agenda. Let us examine the scale of this undertaking.
+1. [T] [ ] first
+2. [T] [X] second
+Very well. Do come back. I mean, someone must supervise your progress.
+```
+
+## Test Case 14: Handle denied reads
+
+### Aim
+
+Do not treat unreadable storage as an empty writable task file.
+
+### Setup
+
+```sh
+mkdir -p data
+printf 'T | 0 | secret\n' > data/stewie.txt
+chmod 000 data/stewie.txt
+```
+
+### Inputs
+
+```text
+todo new
+list
+bye
+```
+
+### Expected output
+
+```text
+███████╗ ████████╗ ███████╗ ██╗    ██╗ ██╗ ███████╗
+██╔════╝ ╚══██╔══╝ ██╔════╝ ██║    ██║ ██║ ██╔════╝
+███████╗    ██║    █████╗   ██║ █╗ ██║ ██║ █████╗
+╚════██║    ██║    ██╔══╝   ██║███╗██║ ██║ ██╔══╝
+███████║    ██║    ███████╗ ╚███╔███╔╝ ██║ ███████╗
+╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
+
+Ah, there you are. I'm Stewie.
+Tell me your tasks. Clearly, this operation requires supervision.
+Storage warning: Unable to read the task file. Tasks are read-only. Check the file path, permissions, and UTF-8 content, then restart.
+Tasks are read-only. Back up and repair the task file, then restart.
+Behold, your agenda. Let us examine the scale of this undertaking.
+No tasks to show. How suspiciously serene. Try adding a task or checking your search.
+Very well. Do come back. I mean, someone must supervise your progress.
+```
+
+## Test Case 15: Handle invalid UTF-8
+
+### Aim
+
+Reject undecodable file content and protect the original bytes.
+
+### Setup
+
+```sh
+mkdir -p data
+printf '\377' > data/stewie.txt
+```
+
+### Inputs
+
+```text
+todo new
+list
+bye
+```
+
+### Expected output
+
+```text
+███████╗ ████████╗ ███████╗ ██╗    ██╗ ██╗ ███████╗
+██╔════╝ ╚══██╔══╝ ██╔════╝ ██║    ██║ ██║ ██╔════╝
+███████╗    ██║    █████╗   ██║ █╗ ██║ ██║ █████╗
+╚════██║    ██║    ██╔══╝   ██║███╗██║ ██║ ██╔══╝
+███████║    ██║    ███████╗ ╚███╔███╔╝ ██║ ███████╗
+╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
+
+Ah, there you are. I'm Stewie.
+Tell me your tasks. Clearly, this operation requires supervision.
+Storage warning: Unable to read the task file. Tasks are read-only. Check the file path, permissions, and UTF-8 content, then restart.
+Tasks are read-only. Back up and repair the task file, then restart.
+Behold, your agenda. Let us examine the scale of this undertaking.
+No tasks to show. How suspiciously serene. Try adding a task or checking your search.
 Very well. Do come back. I mean, someone must supervise your progress.
 ```

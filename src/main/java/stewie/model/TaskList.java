@@ -1,10 +1,10 @@
 package stewie.model;
 
-import stewie.storage.Storage;
-import stewie.ui.cli.Ui;
-
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import stewie.storage.Storage;
+import stewie.ui.cli.Ui;
 
 /**
  * Represents a task list.
@@ -12,13 +12,43 @@ import java.util.Arrays;
  */
 public class TaskList {
     private final ArrayList<Task> tasks;
+    private final Storage storage;
+    private long revision;
 
     /**
      * Initialize a task list with data from the disk.
      */
     public TaskList() {
-        this.tasks = Storage.loadFromDisk();
+        this(new Storage());
+    }
+
+    /**
+     * Creates a task list using supplied storage.
+     *
+     * @param storage Storage instance used for loading and saving.
+     */
+    public TaskList(Storage storage) {
+        this.storage = storage;
+        this.tasks = storage.loadFromDisk();
         assert this.tasks != null : "Storage must return a task list";
+    }
+
+    /**
+     * Returns the revision of the current task list to detect outdated GUI controls.
+     *
+     * @return Revision incremented after every successfully saved change.
+     */
+    public long getRevision() {
+        return revision;
+    }
+
+    /**
+     * Returns startup storage warnings for display in either interface.
+     *
+     * @return Warning, or an empty string if loading succeeded.
+     */
+    public String getLoadWarning() {
+        return storage.getLoadWarning();
     }
 
     /**
@@ -60,8 +90,10 @@ public class TaskList {
      * @param task Task to add.
      */
     private void addTask(Task task) {
-        this.tasks.add(task);
-        Storage.saveToDisk(this.tasks);
+        rejectDuplicate(task, -1);
+        ArrayList<Task> proposed = new ArrayList<>(tasks);
+        proposed.add(task);
+        persist(proposed);
         Ui.printTaskAddConfirmation(task, this.tasks.size());
     }
 
@@ -73,9 +105,7 @@ public class TaskList {
      */
     public void markAsDone(int index) {
         try {
-            this.tasks.get(index).markAsDone();
-            assert this.tasks.get(index).isDone() : "Marking a task must set its done status";
-            Storage.saveToDisk(this.tasks);
+            changeStatus(index, true);
         } catch (IndexOutOfBoundsException e) {
             Ui.printNumberedCommandFormat("mark");
         }
@@ -89,9 +119,7 @@ public class TaskList {
      */
     public void markAsUndone(int index) {
         try {
-            this.tasks.get(index).markAsUndone();
-            assert !this.tasks.get(index).isDone() : "Unmarking a task must clear its done status";
-            Storage.saveToDisk(this.tasks);
+            changeStatus(index, false);
         } catch (IndexOutOfBoundsException e) {
             Ui.printNumberedCommandFormat("unmark");
         }
@@ -105,8 +133,9 @@ public class TaskList {
      */
     public void deleteTask(int index) {
         try {
-            this.tasks.remove(index);
-            Storage.saveToDisk(this.tasks);
+            ArrayList<Task> proposed = new ArrayList<>(tasks);
+            proposed.remove(index);
+            persist(proposed);
         } catch (IndexOutOfBoundsException e) {
             Ui.printNumberedCommandFormat("delete");
         }
@@ -161,11 +190,50 @@ public class TaskList {
             if (existingTask.isDone()) {
                 updatedTask.markAsDone();
             }
-            this.tasks.set(index, updatedTask);
-            Storage.saveToDisk(this.tasks);
+            rejectDuplicate(updatedTask, index);
+            ArrayList<Task> proposed = new ArrayList<>(tasks);
+            proposed.set(index, updatedTask);
+            persist(proposed);
             Ui.printTaskUpdateConfirmation(updatedTask);
         } catch (IndexOutOfBoundsException e) {
             Ui.printNumberedCommandFormat("update");
+        }
+    }
+
+    /** Publishes a proposed task list only after storage confirms a successful save. */
+    private void persist(ArrayList<Task> proposed) {
+        storage.saveToDisk(proposed);
+        tasks.clear();
+        tasks.addAll(proposed);
+        revision++;
+    }
+
+    /** Copies a task before changing its status so failed saves cannot mutate the live list. */
+    private void changeStatus(int index, boolean isDone) {
+        Task existing = tasks.get(index);
+        Task replacement;
+        if (existing instanceof Deadline deadline) {
+            replacement = new Deadline(existing.getDescription(), deadline.getDeadline());
+        } else if (existing instanceof Event event) {
+            replacement = new Event(existing.getDescription(), event.getFrom(), event.getTo());
+        } else {
+            replacement = new ToDo(existing.getDescription());
+        }
+        if (isDone) {
+            replacement.markAsDone();
+        }
+        ArrayList<Task> proposed = new ArrayList<>(tasks);
+        proposed.set(index, replacement);
+        persist(proposed);
+    }
+
+    /** Rejects duplicates while allowing an update to preserve its own details. */
+    private void rejectDuplicate(Task candidate, int ignoredIndex) {
+        for (int index = 0; index < tasks.size(); index++) {
+            if (index != ignoredIndex && candidate.hasSameDetails(tasks.get(index))) {
+                throw new IllegalArgumentException(
+                        "A task with these details already exists (task " + (index + 1) + ").");
+            }
         }
     }
 

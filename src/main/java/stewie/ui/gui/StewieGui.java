@@ -1,5 +1,13 @@
 package stewie.ui.gui;
 
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.kordamp.ikonli.javafx.FontIcon;
+
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -8,6 +16,7 @@ import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
@@ -24,16 +33,11 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.util.Duration;
-import org.kordamp.ikonli.javafx.FontIcon;
 import stewie.model.TaskList;
 import stewie.parser.Command;
 import stewie.parser.Parser;
+import stewie.storage.StorageException;
 import stewie.ui.Dialogue;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Represents the modern Instagram-inspired chat workspace for Stewie.
@@ -89,8 +93,7 @@ public class StewieGui extends BorderPane {
             Example: deadline submit report /by 12/08/2026
             """;
 
-    private final Image stewiePhoto = new Image(
-            StewieGui.class.getResource("/images/stewie_photo.png").toExternalForm());
+    private final Image stewiePhoto = loadPhoto();
     private final TaskList taskList;
     private final VBox conversation;
     private final ScrollPane conversationScroll;
@@ -123,6 +126,9 @@ public class StewieGui extends BorderPane {
         setLeft(createSidebar());
         setCenter(chatPanel);
         addWelcomeMessage();
+        if (!taskList.getLoadWarning().isEmpty()) {
+            appendMessage(false, taskList.getLoadWarning());
+        }
         refreshTaskSummary();
     }
 
@@ -339,6 +345,7 @@ public class StewieGui extends BorderPane {
      */
     private HBox createListTaskCard(int index, String taskText, boolean isDone, boolean isPending) {
         HBox card = createTaskCard(index + 1, taskText, false);
+        long cardRevision = taskList.getRevision();
         CheckBox statusBox = new CheckBox();
         statusBox.getStyleClass().addAll("task-check", "list-complete-check");
         statusBox.setSelected(isDone);
@@ -348,23 +355,41 @@ public class StewieGui extends BorderPane {
             card.setOpacity(0.4);
         }
         statusBox.setOnAction(event -> {
-            if (isDone) {
-                taskList.markAsUndone(index);
-            } else {
-                taskList.markAsDone(index);
-                PauseTransition removalDelay = new PauseTransition(Duration.seconds(3));
-                completionDelays.put(index, removalDelay);
-                removalDelay.setOnFinished(finishedEvent -> {
-                    completionDelays.remove(index);
-                    refreshListPanel();
-                });
-                removalDelay.play();
+            if (cardRevision != taskList.getRevision()) {
+                statusBox.setSelected(isDone);
+                refreshListPanel();
+                return;
+            }
+            try {
+                if (isDone) {
+                    taskList.markAsUndone(index);
+                } else {
+                    taskList.markAsDone(index);
+                    PauseTransition removalDelay = new PauseTransition(Duration.seconds(3));
+                    completionDelays.put(index, removalDelay);
+                    removalDelay.setOnFinished(finishedEvent -> {
+                        completionDelays.remove(index);
+                        refreshListPanel();
+                    });
+                    removalDelay.play();
+                }
+            } catch (StorageException exception) {
+                statusBox.setSelected(isDone);
+                showStorageError(exception);
             }
             refreshTaskSummary();
             refreshListPanel();
         });
         card.getChildren().add(statusBox);
         return card;
+    }
+
+    /** Displays a failed card action even when the user is currently viewing My List. */
+    private void showStorageError(StorageException exception) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setHeaderText("Task change was not saved");
+        alert.setContentText(exception.getMessage());
+        alert.showAndWait();
     }
 
     /**
@@ -459,7 +484,7 @@ public class StewieGui extends BorderPane {
 
         appendMessage(true, rawInput);
         messageField.clear();
-        handleCommand(rawInput.toLowerCase());
+        handleCommand(Parser.normalize(rawInput));
         refreshTaskSummary();
         scrollToBottom();
     }
@@ -514,6 +539,8 @@ public class StewieGui extends BorderPane {
                                     + "`mark`, `unmark`, `delete`, or `update`.");
                     break;
             }
+        } catch (StorageException exception) {
+            appendMessage(false, exception.getMessage());
         } catch (IllegalArgumentException exception) {
             appendMessage(false, "A slight flaw in your plan: " + exception.getMessage());
         }
@@ -525,12 +552,8 @@ public class StewieGui extends BorderPane {
      * @param input the normalized todo command
      */
     private void addTodo(String input) {
-        try {
-            taskList.addToDo(Parser.parseTodo(input));
-            appendMessage(false, Dialogue.ADDED);
-        } catch (ArrayIndexOutOfBoundsException exception) {
-            appendMessage(false, "A task needs a description. Try `todo call Mum`. Yes, one must keep her informed.");
-        }
+        taskList.addToDo(Parser.parseTodo(input));
+        appendMessage(false, Dialogue.ADDED);
     }
 
     /**
@@ -539,15 +562,9 @@ public class StewieGui extends BorderPane {
      * @param input the normalized deadline command
      */
     private void addDeadline(String input) {
-        try {
-            String[] parsedInput = Parser.parseDeadline(input);
-            taskList.addDeadline(parsedInput[0], parsedInput[1]);
-            appendMessage(false, "Deadline recorded. Time is now officially judging you.");
-        } catch (ArrayIndexOutOfBoundsException exception) {
-            appendMessage(false,
-                    "Even I need a deadline. Use `deadline <description> /by <date>`, "
-                            + "e.g. `deadline report /by 25 Dec 2026`.");
-        }
+        String[] parsedInput = Parser.parseDeadline(input);
+        taskList.addDeadline(parsedInput[0], parsedInput[1]);
+        appendMessage(false, "Deadline recorded. Time is now officially judging you.");
     }
 
     /**
@@ -556,13 +573,9 @@ public class StewieGui extends BorderPane {
      * @param input the normalized event command
      */
     private void addEvent(String input) {
-        try {
-            String[] parsedInput = Parser.parseEvent(input);
-            taskList.addEvent(parsedInput[0], parsedInput[1], parsedInput[2]);
-            appendMessage(false, "Event scheduled. I trust the occasion warrants all this organisation.");
-        } catch (ArrayIndexOutOfBoundsException exception) {
-            appendMessage(false, "An event requires a schedule. Use `event <description> /from <date> /to <date>`.");
-        }
+        String[] parsedInput = Parser.parseEvent(input);
+        taskList.addEvent(parsedInput[0], parsedInput[1], parsedInput[2]);
+        appendMessage(false, "Event scheduled. I trust the occasion warrants all this organisation.");
     }
 
     /**
@@ -717,14 +730,25 @@ public class StewieGui extends BorderPane {
         details.getChildren().addAll(taskLabel, numberLabel);
 
         if (isInteractive) {
+            long cardRevision = taskList.getRevision();
             CheckBox doneBox = new CheckBox();
             doneBox.setSelected(isDone);
             doneBox.getStyleClass().add("task-check");
             doneBox.setOnAction(event -> {
-                if (doneBox.isSelected()) {
-                    taskList.markAsDone(index - 1);
-                } else {
-                    taskList.markAsUndone(index - 1);
+                if (!isCurrentCard(cardRevision)) {
+                    doneBox.setSelected(isDone);
+                    return;
+                }
+                try {
+                    if (doneBox.isSelected()) {
+                        taskList.markAsDone(index - 1);
+                    } else {
+                        taskList.markAsUndone(index - 1);
+                    }
+                } catch (StorageException exception) {
+                    doneBox.setSelected(isDone);
+                    showStorageError(exception);
+                    return;
                 }
                 refreshTaskSummary();
                 showTaskList("Status revised. Our little operation advances:");
@@ -734,7 +758,15 @@ public class StewieGui extends BorderPane {
             Button deleteButton = new Button("×");
             deleteButton.getStyleClass().add("delete-button");
             deleteButton.setOnAction(event -> {
-                taskList.deleteTask(index - 1);
+                if (!isCurrentCard(cardRevision)) {
+                    return;
+                }
+                try {
+                    taskList.deleteTask(index - 1);
+                } catch (StorageException exception) {
+                    showStorageError(exception);
+                    return;
+                }
                 refreshTaskSummary();
                 showTaskList("Dismissed from the agenda. Here is what remains:");
             });
@@ -778,6 +810,16 @@ public class StewieGui extends BorderPane {
         taskSummary.setText(String.format("%d tasks  ·  %d done", tasks.length, completedTasks));
     }
 
+    /** Rejects stale chat controls before their old task numbers can affect another task. */
+    private boolean isCurrentCard(long cardRevision) {
+        if (cardRevision == taskList.getRevision()) {
+            return true;
+        }
+        showTaskList("That task card is out of date. Use the refreshed list below.");
+        scrollToBottom();
+        return false;
+    }
+
     /**
      * Returns whether a zero-based task index points to an existing task.
      *
@@ -809,6 +851,16 @@ public class StewieGui extends BorderPane {
         });
     }
 
+    /** Loads the optional portrait, allowing the interface to use a text logo if it is missing or corrupt. */
+    private Image loadPhoto() {
+        URL resource = StewieGui.class.getResource("/images/stewie_photo.png");
+        if (resource == null) {
+            return null;
+        }
+        Image image = new Image(resource.toExternalForm());
+        return image.isError() ? null : image;
+    }
+
     /**
      * Creates a Stewie image logo while preserving the original proportions.
      *
@@ -823,7 +875,7 @@ public class StewieGui extends BorderPane {
         portrait.setSmooth(true);
         portrait.setAccessibleText("Stewie");
 
-        StackPane logo = new StackPane(portrait);
+        StackPane logo = stewiePhoto == null ? new StackPane(new Label("S")) : new StackPane(portrait);
         logo.setMinSize(size, size);
         logo.setPrefSize(size, size);
         logo.setMaxSize(size, size);

@@ -22,6 +22,9 @@ public class Event extends Task {
         validateArgument(to, "Event end time");
         this.from = new Date(from);
         this.to = new Date(to);
+        if (!this.from.isBefore(this.to)) {
+            throw new IllegalArgumentException("Event start date must be before its end date.");
+        }
         assert this.from != null && this.to != null : "An event must have both boundary dates";
     }
 

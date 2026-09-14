@@ -1,5 +1,7 @@
 package stewie.ui.gui;
 
+import java.net.URL;
+
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -19,7 +21,10 @@ public class StewieApplication extends Application {
     public void start(Stage stage) {
         StewieGui gui = new StewieGui(new TaskList());
         Scene scene = new Scene(gui, 1180, 760);
-        scene.getStylesheets().add(getClass().getResource("/stewie/ui/gui/instagram.css").toExternalForm());
+        URL stylesheet = getClass().getResource("/stewie/ui/gui/instagram.css");
+        if (stylesheet != null) {
+            scene.getStylesheets().add(stylesheet.toExternalForm());
+        }
 
         stage.setTitle("Stewie — your task studio");
         stage.setMinWidth(960);

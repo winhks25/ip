@@ -1,11 +1,12 @@
 package stewie;
 
+import java.util.Scanner;
+
 import stewie.model.TaskList;
 import stewie.parser.Command;
 import stewie.parser.Parser;
+import stewie.storage.StorageException;
 import stewie.ui.cli.Ui;
-
-import java.util.Scanner;
 
 /**
  * Represent the chatbot Stewie.
@@ -29,11 +30,14 @@ public class Stewie {
      */
     public void run() {
         Ui.greetUser();
+        if (!taskList.getLoadWarning().isEmpty()) {
+            System.out.println(taskList.getLoadWarning());
+        }
         Scanner scanner = new Scanner(System.in);
 
         // Conversation starts here
         while (scanner.hasNextLine()) {
-            String input = scanner.nextLine().toLowerCase().trim();
+            String input = Parser.normalize(scanner.nextLine());
             Command command = Parser.getCommand(input);
             assert command != null : "Parser must classify every input command";
             try {
@@ -75,6 +79,8 @@ public class Stewie {
                                 + "+ description!");
                         break;
                 }
+            } catch (StorageException exception) {
+                System.out.println(exception.getMessage());
             } catch (IllegalArgumentException e) {
                 System.out.println("A slight flaw in your plan: " + e.getMessage());
             }
@@ -89,13 +95,8 @@ public class Stewie {
      * @param input Input from user.
      */
     private void addDeadline(String input) {
-        try {
-            String[] parsedInput = Parser.parseDeadline(input);
-            // parsedInput = {description, deadline}
-            this.taskList.addDeadline(parsedInput[0], parsedInput[1]);
-        } catch (ArrayIndexOutOfBoundsException e) {
-            System.out.println("Even I need a deadline. Use: deadline <description> /by <deadline>");
-        }
+        String[] parsedInput = Parser.parseDeadline(input);
+        this.taskList.addDeadline(parsedInput[0], parsedInput[1]);
     }
 
     /**
@@ -105,14 +106,8 @@ public class Stewie {
      * @param input Input from user.
      */
     private void addEvent(String input) {
-        try {
-            String[] parsedInput = Parser.parseEvent(input);
-            // parsedInput = {description, form, to}
-            this.taskList.addEvent(parsedInput[0], parsedInput[1], parsedInput[2]);
-        } catch (ArrayIndexOutOfBoundsException e) {
-            System.out.println("An event requires a schedule. Use: event <description> /from <date or time> "
-                    + "/to <date or time>");
-        }
+        String[] parsedInput = Parser.parseEvent(input);
+        this.taskList.addEvent(parsedInput[0], parsedInput[1], parsedInput[2]);
     }
 
     /**
@@ -122,12 +117,7 @@ public class Stewie {
      * @param input Input from user.
      */
     private void addToDo(String input) {
-        try {
-            String description = Parser.parseTodo(input);
-            this.taskList.addToDo(description);
-        } catch (ArrayIndexOutOfBoundsException e) {
-            System.out.println("A task without a description? Do give me something to work with.");
-        }
+        this.taskList.addToDo(Parser.parseTodo(input));
     }
 
     /**

@@ -1,235 +1,209 @@
 package stewie.parser;
 
 import java.util.Arrays;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * Contains methods to parse user input into commands that the chatbot understands
+ * Parses command words and validates fields before tasks are changed.
  */
 public class Parser {
+    private static final Pattern CREATE_MARKER = Pattern.compile("(?<!\\S)/[^\\s/]+");
+    private static final Pattern UPDATE_MARKER = Pattern.compile("(?<!\\S)([a-zA-Z]+/|/[^\\s/]+)");
+
     /**
-     * Returns a type of command from user's input.
+     * Normalizes command casing and whitespace consistently in both interfaces.
      *
-     * @param input Input text string the user typed in.
-     * @return command A type of valid command.
+     * @param input User input, which may be null.
+     * @return Normalized input, or an empty string for null input.
+     */
+    public static String normalize(String input) {
+        return input == null ? "" : input.strip().replaceAll("(?U)\\s+", " ").toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * Returns the command type, including commands whose required arguments are missing.
+     *
+     * @param input User input.
+     * @return Recognized command or ERROR.
      */
     public static Command getCommand(String input) {
-        assert input != null : "Command parsing requires normalized input";
-        if (input.equals("bye")) {
-            return Command.BYE;
+        String[] parts = normalize(input).split(" ", 2);
+        try {
+            Command command = Command.valueOf(parts[0].toUpperCase(Locale.ROOT));
+            if ((command == Command.LIST || command == Command.BYE) && parts.length != 1) {
+                return Command.ERROR;
+            }
+            return command;
+        } catch (IllegalArgumentException exception) {
+            return Command.ERROR;
         }
-        if (input.equals("list")) {
-            return Command.LIST;
-        }
-        if (input.startsWith("mark ")) {
-            return Command.MARK;
-        }
-        if (input.startsWith("unmark ")) {
-            return Command.UNMARK;
-        }
-        if (input.startsWith("deadline ")) {
-            return Command.DEADLINE;
-        }
-        if (input.startsWith("event ")) {
-            return Command.EVENT;
-        }
-        if (input.startsWith("todo ")) {
-            return Command.TODO;
-        }
-        if (input.startsWith("delete ")) {
-            return Command.DELETE;
-        }
-        if (input.startsWith("find ")) {
-            return Command.FIND;
-        }
-        if (input.startsWith("update ")) {
-            return Command.UPDATE;
-        }
-        return Command.ERROR;
     }
 
     /**
-     * Returns the index of the task from the user input string.
+     * Returns a zero-based index for a command with exactly one positive task number.
      *
-     * @param input Input from user.
-     * @return Index of the task from the input string.
+     * @param input User command.
+     * @return Task index, or -1 for missing, extra, nonnumeric, or overflowing arguments.
      */
     public static int getTaskIndex(String input) {
-        assert input != null : "Task index parsing requires command input";
-        String[] parts = input.trim().split("\\s+");
+        String[] parts = normalize(input).split(" ");
+        return parts.length == 2 ? parseIndex(parts[1]) : -1;
+    }
 
-        if (parts.length != 2) {
+    private static int parseIndex(String number) {
+        if (!number.matches("[0-9]+")) {
             return -1;
         }
-
         try {
-            return Integer.parseInt(parts[1]) - 1;
-        } catch (NumberFormatException e) {
+            int value = Integer.parseInt(number);
+            return value > 0 ? value - 1 : -1;
+        } catch (NumberFormatException exception) {
             return -1;
         }
     }
 
     /**
-     * Parses a string into description and deadline.
-     * Returns description and deadline as a string array.
+     * Parses a deadline with exactly one /by field.
      *
-     * @param input Input string from user.
-     * @return {description, deadline} in String[] format.
+     * @param input User command.
+     * @return Description and deadline.
+     * @throws IllegalArgumentException If a field is missing, repeated, or unsupported.
      */
     public static String[] parseDeadline(String input) {
-        String[] words = input.split("deadline|/by");
-        String description = words[1].trim();
-        String deadline = words[2].trim();
-        return new String[] {description, deadline};
+        return parseCreation(input, new String[] {"/by"},
+                "Use: deadline <description> /by <date>. Supply each field once.");
     }
 
     /**
-     * Parses a string into description, from(date), and to(date).
-     * Returns them as a string array.
+     * Parses an event with one /from field followed by one /to field.
      *
-     * @param input Input from user.
-     * @return {description, from, to} string array.
+     * @param input User command.
+     * @return Description, start date, and end date.
+     * @throws IllegalArgumentException If fields are missing, repeated, unsupported, or out of order.
      */
     public static String[] parseEvent(String input) {
-        String[] words = input.split("event|/from|/to");
-        String description = words[1].trim();
-        String from = words[2].trim();
-        String to = words[3].trim();
-        return new String[] {description, from, to};
+        return parseCreation(input, new String[] {"/from", "/to"},
+                "Use: event <description> /from <date> /to <date>. Supply each field once in this order.");
+    }
+
+    /** Validates the complete marker sequence so no supplied field is silently discarded. */
+    private static String[] parseCreation(String input, String[] markers, String guidance) {
+        String body = body(input);
+        Matcher matcher = CREATE_MARKER.matcher(body);
+        String[] values = new String[markers.length + 1];
+        int count = 0;
+        int start = 0;
+        while (matcher.find()) {
+            if (count >= markers.length || !matcher.group().equals(markers[count])) {
+                throw new IllegalArgumentException(guidance);
+            }
+            values[count++] = body.substring(start, matcher.start()).strip();
+            start = matcher.end();
+        }
+        if (count != markers.length) {
+            throw new IllegalArgumentException(guidance);
+        }
+        values[count] = body.substring(start).strip();
+        if (Arrays.stream(values).anyMatch(String::isEmpty)) {
+            throw new IllegalArgumentException(guidance);
+        }
+        return values;
     }
 
     /**
-     * Parses a string into description.
+     * Returns a required todo description.
      *
-     * @param input Input from user.
-     * @return description extracted from user.
+     * @param input User command.
+     * @return Task description.
+     * @throws IllegalArgumentException If the description is missing.
      */
     public static String parseTodo(String input) {
-        return input.split("\\s+", 2)[1].trim();
+        String description = body(input);
+        if (description.isEmpty()) {
+            throw new IllegalArgumentException("Use: todo <description>.");
+        }
+        return description;
+    }
+
+    private static String body(String input) {
+        String[] parts = input == null ? new String[0] : input.strip().split("(?U)\\s+", 2);
+        return parts.length < 2 ? "" : parts[1].strip();
     }
 
     /**
-     * Returns the task index from an update command.
+     * Returns the task index from an update with at least one replacement field.
      *
-     * @param input Input from user.
-     * @return Zero-based task index, or -1 when the command has no valid index.
+     * @param input User command.
+     * @return Task index or -1 for invalid input.
      */
     public static int getUpdateTaskIndex(String input) {
-        assert input != null : "Update parsing requires command input";
-        String[] parts = input.trim().split("\\s+");
-
-        if (parts.length < 3) {
-            return -1;
-        }
-
-        try {
-            return Integer.parseInt(parts[1]) - 1;
-        } catch (NumberFormatException e) {
-            return -1;
-        }
+        String[] parts = normalize(input).split(" ", 3);
+        return parts.length == 3 ? parseIndex(parts[1]) : -1;
     }
 
     /**
-     * Returns the replacement description from an update command.
+     * Returns an update description, or an empty string if omitted.
      *
-     * @param input Input from user.
-     * @return Replacement task description, or an empty string when it is missing.
+     * @param input User command.
+     * @return Replacement description.
      */
     public static String parseUpdateDescription(String input) {
-        assert input != null : "Update parsing requires command input";
-        String[] updates = parseUpdate(input);
-        return updates[0] == null ? "" : updates[0];
+        String description = parseUpdate(input)[0];
+        return description == null ? "" : description;
     }
 
     /**
-     * Parses the optional fields in an update command.
-     * The returned values are description, deadline, from, and to, respectively.
-     * A null value means that the corresponding task field should be preserved.
+     * Parses optional update fields without accepting repeated or unknown markers.
      *
-     * @param input Input from user.
-     * @return Updated task fields in the order description, deadline, from, and to.
+     * @param input User command.
+     * @return Description, deadline, start, and end; null entries preserve existing fields.
+     * @throws IllegalArgumentException If a marker is unsupported, repeated, or has no value.
      */
     public static String[] parseUpdate(String input) {
-        assert input != null : "Update parsing requires command input";
-        String[] parts = input.trim().split("\\s+", 3);
-        if (parts.length < 3) {
-            return new String[] {null, null, null, null};
+        String fields = body(body(input));
+        String[] values = new String[4];
+        Matcher matcher = UPDATE_MARKER.matcher(fields);
+        int field = 0;
+        int start = 0;
+        while (matcher.find()) {
+            String value = fields.substring(start, matcher.start()).strip();
+            if (field != 0 && value.isEmpty()) {
+                throw new IllegalArgumentException("Update fields cannot be empty.");
+            }
+            values[field] = value.isEmpty() ? null : value;
+            field = switch (matcher.group().toLowerCase(Locale.ROOT)) {
+                case "d/", "by/" -> 1;
+                case "from/" -> 2;
+                case "to/" -> 3;
+                default -> throw new IllegalArgumentException("Use update fields: d/ (or by/), from/, to/.");
+            };
+            if (values[field] != null) {
+                throw new IllegalArgumentException("Supply each update field only once; d/ and by/ are aliases.");
+            }
+            start = matcher.end();
         }
-
-        String body = parts[2].trim();
-        String description = body;
-        String deadline = null;
-        String from = null;
-        String to = null;
-        String[] markers = {" d/", " by/", " from/", " to/"};
-        int firstMarker = body.length();
-        for (String marker : markers) {
-            int markerIndex = body.indexOf(marker.trim());
-            if (markerIndex >= 0 && markerIndex < firstMarker) {
-                if (markerIndex == 0 || body.charAt(markerIndex - 1) == ' ') {
-                    firstMarker = markerIndex;
-                }
-            }
+        String value = fields.substring(start).strip();
+        if (field != 0 && value.isEmpty()) {
+            throw new IllegalArgumentException("Update fields cannot be empty.");
         }
-        description = body.substring(0, firstMarker).trim();
-
-        String fields = body.substring(firstMarker).trim();
-        while (!fields.isEmpty()) {
-            int slashIndex = fields.indexOf('/');
-            if (slashIndex <= 0) {
-                return new String[] {null, null, null, null};
-            }
-            String marker = fields.substring(0, slashIndex).trim();
-            int nextMarker = findNextUpdateMarker(fields, slashIndex + 1);
-            String value = fields.substring(slashIndex + 1, nextMarker).trim();
-            if (value.isEmpty()) {
-                return new String[] {null, null, null, null};
-            }
-            switch (marker) {
-                case "d":
-                case "by":
-                    deadline = value;
-                    break;
-                case "from":
-                    from = value;
-                    break;
-                case "to":
-                    to = value;
-                    break;
-                default:
-                    return new String[] {null, null, null, null};
-            }
-            fields = nextMarker == fields.length() ? "" : fields.substring(nextMarker).trim();
-        }
-        return new String[] {description.isEmpty() ? null : description, deadline, from, to};
+        values[field] = value.isEmpty() ? null : value;
+        return values;
     }
 
     /**
-     * Finds the next supported update field marker.
+     * Returns at least one search keyword.
      *
-     * @param fields Update fields to search.
-     * @param startIndex Position at which to start searching.
-     * @return Index of the next marker, or the end of the input.
-     */
-    private static int findNextUpdateMarker(String fields, int startIndex) {
-        int nextMarker = fields.length();
-        String[] markers = {" d/", " by/", " from/", " to/"};
-        for (String marker : markers) {
-            int markerIndex = fields.indexOf(marker, startIndex - 1);
-            if (markerIndex >= 0 && markerIndex < nextMarker) {
-                nextMarker = markerIndex;
-            }
-        }
-        return nextMarker;
-    }
-
-    /**
-     * Parses a string to keywords string array.
-     *
-     * @param input Input string from user.
-     * @return Words starting from second word in input.
+     * @param input User command.
+     * @return Search keywords.
+     * @throws IllegalArgumentException If no keyword is supplied.
      */
     public static String[] parseFindKeywords(String input) {
-        String[] words = input.split("\\s+");
-        return Arrays.copyOfRange(words, 1, words.length);
+        String keywords = body(input);
+        if (keywords.isEmpty()) {
+            throw new IllegalArgumentException("Use: find <keyword> [more keywords].");
+        }
+        return keywords.split("(?U)\\s+");
     }
 }

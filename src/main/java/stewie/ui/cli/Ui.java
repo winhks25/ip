@@ -1,9 +1,9 @@
 package stewie.ui.cli;
 
+import java.util.Scanner;
+
 import stewie.model.Task;
 import stewie.ui.Dialogue;
-
-import java.util.Scanner;
 
 /**
  * Contains the UI components of the program.
