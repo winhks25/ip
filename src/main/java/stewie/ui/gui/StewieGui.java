@@ -1,5 +1,12 @@
 package stewie.ui.gui;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.kordamp.ikonli.javafx.FontIcon;
+
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -24,16 +31,10 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.util.Duration;
-import org.kordamp.ikonli.javafx.FontIcon;
 import stewie.model.TaskList;
 import stewie.parser.Command;
 import stewie.parser.Parser;
 import stewie.ui.Dialogue;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Represents the modern Instagram-inspired chat workspace for Stewie.
@@ -459,7 +460,7 @@ public class StewieGui extends BorderPane {
 
         appendMessage(true, rawInput);
         messageField.clear();
-        handleCommand(rawInput.toLowerCase());
+        handleCommand(Parser.normalize(rawInput));
         refreshTaskSummary();
         scrollToBottom();
     }
@@ -525,12 +526,8 @@ public class StewieGui extends BorderPane {
      * @param input the normalized todo command
      */
     private void addTodo(String input) {
-        try {
-            taskList.addToDo(Parser.parseTodo(input));
-            appendMessage(false, Dialogue.ADDED);
-        } catch (ArrayIndexOutOfBoundsException exception) {
-            appendMessage(false, "A task needs a description. Try `todo call Mum`. Yes, one must keep her informed.");
-        }
+        taskList.addToDo(Parser.parseTodo(input));
+        appendMessage(false, Dialogue.ADDED);
     }
 
     /**
@@ -539,15 +536,9 @@ public class StewieGui extends BorderPane {
      * @param input the normalized deadline command
      */
     private void addDeadline(String input) {
-        try {
-            String[] parsedInput = Parser.parseDeadline(input);
-            taskList.addDeadline(parsedInput[0], parsedInput[1]);
-            appendMessage(false, "Deadline recorded. Time is now officially judging you.");
-        } catch (ArrayIndexOutOfBoundsException exception) {
-            appendMessage(false,
-                    "Even I need a deadline. Use `deadline <description> /by <date>`, "
-                            + "e.g. `deadline report /by 25 Dec 2026`.");
-        }
+        String[] parsedInput = Parser.parseDeadline(input);
+        taskList.addDeadline(parsedInput[0], parsedInput[1]);
+        appendMessage(false, "Deadline recorded. Time is now officially judging you.");
     }
 
     /**
@@ -556,13 +547,9 @@ public class StewieGui extends BorderPane {
      * @param input the normalized event command
      */
     private void addEvent(String input) {
-        try {
-            String[] parsedInput = Parser.parseEvent(input);
-            taskList.addEvent(parsedInput[0], parsedInput[1], parsedInput[2]);
-            appendMessage(false, "Event scheduled. I trust the occasion warrants all this organisation.");
-        } catch (ArrayIndexOutOfBoundsException exception) {
-            appendMessage(false, "An event requires a schedule. Use `event <description> /from <date> /to <date>`.");
-        }
+        String[] parsedInput = Parser.parseEvent(input);
+        taskList.addEvent(parsedInput[0], parsedInput[1], parsedInput[2]);
+        appendMessage(false, "Event scheduled. I trust the occasion warrants all this organisation.");
     }
 
     /**

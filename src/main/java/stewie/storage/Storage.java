@@ -1,15 +1,15 @@
 package stewie.storage;
 
-import stewie.model.ToDo;
-import stewie.model.Deadline;
-import stewie.model.Event;
-import stewie.model.Task;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
+
+import stewie.model.Deadline;
+import stewie.model.Event;
+import stewie.model.Task;
+import stewie.model.ToDo;
 
 /**
  * Contains methods that stores and retrieve the task from local disk.

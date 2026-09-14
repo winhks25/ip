@@ -1,10 +1,10 @@
 package stewie.model;
 
-import stewie.storage.Storage;
-import stewie.ui.cli.Ui;
-
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import stewie.storage.Storage;
+import stewie.ui.cli.Ui;
 
 /**
  * Represents a task list.

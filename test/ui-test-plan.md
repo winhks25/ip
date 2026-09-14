@@ -72,11 +72,15 @@ javac -d out/ui-test $(find src/main/java -name '*.java' ! -path '*/stewie/ui/gu
 Launch each test case with:
 
 ```sh
-rm -f data/stewie.txt
-java -ea -cp out/ui-test stewie.Stewie
+repo_root="$PWD"
+case_dir=$(mktemp -d)
+cd "$case_dir"
+java -ea -cp "$repo_root/out/ui-test" stewie.Stewie
 ```
 
-The saved task file is removed before each case so the cases remain independent.
+Each case runs in a fresh temporary directory, preserving the real task file.
+Run `python3 test/run-ui-tests.py <record-path>` to compile with Java 25 and execute the cases in order.
+Optional case setup commands run in that temporary directory before launching the application.
 Assertions are enabled with `-ea` to check internal invariants during every session.
 
 The expected output below uses `LF` line endings and includes the final newline produced by the program. The skill may normalize `CRLF` to `LF` and one final trailing newline only.
@@ -169,9 +173,9 @@ bye
 Ah, there you are. I'm Stewie.
 Tell me your tasks. Clearly, this operation requires supervision.
 What precisely is the plan? Use a command: todo, event, deadline, mark, unmark, delete, find, update, list, bye + description!
-What precisely is the plan? Use a command: todo, event, deadline, mark, unmark, delete, find, update, list, bye + description!
-An event requires a schedule. Use: event <description> /from <date or time> /to <date or time>
-Even I need a deadline. Use: deadline <description> /by <deadline>
+A slight flaw in your plan: Use: todo <description>.
+A slight flaw in your plan: Use: event <description> /from <date> /to <date>. Supply each field once in this order.
+A slight flaw in your plan: Use: deadline <description> /by <date>. Supply each field once.
 That task exists only in your imagination. Use a listed number: mark <number>
 Numbers, please. Use: unmark <number>.
 Behold, your agenda. Let us examine the scale of this undertaking.
@@ -422,5 +426,71 @@ No tasks to show. How suspiciously serene. Try adding a task or checking your se
 A slight flaw in your plan: Date format is not recognized
 Behold, your agenda. Let us examine the scale of this undertaking.
 1. [T] [ ] buy milk
+Very well. Do come back. I mean, someone must supervise your progress.
+```
+
+## Test Case 9: Reject ambiguous command fields
+
+### Aim
+
+Reject missing, repeated, misplaced, and unknown fields; accept tabs and command words inside descriptions.
+
+### Inputs
+
+```text
+deadline
+event
+find
+mark
+mark -2147483648
+delete +1
+unmark 999999999999999
+deadline report /by 1/1/2026 /by 2/1/2026
+deadline report /by
+event trip /to 2/1/2026 /from 1/1/2026
+event trip /from 1/1/2026 /to 2/1/2026 /to 3/1/2026
+update 1 d/1/1/2026 by/2/1/2026
+update 1 from/
+update 1 bogus/value
+list extra
+bye extra
+  todo	  plan the event and deadline
+list
+bye
+```
+
+### Expected output
+
+```text
+███████╗ ████████╗ ███████╗ ██╗    ██╗ ██╗ ███████╗
+██╔════╝ ╚══██╔══╝ ██╔════╝ ██║    ██║ ██║ ██╔════╝
+███████╗    ██║    █████╗   ██║ █╗ ██║ ██║ █████╗
+╚════██║    ██║    ██╔══╝   ██║███╗██║ ██║ ██╔══╝
+███████║    ██║    ███████╗ ╚███╔███╔╝ ██║ ███████╗
+╚══════╝    ╚═╝    ╚══════╝  ╚══╝╚══╝  ╚═╝ ╚══════╝
+
+Ah, there you are. I'm Stewie.
+Tell me your tasks. Clearly, this operation requires supervision.
+A slight flaw in your plan: Use: deadline <description> /by <date>. Supply each field once.
+A slight flaw in your plan: Use: event <description> /from <date> /to <date>. Supply each field once in this order.
+A slight flaw in your plan: Use: find <keyword> [more keywords].
+Numbers, please. Use: mark <number>.
+Numbers, please. Use: mark <number>.
+Numbers, please. Use: delete <number>.
+Numbers, please. Use: unmark <number>.
+A slight flaw in your plan: Use: deadline <description> /by <date>. Supply each field once.
+A slight flaw in your plan: Use: deadline <description> /by <date>. Supply each field once.
+A slight flaw in your plan: Use: event <description> /from <date> /to <date>. Supply each field once in this order.
+A slight flaw in your plan: Use: event <description> /from <date> /to <date>. Supply each field once in this order.
+A slight flaw in your plan: Supply each update field only once; d/ and by/ are aliases.
+A slight flaw in your plan: Update fields cannot be empty.
+A slight flaw in your plan: Use update fields: d/ (or by/), from/, to/.
+What precisely is the plan? Use a command: todo, event, deadline, mark, unmark, delete, find, update, list, bye + description!
+What precisely is the plan? Use a command: todo, event, deadline, mark, unmark, delete, find, update, list, bye + description!
+Consider it recorded. A small triumph for competent administration.
+[T] [ ] plan the event and deadline
+Your agenda now contains 1 task. Do try to keep up.
+Behold, your agenda. Let us examine the scale of this undertaking.
+1. [T] [ ] plan the event and deadline
 Very well. Do come back. I mean, someone must supervise your progress.
 ```
