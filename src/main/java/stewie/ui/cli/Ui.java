@@ -6,7 +6,7 @@ import stewie.model.Task;
 import stewie.ui.Dialogue;
 
 /**
- * Contains the UI components of the program.
+ * Provides console greetings, task displays, and command feedback.
  */
 public class Ui {
     /**
@@ -38,7 +38,9 @@ public class Ui {
         System.out.println("A slight flaw in your plan: " + message);
     }
 
-    /** Prints the supported commands when input cannot be classified. */
+    /**
+     * Prints the supported commands when input cannot be classified.
+     */
     public static void printUnknownCommand() {
         System.out.println("What precisely is the plan? Use a command: todo, event, deadline, "
                 + "mark, unmark, delete, find, update, list, bye + description!");
@@ -53,14 +55,17 @@ public class Ui {
         System.out.println("Numbers, please. Use: " + command + " <number>.");
     }
 
-    /** Prints the format for an update missing its task number or replacement fields. */
+    /**
+     * Prints the format for an update missing its task number or replacement fields.
+     */
     public static void printUpdateFormat() {
         System.out.println("A revision needs details. Use: update <number> [description] "
                 + "[d/<deadline>] [from/<from>] [to/<to>]");
     }
 
     /**
-     * Prints whatever users type in.
+     * Echoes input lines with a Stewie prefix until bye or the end of input.
+     * Prints the farewell instead of echoing bye.
      */
     public static void echoUserCommands() {
         Scanner scanner = new Scanner(System.in);
@@ -75,7 +80,7 @@ public class Ui {
     }
 
     /**
-     * Print goodbye statement.
+     * Prints the farewell message.
      */
     public static void printBye() {
         System.out.println(Dialogue.GOODBYE);
@@ -98,7 +103,7 @@ public class Ui {
     }
 
     /**
-     * Print the success message upon the successful addition of a task to the list.
+     * Prints the success message after a task is added to the list.
      *
      * @param t Task being added.
      * @param numTasks Number of tasks in the task list.
@@ -140,8 +145,9 @@ public class Ui {
     }
 
     /**
-     * Print the format for mark and unmark commands
-     * @param command Type of command: mark or unmark or delete
+     * Prints guidance when a numbered command refers to a nonexistent task.
+     *
+     * @param command Command requiring a task number: mark, unmark, or delete.
      */
     public static void printNumberedCommandFormat(String command) {
         System.out.printf("That task exists only in your imagination. Use a listed number: %s <number>%n", command);

@@ -10,13 +10,17 @@ import java.util.List;
  * @param isInteractive Whether task cards may change the current list.
  */
 record GuiCommandResult(List<String> messages, List<String> tasks, boolean isInteractive) {
-    /** Copies reply contents so rendering cannot change the command result. */
+    /**
+     * Copies reply contents so rendering cannot change the command result.
+     */
     GuiCommandResult {
         messages = List.copyOf(messages);
         tasks = List.copyOf(tasks);
     }
 
-    /** Creates a reply with no task cards. */
+    /**
+     * Creates a reply with no task cards.
+     */
     static GuiCommandResult message(String message) {
         return new GuiCommandResult(List.of(message), List.of(), false);
     }

@@ -21,7 +21,9 @@ import javafx.scene.layout.VBox;
 import stewie.model.TaskList;
 import stewie.storage.StorageException;
 
-/** Assembles the workspace panels and coordinates navigation and the task summary. */
+/**
+ * Assembles the workspace panels and coordinates navigation and the task summary.
+ */
 public class StewieGui extends BorderPane {
     private final Image stewiePhoto = loadPhoto();
     private final TaskList taskList;
@@ -48,7 +50,7 @@ public class StewieGui extends BorderPane {
     /**
      * Creates the sidebar containing the brand, navigation, and task summary.
      *
-     * @return the styled sidebar
+     * @return The styled sidebar.
      */
     private VBox createSidebar() {
         VBox sidebar = createSidebarContainer();
@@ -57,7 +59,9 @@ public class StewieGui extends BorderPane {
         return sidebar;
     }
 
-    /** Creates the sidebar's outer layout. */
+    /**
+     * Creates the sidebar's outer layout.
+     */
     private VBox createSidebarContainer() {
         VBox sidebar = new VBox(24);
         sidebar.getStyleClass().add("sidebar");
@@ -66,7 +70,9 @@ public class StewieGui extends BorderPane {
         return sidebar;
     }
 
-    /** Creates the sidebar portrait, brand name, and tagline. */
+    /**
+     * Creates the sidebar portrait, brand name, and tagline.
+     */
     private HBox createBrand() {
         HBox brand = new HBox(12);
         brand.setAlignment(Pos.CENTER_LEFT);
@@ -82,7 +88,9 @@ public class StewieGui extends BorderPane {
         return brand;
     }
 
-    /** Creates navigation controls whose handlers only select a page and its highlight. */
+    /**
+     * Creates navigation controls whose handlers only select a page and its highlight.
+     */
     private VBox createNavigation() {
         VBox navigation = new VBox(8);
         Button chatButton = createNavigationButton("fth-message-circle", "Chat", true);
@@ -104,13 +112,17 @@ public class StewieGui extends BorderPane {
         return navigation;
     }
 
-    /** Restores the conversation while discarding pending list animations. */
+    /**
+     * Restores the conversation while discarding pending list animations.
+     */
     private void showChatPanel() {
         listPanel.cancelCompletionDelays();
         setCenter(chatPanel);
     }
 
-    /** Refreshes the list on entry, retaining delays when its selected tab is clicked again. */
+    /**
+     * Refreshes the list on entry, retaining delays when its selected tab is clicked again.
+     */
     private void showListPanel() {
         if (getCenter() != listPanel) {
             listPanel.cancelCompletionDelays();
@@ -119,13 +131,17 @@ public class StewieGui extends BorderPane {
         setCenter(listPanel);
     }
 
-    /** Opens the reference and stops timers belonging to the previous list view. */
+    /**
+     * Opens the reference and stops timers belonging to the previous list view.
+     */
     private void showHelpPanel() {
         listPanel.cancelCompletionDelays();
         setCenter(helpPanel);
     }
 
-    /** Keeps exactly one navigation button highlighted. */
+    /**
+     * Keeps exactly one navigation button highlighted.
+     */
     private void selectNavigation(Button selected, Button... others) {
         for (Button button : others) {
             button.getStyleClass().remove("navigation-button-active");
@@ -135,14 +151,18 @@ public class StewieGui extends BorderPane {
         }
     }
 
-    /** Creates flexible space that keeps the summary near the bottom. */
+    /**
+     * Creates flexible space that keeps the summary near the bottom.
+     */
     private Region createSidebarSpacer() {
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
         return spacer;
     }
 
-    /** Creates the card containing the live task count and its explanatory labels. */
+    /**
+     * Creates the card containing the live task count and its explanatory labels.
+     */
     private VBox createSummaryCard() {
         VBox summaryCard = new VBox(12);
         summaryCard.getStyleClass().add("summary-card");
@@ -157,7 +177,9 @@ public class StewieGui extends BorderPane {
         return summaryCard;
     }
 
-    /** Creates the sidebar's closing caption. */
+    /**
+     * Creates the sidebar's closing caption.
+     */
     private Label createSidebarFooter() {
         Label footer = new Label("supervised by a genius");
         footer.getStyleClass().add("muted-label");
@@ -192,7 +214,9 @@ public class StewieGui extends BorderPane {
         return panel;
     }
 
-    /** Displays a failed card action even when the user is currently viewing My List. */
+    /**
+     * Displays a failed card action even when the user is currently viewing My List.
+     */
     private void showStorageError(StorageException exception) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setHeaderText("Task change was not saved");
@@ -214,7 +238,9 @@ public class StewieGui extends BorderPane {
         taskSummary.setText(String.format("%d tasks  ·  %d done", tasks.length, completedTasks));
     }
 
-    /** Loads the optional portrait, allowing the interface to use a text logo if it is missing or corrupt. */
+    /**
+     * Loads the optional portrait, allowing the interface to use a text logo if it is missing or corrupt.
+     */
     private Image loadPhoto() {
         URL resource = StewieGui.class.getResource("/images/stewie_photo.png");
         if (resource == null) {
@@ -227,8 +253,8 @@ public class StewieGui extends BorderPane {
     /**
      * Creates a Stewie image logo while preserving the original proportions.
      *
-     * @param size the width and height available for the logo
-     * @return a logo node
+     * @param size The width and height available for the logo.
+     * @return A logo node.
      */
     private StackPane createLogo(double size) {
         ImageView portrait = new ImageView(stewiePhoto);
@@ -248,10 +274,10 @@ public class StewieGui extends BorderPane {
     /**
      * Creates one item in the sidebar navigation.
      *
-     * @param icon the navigation icon
-     * @param labelText the navigation label
-     * @param isActive whether the item represents the current page
-     * @return a navigation button
+     * @param icon The navigation icon.
+     * @param labelText The navigation label.
+     * @param isActive Whether the item represents the current page.
+     * @return A navigation button.
      */
     private Button createNavigationButton(String icon, String labelText, boolean isActive) {
         FontIcon navigationIcon = new FontIcon(icon);

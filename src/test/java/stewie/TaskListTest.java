@@ -22,21 +22,27 @@ import stewie.model.TaskList;
 import stewie.storage.Storage;
 import stewie.storage.StorageException;
 
-/** Verifies task-list mutations, searching, persistence, and preservation after rejected changes. */
+/**
+ * Verifies task-list mutations, searching, persistence, and preservation after rejected changes.
+ */
 public class TaskListTest {
     @TempDir
     private Path directory;
     private Path file;
     private TaskList tasks;
 
-    /** Creates isolated storage for each test so no test touches the user's agenda. */
+    /**
+     * Creates isolated storage for each test so no test touches the user's agenda.
+     */
     @BeforeEach
     public void setUp() {
         file = directory.resolve("stewie.txt");
         tasks = new TaskList(new Storage(file));
     }
 
-    /** Verifies creation order and an independent snapshot of the list. */
+    /**
+     * Verifies creation order and an independent snapshot of the list.
+     */
     @Test
     public void addTasks_preservesOrderAndReturnsIndependentSnapshot() {
         assertArrayEquals(new String[0], tasks.produceTaskList());
@@ -50,7 +56,9 @@ public class TaskListTest {
         assertPersisted(3);
     }
 
-    /** Verifies every task type retains its metadata through repeated status transitions. */
+    /**
+     * Verifies every task type retains its metadata through repeated status transitions.
+     */
     @Test
     public void changeStatus_preservesEveryTaskType() {
         addEveryType();
@@ -67,7 +75,9 @@ public class TaskListTest {
         }
     }
 
-    /** Verifies deleting first, last, and final tasks persists the remaining order. */
+    /**
+     * Verifies deleting first, last, and final tasks persists the remaining order.
+     */
     @Test
     public void deleteTask_handlesListBoundaries() {
         addEveryType();
@@ -82,7 +92,9 @@ public class TaskListTest {
         assertPersisted(6);
     }
 
-    /** Verifies description-only updates retain dates and completed status for all task types. */
+    /**
+     * Verifies description-only updates retain dates and completed status for all task types.
+     */
     @Test
     public void updateDescription_preservesMetadataAndCompletion() {
         addEveryType();
@@ -95,7 +107,9 @@ public class TaskListTest {
         assertPersisted(9);
     }
 
-    /** Verifies independent date updates and all-field updates preserve omitted values. */
+    /**
+     * Verifies independent date updates and all-field updates preserve omitted values.
+     */
     @Test
     public void updateDates_preservesOmittedFields() {
         addEveryType();
@@ -114,7 +128,9 @@ public class TaskListTest {
         assertPersisted(9);
     }
 
-    /** Verifies incompatible fields and invalid values cannot partially update any task. */
+    /**
+     * Verifies incompatible fields and invalid values cannot partially update any task.
+     */
     @Test
     public void updateTask_rejectsIncompatibleAndInvalidFields() throws IOException {
         addEveryType();
@@ -134,7 +150,9 @@ public class TaskListTest {
         }
     }
 
-    /** Verifies duplicate details are rejected regardless of case, whitespace, or completion. */
+    /**
+     * Verifies duplicate details are rejected regardless of case, whitespace, or completion.
+     */
     @Test
     public void addAndUpdate_rejectDuplicatesButAllowOwnDetails() throws IOException {
         addEveryType();
@@ -153,7 +171,9 @@ public class TaskListTest {
         assertPersisted(8);
     }
 
-    /** Verifies invalid indices do not save or change state for any numbered operation. */
+    /**
+     * Verifies invalid indices do not save or change state for any numbered operation.
+     */
     @Test
     public void numberedActions_rejectOutOfRangeIndices() throws IOException {
         addEveryType();
@@ -170,7 +190,9 @@ public class TaskListTest {
         }
     }
 
-    /** Verifies failed saves preserve metadata, completion, revision, and externally changed bytes. */
+    /**
+     * Verifies failed saves preserve metadata, completion, revision, and externally changed bytes.
+     */
     @Test
     public void failedSave_preservesEveryTaskType() throws IOException {
         addEveryType();
@@ -191,7 +213,9 @@ public class TaskListTest {
         }
     }
 
-    /** Verifies search uses any keyword, includes metadata, preserves order, and avoids duplicate matches. */
+    /**
+     * Verifies search uses any keyword, includes metadata, preserves order, and avoids duplicate matches.
+     */
     @Test
     public void findTasks_matchesAnyKeywordOnce() {
         assertArrayEquals(new String[0], tasks.findTasks("anything"));
@@ -205,7 +229,9 @@ public class TaskListTest {
         assertEquals(3, tasks.getRevision());
     }
 
-    /** Verifies shared model operations leave all console presentation to the caller. */
+    /**
+     * Verifies shared model operations leave all console presentation to the caller.
+     */
     @Test
     @ResourceLock(Resources.SYSTEM_OUT)
     public void mutations_doNotWriteConsoleOutput() {
@@ -225,14 +251,18 @@ public class TaskListTest {
         assertEquals("", output.toString(StandardCharsets.UTF_8));
     }
 
-    /** Seeds the three supported task types with distinct details. */
+    /**
+     * Seeds the three supported task types with distinct details.
+     */
     private void addEveryType() {
         tasks.addToDo("read book");
         tasks.addDeadline("report", "2026-01-02");
         tasks.addEvent("trip", "2026-01-01", "2026-01-03");
     }
 
-    /** Checks successful mutations survive restart with the expected revision. */
+    /**
+     * Checks successful mutations survive restart with the expected revision.
+     */
     private void assertPersisted(long revision) {
         assertEquals(revision, tasks.getRevision());
         TaskList restored = new TaskList(new Storage(file));
@@ -241,7 +271,9 @@ public class TaskListTest {
         assertEquals(0, restored.getRevision());
     }
 
-    /** Checks invalid mutations leave both persisted bytes and live state unchanged. */
+    /**
+     * Checks invalid mutations leave both persisted bytes and live state unchanged.
+     */
     private void assertRejected(Consumer<TaskList> action) throws IOException {
         String[] before = tasks.produceTaskList();
         byte[] saved = Files.readAllBytes(file);

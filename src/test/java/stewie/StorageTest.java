@@ -24,12 +24,16 @@ import stewie.model.ToDo;
 import stewie.storage.Storage;
 import stewie.storage.StorageException;
 
-/** Verifies storage recovery and preservation of both disk and memory on failed writes. */
+/**
+ * Verifies storage recovery and preservation of both disk and memory on failed writes.
+ */
 public class StorageTest {
     @TempDir
     private Path directory;
 
-    /** Verifies missing directories are created and every task type survives a restart in another locale. */
+    /**
+     * Verifies missing directories are created and every task type survives a restart in another locale.
+     */
     @Test
     public void saveTasks_roundTripsAcrossLocales() {
         Locale originalLocale = Locale.getDefault();
@@ -49,7 +53,9 @@ public class StorageTest {
         }
     }
 
-    /** Verifies damaged records do not hide later valid records or allow overwriting the original file. */
+    /**
+     * Verifies damaged records do not hide later valid records or allow overwriting the original file.
+     */
     @Test
     public void loadTasks_preservesDamagedFile() throws IOException {
         Path file = directory.resolve("stewie.txt");
@@ -62,7 +68,9 @@ public class StorageTest {
         assertEquals(content, Files.readString(file));
     }
 
-    /** Verifies external edits block every kind of mutation without altering memory or the edited file. */
+    /**
+     * Verifies external edits block every kind of mutation without altering memory or the edited file.
+     */
     @Test
     public void saveTasks_protectsExternalChanges() throws IOException {
         Path file = directory.resolve("stewie.txt");
@@ -82,7 +90,9 @@ public class StorageTest {
         assertEquals(external, Files.readString(file));
     }
 
-    /** Verifies denied saves can be retried after permissions are restored, without losing prior data. */
+    /**
+     * Verifies denied saves can be retried after permissions are restored, without losing prior data.
+     */
     @Test
     public void saveTasks_recoversAfterDeniedWrite() throws IOException {
         Path file = directory.resolve("stewie.txt");
@@ -103,7 +113,9 @@ public class StorageTest {
         assertEquals(2, new TaskList(new Storage(file)).produceTaskList().length);
     }
 
-    /** Verifies a failed temporary write leaves existing content intact and can be retried. */
+    /**
+     * Verifies a failed temporary write leaves existing content intact and can be retried.
+     */
     @Test
     public void saveTasks_preservesFileWhenDirectoryIsUnwritable() throws IOException {
         Path data = Files.createDirectory(directory.resolve("data"));
@@ -127,7 +139,9 @@ public class StorageTest {
         }
     }
 
-    /** Verifies invalid bytes cannot be overwritten as apparently empty data. */
+    /**
+     * Verifies invalid bytes cannot be overwritten as apparently empty data.
+     */
     @Test
     public void loadTasks_protectsUnreadableSources() throws IOException {
         Path file = directory.resolve("stewie.txt");
@@ -139,7 +153,9 @@ public class StorageTest {
         assertArrayEquals(invalidBytes, Files.readAllBytes(file));
     }
 
-    /** Verifies symbolic links cannot redirect reads or writes to another task file. */
+    /**
+     * Verifies symbolic links cannot redirect reads or writes to another task file.
+     */
     @Test
     public void loadTasks_protectsSymbolicLinks() throws IOException {
         assumeTrue(Files.getFileStore(directory).supportsFileAttributeView("posix"),
@@ -155,7 +171,9 @@ public class StorageTest {
         assertEquals("T | 0 | original", Files.readString(file));
     }
 
-    /** Verifies duplicate records, invalid statuses, field counts, and event ranges are diagnosed individually. */
+    /**
+     * Verifies duplicate records, invalid statuses, field counts, and event ranges are diagnosed individually.
+     */
     @Test
     public void loadTasks_validatesEveryRecord() throws IOException {
         Path file = directory.resolve("stewie.txt");
@@ -168,7 +186,9 @@ public class StorageTest {
         assertTrue(tasks.get(1).hasSameDetails(new Deadline("report", "2026-01-03")));
         assertTrue(storage.getLoadWarning().contains("lines 2, 3, 4, 5"));
     }
-    /** Verifies GUI revisions change only after successful writes and survive rejected actions. */
+    /**
+     * Verifies GUI revisions change only after successful writes and survive rejected actions.
+     */
     @Test
     public void taskRevision_changesOnlyAfterSuccessfulSave() throws IOException {
         Path file = directory.resolve("stewie.txt");

@@ -8,7 +8,9 @@ import org.junit.jupiter.api.Test;
 
 import stewie.parser.Parser;
 
-/** Verifies command parsing and rejection of ambiguous user input. */
+/**
+ * Verifies command parsing and rejection of ambiguous user input.
+ */
 public class ParserTest {
     @Test
     public void getTaskIndex_fail() {
@@ -48,7 +50,9 @@ public class ParserTest {
         assertEquals(-1, Parser.getUpdateTaskIndex("update two book"));
         assertEquals("", Parser.parseUpdateDescription("update 2"));
     }
-    /** Verifies marker boundaries do not split words within descriptions. */
+    /**
+     * Verifies marker boundaries do not split words within descriptions.
+     */
     @Test
     public void parseCreation_preservesCommandWords() {
         assertArrayEquals(new String[] {"review deadline", "1/1/2026"},
@@ -57,7 +61,9 @@ public class ParserTest {
                 Parser.parseEvent("event prevent event /from 1/1/2026 /to 2/1/2026"));
     }
 
-    /** Verifies duplicate aliases and repeated event fields cannot discard user input. */
+    /**
+     * Verifies duplicate aliases and repeated event fields cannot discard user input.
+     */
     @Test
     public void parseFields_rejectsAmbiguousInput() {
         assertThrows(IllegalArgumentException.class,
@@ -68,7 +74,9 @@ public class ParserTest {
                 () -> Parser.parseDeadline("deadline report /by"));
     }
 
-    /** Verifies task numbers cannot wrap around or contain signs or extra arguments. */
+    /**
+     * Verifies task numbers cannot wrap around or contain signs or extra arguments.
+     */
     @Test
     public void parseIndex_rejectsInvalidNumbers() {
         for (String number : new String[] {"-2147483648", "2147483648", "+1", "0", "1 extra"}) {

@@ -17,7 +17,9 @@ import javafx.util.Duration;
 import stewie.model.TaskList;
 import stewie.storage.StorageException;
 
-/** Displays grouped tasks and manages the lifetime of their completion delays. */
+/**
+ * Displays grouped tasks and manages the lifetime of their completion delays.
+ */
 final class TaskListPanel extends VBox {
     private final TaskList taskList;
     private final Runnable onTasksChanged;
@@ -26,7 +28,9 @@ final class TaskListPanel extends VBox {
     // Each completed task keeps its own delay until navigation cancels the pending callbacks.
     private final Map<Integer, PauseTransition> completionDelays = new HashMap<>();
 
-    /** Creates a list view with callbacks for summary updates and visible save errors. */
+    /**
+     * Creates a list view with callbacks for summary updates and visible save errors.
+     */
     TaskListPanel(TaskList taskList, Runnable onTasksChanged, Consumer<StorageException> onStorageError) {
         this.taskList = taskList;
         this.onTasksChanged = onTasksChanged;
@@ -61,7 +65,9 @@ final class TaskListPanel extends VBox {
         getChildren().addAll(header, listScroll);
     }
 
-    /** Stops pending completion timers before discarding their callbacks. */
+    /**
+     * Stops pending completion timers before discarding their callbacks.
+     */
     void cancelCompletionDelays() {
         completionDelays.values().forEach(PauseTransition::stop);
         completionDelays.clear();
@@ -94,11 +100,11 @@ final class TaskListPanel extends VBox {
     /**
      * Creates a list card whose checkbox completes or reopens the original task.
      *
-     * @param index the zero-based task index
-     * @param taskText the formatted task description
-     * @param isDone whether the task is complete
-     * @param isPending whether its completion delay is still running
-     * @return the task card with its status control
+     * @param index The zero-based task index.
+     * @param taskText The formatted task description.
+     * @param isDone Whether the task is complete.
+     * @param isPending Whether its completion delay is still running.
+     * @return The task card with its status control.
      */
     private HBox createListTaskCard(int index, String taskText, boolean isDone, boolean isPending) {
         HBox card = TaskCardFactory.create(index + 1, taskText);
@@ -109,7 +115,9 @@ final class TaskListPanel extends VBox {
         return card;
     }
 
-    /** Creates a checkbox tied to the task revision shown in My List. */
+    /**
+     * Creates a checkbox tied to the task revision shown in My List.
+     */
     private CheckBox createListStatusCheckbox(int index, boolean isDone, boolean isPending) {
         long cardRevision = taskList.getRevision();
         CheckBox statusBox = new CheckBox();
@@ -121,7 +129,9 @@ final class TaskListPanel extends VBox {
         return statusBox;
     }
 
-    /** Applies a current list-card action and restores its checkbox if saving fails. */
+    /**
+     * Applies a current list-card action and restores its checkbox if saving fails.
+     */
     private void handleListStatusChange(int index, boolean isDone, long cardRevision, CheckBox statusBox) {
         if (cardRevision != taskList.getRevision()) {
             statusBox.setSelected(isDone);
@@ -138,7 +148,9 @@ final class TaskListPanel extends VBox {
         refresh();
     }
 
-    /** Reopens a task immediately or completes it with a delay before regrouping its card. */
+    /**
+     * Reopens a task immediately or completes it with a delay before regrouping its card.
+     */
     private void changeListTaskStatus(int index, boolean isDone) {
         if (isDone) {
             taskList.markAsUndone(index);
@@ -148,7 +160,9 @@ final class TaskListPanel extends VBox {
         }
     }
 
-    /** Gives each completed task its own three-second display delay. */
+    /**
+     * Gives each completed task its own three-second display delay.
+     */
     private void scheduleCompletionRefresh(int index) {
         PauseTransition removalDelay = new PauseTransition(Duration.seconds(3));
         completionDelays.put(index, removalDelay);
@@ -162,9 +176,9 @@ final class TaskListPanel extends VBox {
     /**
      * Adds a titled task section, showing a message when it has no cards.
      *
-     * @param title the section heading
-     * @param cards the task cards in this section
-     * @param emptyText the message for an empty section
+     * @param title The section heading.
+     * @param cards The task cards in this section.
+     * @param emptyText The message for an empty section.
      */
     private void addListSection(String title, VBox cards, String emptyText) {
         Label heading = new Label(title);

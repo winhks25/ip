@@ -24,12 +24,16 @@ import stewie.model.ToDo;
 import stewie.storage.Storage;
 import stewie.storage.StorageException;
 
-/** Verifies storage format boundaries, Unicode portability, reload recovery, and external file changes. */
+/**
+ * Verifies storage format boundaries, Unicode portability, reload recovery, and external file changes.
+ */
 public class StorageEdgeCaseTest {
     @TempDir
     private Path directory;
 
-    /** Verifies a missing or empty file loads cleanly and missing parent folders are created on save. */
+    /**
+     * Verifies a missing or empty file loads cleanly and missing parent folders are created on save.
+     */
     @Test
     public void loadAndSave_handlesEmptyStorage() throws IOException {
         Path file = directory.resolve("nested/data/stewie.txt");
@@ -47,7 +51,9 @@ public class StorageEdgeCaseTest {
         assertTrue(storage.loadFromDisk().isEmpty());
     }
 
-    /** Verifies exact serialization and round trips for every type and completion state in Burmese locale. */
+    /**
+     * Verifies exact serialization and round trips for every type and completion state in Burmese locale.
+     */
     @Test
     public void saveTasks_preservesUnicodeAndEveryStatus() throws IOException {
         Locale original = Locale.getDefault();
@@ -79,7 +85,9 @@ public class StorageEdgeCaseTest {
         }
     }
 
-    /** Verifies Windows and Unix line endings with or without a final newline load identically. */
+    /**
+     * Verifies Windows and Unix line endings with or without a final newline load identically.
+     */
     @Test
     public void loadTasks_acceptsPlatformLineEndings() throws IOException {
         Path file = directory.resolve("stewie.txt");
@@ -96,7 +104,9 @@ public class StorageEdgeCaseTest {
         }
     }
 
-    /** Verifies all malformed shapes report their line numbers while later valid records survive. */
+    /**
+     * Verifies all malformed shapes report their line numbers while later valid records survive.
+     */
     @Test
     public void loadTasks_reportsEveryMalformedShape() throws IOException {
         String[] invalid = {"", "T", "T | 0", "T | 2 | bad", "T | | bad", "X | 0 | bad",
@@ -119,7 +129,9 @@ public class StorageEdgeCaseTest {
         }
     }
 
-    /** Verifies reloading after repair clears read-only state and the old warning. */
+    /**
+     * Verifies reloading after repair clears read-only state and the old warning.
+     */
     @Test
     public void loadTasks_recoversAfterRepair() throws IOException {
         Path file = directory.resolve("stewie.txt");
@@ -136,7 +148,9 @@ public class StorageEdgeCaseTest {
         assertEquals(2, new Storage(file).loadFromDisk().size());
     }
 
-    /** Verifies an externally created or deleted file cannot be silently overwritten. */
+    /**
+     * Verifies an externally created or deleted file cannot be silently overwritten.
+     */
     @Test
     public void saveTasks_detectsExternalCreationAndDeletion() throws IOException {
         Path file = directory.resolve("stewie.txt");
@@ -152,7 +166,9 @@ public class StorageEdgeCaseTest {
         assertFalse(Files.exists(file));
     }
 
-    /** Verifies a symlink substituted after loading cannot redirect a subsequent save. */
+    /**
+     * Verifies a symlink substituted after loading cannot redirect a subsequent save.
+     */
     @Test
     public void saveTasks_protectsAgainstSubstitutedSymbolicLink() throws IOException {
         assumeTrue(Files.getFileStore(directory).supportsFileAttributeView("posix"),
@@ -171,7 +187,9 @@ public class StorageEdgeCaseTest {
         assertEquals("T | 0 | original", Files.readString(target));
     }
 
-    /** Verifies replacing the file with a directory yields a safe read or save error. */
+    /**
+     * Verifies replacing the file with a directory yields a safe read or save error.
+     */
     @Test
     public void storage_rejectsDirectoryAsTaskFile() throws IOException {
         Path file = directory.resolve("stewie.txt");
@@ -189,7 +207,9 @@ public class StorageEdgeCaseTest {
         }
     }
 
-    /** Verifies duplicate dated records are compared by normalized dates and ignore completion status. */
+    /**
+     * Verifies duplicate dated records are compared by normalized dates and ignore completion status.
+     */
     @Test
     public void loadTasks_rejectsDuplicateDatedRecords() throws IOException {
         Path file = directory.resolve("stewie.txt");

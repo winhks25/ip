@@ -18,7 +18,9 @@ import stewie.model.TaskList;
 import stewie.storage.Storage;
 import stewie.ui.Dialogue;
 
-/** Verifies chat command replies and saved state without starting the JavaFX toolkit. */
+/**
+ * Verifies chat command replies and saved state without starting the JavaFX toolkit.
+ */
 class GuiCommandHandlerTest {
     @TempDir
     private Path directory;

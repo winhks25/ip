@@ -15,7 +15,7 @@ public class TaskList {
     private long revision;
 
     /**
-     * Initialize a task list with data from the disk.
+     * Creates a task list with data loaded from the default storage file.
      */
     public TaskList() {
         this(new Storage());
@@ -65,8 +65,8 @@ public class TaskList {
      * Saves the event to the disk.
      *
      * @param description Description of the event.
-     * @param from Start time of the event.
-     * @param to End time of the event.
+     * @param from Start date of the event in a supported format.
+     * @param to End date of the event in a supported format.
      */
     public void addEvent(String description, String from, String to) {
         addTask(new Event(description, from, to));
@@ -118,7 +118,7 @@ public class TaskList {
     }
 
     /**
-     * Delete a task from the task list.
+     * Deletes a task from the task list.
      * Saves the changes to the disk.
      *
      * @param index Index of the task to be deleted.
@@ -147,8 +147,8 @@ public class TaskList {
      * @param index Index of the task to update.
      * @param description Replacement description, or null to preserve it.
      * @param deadlineValue Replacement deadline, or null to preserve it.
-     * @param from Replacement event start time, or null to preserve it.
-     * @param to Replacement event end time, or null to preserve it.
+     * @param from Replacement event start date, or null to preserve it.
+     * @param to Replacement event end date, or null to preserve it.
      * @throws IndexOutOfBoundsException If the index does not identify a task.
      */
     public void updateTask(int index, String description, String deadlineValue, String from, String to) {
@@ -157,14 +157,18 @@ public class TaskList {
         replaceTask(index, updatedTask);
     }
 
-    /** Saves a replacement in a proposed list before publishing it to the live list. */
+    /**
+     * Saves a replacement in a proposed list before publishing it to the live list.
+     */
     private void replaceTask(int index, Task replacement) {
         ArrayList<Task> proposed = new ArrayList<>(tasks);
         proposed.set(index, replacement);
         persist(proposed);
     }
 
-    /** Publishes a proposed task list only after storage confirms a successful save. */
+    /**
+     * Publishes a proposed task list only after storage confirms a successful save.
+     */
     private void persist(ArrayList<Task> proposed) {
         storage.saveToDisk(proposed);
         tasks.clear();
@@ -172,12 +176,16 @@ public class TaskList {
         revision++;
     }
 
-    /** Copies a task before changing its status so failed saves cannot mutate the live list. */
+    /**
+     * Copies a task before changing its status so failed saves cannot mutate the live list.
+     */
     private void changeStatus(int index, boolean isDone) {
         replaceTask(index, TaskUpdater.withStatus(tasks.get(index), isDone));
     }
 
-    /** Rejects duplicates while allowing an update to preserve its own details. */
+    /**
+     * Rejects duplicates while allowing an update to preserve its own details.
+     */
     private void rejectDuplicate(Task candidate, int ignoredIndex) {
         for (int index = 0; index < tasks.size(); index++) {
             if (index != ignoredIndex && candidate.hasSameDetails(tasks.get(index))) {
@@ -188,7 +196,7 @@ public class TaskList {
     }
 
     /**
-     * Returns the tasks in string array.
+     * Returns an ordered snapshot of the formatted tasks.
      *
      * @return Tasks as a string array.
      */
@@ -203,8 +211,8 @@ public class TaskList {
     }
 
     /**
-     * Given an arbitrary number of keywords,
-     * returns tasks' strings that contains at least one of those keywords.
+     * Returns formatted tasks containing at least one supplied keyword.
+     * Matches are case-sensitive and include task types, completion markers, descriptions, and dates.
      *
      * @param keywords Keywords that tasks must contain.
      * @return Array of task strings.

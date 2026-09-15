@@ -1,11 +1,15 @@
 package stewie.model;
 
-/** Creates validated task replacements without mutating the original task. */
+/**
+ * Creates validated task replacements without mutating the original task.
+ */
 final class TaskUpdater {
     private TaskUpdater() {
     }
 
-    /** Builds a replacement while preserving the original completion status. */
+    /**
+     * Builds a replacement while preserving the original completion status.
+     */
     static Task update(Task existing, String description, String deadline, String from, String to) {
         Task replacement = createTaskWithUpdatedFields(existing, description, deadline, from, to);
         if (existing.isDone()) {
@@ -14,7 +18,9 @@ final class TaskUpdater {
         return replacement;
     }
 
-    /** Selects the field-update rules for the existing task's type. */
+    /**
+     * Selects the field-update rules for the existing task's type.
+     */
     private static Task createTaskWithUpdatedFields(Task existing, String description, String deadline,
             String from, String to) {
         String updatedDescription = description == null ? existing.getDescription() : description;
@@ -27,7 +33,9 @@ final class TaskUpdater {
         return createUpdatedTodo(updatedDescription, deadline, from, to);
     }
 
-    /** Validates deadline fields and retains the date when it was omitted. */
+    /**
+     * Validates deadline fields and retains the date when it was omitted.
+     */
     private static Task createUpdatedDeadline(Deadline existing, String description, String deadline,
             String from, String to) {
         if (from != null || to != null) {
@@ -37,7 +45,9 @@ final class TaskUpdater {
         return new Deadline(description, updatedDeadline);
     }
 
-    /** Validates event fields and retains each boundary when it was omitted. */
+    /**
+     * Validates event fields and retains each boundary when it was omitted.
+     */
     private static Task createUpdatedEvent(Event existing, String description, String deadline,
             String from, String to) {
         if (deadline != null) {
@@ -48,7 +58,9 @@ final class TaskUpdater {
         return new Event(description, updatedFrom, updatedTo);
     }
 
-    /** Rejects date fields for todos before constructing the replacement. */
+    /**
+     * Rejects date fields for todos before constructing the replacement.
+     */
     private static Task createUpdatedTodo(String description, String deadline, String from, String to) {
         if (deadline != null || from != null || to != null) {
             throw new IllegalArgumentException("Todo tasks only support descriptions.");
@@ -56,7 +68,9 @@ final class TaskUpdater {
         return new ToDo(description);
     }
 
-    /** Copies all task details and applies the requested completion state to the copy. */
+    /**
+     * Copies all task details and applies the requested completion state to the copy.
+     */
     static Task withStatus(Task existing, boolean isDone) {
         Task replacement = createTaskWithUpdatedFields(existing, null, null, null, null);
         if (isDone) {

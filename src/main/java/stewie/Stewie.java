@@ -10,37 +10,39 @@ import stewie.storage.StorageException;
 import stewie.ui.cli.Ui;
 
 /**
- * Represent the chatbot Stewie.
- * Stewie has task list to stores the tasks users want to record.
- * Stewie parses the text inputs and stores them as Task in task list.
+ * Represents the Stewie console task assistant.
+ * Parses user commands and maintains a task list backed by local storage.
  */
 public class Stewie {
     private final TaskList taskList;
 
     /**
-     * Initialize a chatbot Stewie with a task list from local disk.
+     * Creates a Stewie chatbot with tasks loaded from local storage.
      */
     public Stewie() {
         this.taskList = new TaskList();
     }
 
     /**
-     * Runs the Chatbot.
-     * Prints the banner STEWIE and prompt the user to type in commands.
-     * Responds to the user based on their commands.
+     * Runs the console chatbot until the user enters bye or input ends.
+     * Prints the banner and greeting, then processes commands and reports recoverable errors.
      */
     public void run() {
         showStartupMessages();
         readCommands(new Scanner(System.in));
     }
 
-    /** Displays the greeting and any warning from loading saved tasks. */
+    /**
+     * Displays the greeting and any warning from loading saved tasks.
+     */
     private void showStartupMessages() {
         Ui.greetUser();
         Ui.printLoadWarning(taskList.getLoadWarning());
     }
 
-    /** Processes input until the user says goodbye or the input stream ends. */
+    /**
+     * Processes input until the user says goodbye or the input stream ends.
+     */
     private void readCommands(Scanner scanner) {
         while (scanner.hasNextLine()) {
             if (!processInput(scanner.nextLine())) {
@@ -49,7 +51,9 @@ public class Stewie {
         }
     }
 
-    /** Handles one input and reports recoverable errors; returns false after goodbye. */
+    /**
+     * Handles one input and reports recoverable errors; returns false after goodbye.
+     */
     private boolean processInput(String rawInput) {
         String input = Parser.normalize(rawInput);
         Command command = Parser.getCommand(input);
@@ -66,7 +70,9 @@ public class Stewie {
         return command != Command.BYE;
     }
 
-    /** Dispatches a classified command to its corresponding operation. */
+    /**
+     * Dispatches a classified command to its corresponding operation.
+     */
     private void executeCommand(Command command, String input) {
         switch (command) {
             case BYE -> Ui.printBye();
@@ -97,7 +103,7 @@ public class Stewie {
 
     /**
      * Adds a task of type event to the task list.
-     * An event has a description, starting time and ending time.
+     * An event has a description, start date, and end date.
      *
      * @param input Input from user.
      */
@@ -118,7 +124,9 @@ public class Stewie {
         printTaskAddConfirmation();
     }
 
-    /** Confirms the last added task only after the model has successfully saved it. */
+    /**
+     * Confirms the last added task only after the model has successfully saved it.
+     */
     private void printTaskAddConfirmation() {
         String[] tasks = taskList.produceTaskList();
         Ui.printTaskAddConfirmation(tasks[tasks.length - 1], tasks.length);
@@ -154,7 +162,7 @@ public class Stewie {
     }
 
     /**
-     * Delete the task from the task list.
+     * Deletes the task from the task list.
      *
      * @param input Input from user.
      */
@@ -168,7 +176,7 @@ public class Stewie {
     }
 
     /**
-     * Updates a task description.
+     * Updates the supplied task description and date fields.
      *
      * @param input Input from user.
      */
@@ -184,7 +192,7 @@ public class Stewie {
     }
 
     /**
-     * Checks whether an update command contains at least one field.
+     * Checks whether all optional update fields are missing.
      *
      * @param updates Parsed update fields.
      * @return True when no update field was supplied.
@@ -199,7 +207,7 @@ public class Stewie {
     }
 
     /**
-     * Prints the tasks that contains the keywords from input.
+     * Prints tasks that contain at least one search keyword from the input.
      *
      * @param input Input from user.
      */

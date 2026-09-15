@@ -15,11 +15,15 @@ import org.junit.jupiter.api.parallel.Resources;
 import stewie.model.ToDo;
 import stewie.ui.cli.Ui;
 
-/** Verifies console presentation, singular and plural task counts, and the standalone echo loop. */
+/**
+ * Verifies console presentation, singular and plural task counts, and the standalone echo loop.
+ */
 @ResourceLock("java.lang.System.in")
 @ResourceLock(Resources.SYSTEM_OUT)
 public class UiTest {
-    /** Verifies singular and plural confirmations and completed task display. */
+    /**
+     * Verifies singular and plural confirmations and completed task display.
+     */
     @Test
     public void printConfirmation_formatsCountsAndStatus() {
         ToDo task = new ToDo("read book");
@@ -34,7 +38,9 @@ public class UiTest {
                 capture("", () -> Ui.printTaskUpdateConfirmation(task)));
     }
 
-    /** Verifies list numbering and empty-state guidance exactly. */
+    /**
+     * Verifies list numbering and empty-state guidance exactly.
+     */
     @Test
     public void printList_formatsEmptyAndPopulatedLists() {
         String heading = "Behold, your agenda. Let us examine the scale of this undertaking.\n";
@@ -48,7 +54,9 @@ public class UiTest {
         }
     }
 
-    /** Verifies blank and Unicode lines are echoed verbatim and bye stops before later input. */
+    /**
+     * Verifies blank and Unicode lines are echoed verbatim and bye stops before later input.
+     */
     @Test
     public void echoCommands_stopsAtBye() {
         assertEquals("Stewie: Hello\nStewie: \nStewie: စာအုပ်\n"
@@ -56,14 +64,18 @@ public class UiTest {
                 capture("Hello\n\nစာအုပ်\nbye\nignored\n", Ui::echoUserCommands));
     }
 
-    /** Verifies EOF stops the echo loop without farewell and a final unterminated line is echoed. */
+    /**
+     * Verifies EOF stops the echo loop without farewell and a final unterminated line is echoed.
+     */
     @Test
     public void echoCommands_handlesEndOfInput() {
         assertEquals("", capture("", Ui::echoUserCommands));
         assertEquals("Stewie: final line\n", capture("final line", Ui::echoUserCommands));
     }
 
-    /** Captures UTF-8 console output and always restores global streams, even if an assertion fails. */
+    /**
+     * Captures UTF-8 console output and always restores global streams, even if an assertion fails.
+     */
     private String capture(String input, Runnable action) {
         InputStream originalInput = System.in;
         PrintStream originalOutput = System.out;

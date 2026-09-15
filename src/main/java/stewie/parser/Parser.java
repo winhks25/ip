@@ -88,7 +88,9 @@ public class Parser {
                 "Use: event <description> /from <date> /to <date>. Supply each field once in this order.");
     }
 
-    /** Validates the complete marker sequence so no supplied field is silently discarded. */
+    /**
+     * Validates the complete marker sequence so no supplied field is silently discarded.
+     */
     private static String[] parseCreation(String input, String[] markers, String guidance) {
         String body = body(input);
         Matcher matcher = CREATE_MARKER.matcher(body);
@@ -179,7 +181,9 @@ public class Parser {
         return values;
     }
 
-    /** Returns the destination index for a supported update marker, treating deadline aliases equally. */
+    /**
+     * Returns the destination index for a supported update marker, treating deadline aliases equally.
+     */
     private static int getUpdateFieldIndex(String marker) {
         return switch (marker.toLowerCase(Locale.ROOT)) {
             case "d/", "by/" -> 1;
@@ -189,7 +193,9 @@ public class Parser {
         };
     }
 
-    /** Stores a trimmed field value, allowing only the optional description to be empty. */
+    /**
+     * Stores a trimmed field value, allowing only the optional description to be empty.
+     */
     private static void storeUpdateValue(String[] values, int field, String rawValue) {
         String value = rawValue.strip();
         if (field != 0 && value.isEmpty()) {

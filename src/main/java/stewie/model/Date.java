@@ -9,11 +9,9 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Represents a date.
- *
- * Date uses Java LocalDate object.
+ * Represents a calendar date backed by a {@link LocalDate}.
+ * Accepts supported numeric and English textual formats and displays dates as {@code dd MMM uuuu}.
  */
-
 public class Date {
     private static final List<DateTimeFormatter> FORMATTERS = List.of(
         DateTimeFormatter.ISO_LOCAL_DATE,
@@ -48,8 +46,10 @@ public class Date {
     private final LocalDate date;
 
     /**
-     * Instantiate Date object
-     * @param s String object
+     * Creates a date by parsing a supported numeric or English textual representation.
+     *
+     * @param s Date text, with optional surrounding whitespace.
+     * @throws IllegalArgumentException If the text is null, blank, unparseable, or outside years 0001 to 9999.
      */
     public Date(String s) {
         this.date = this.parseDate(s);
@@ -57,12 +57,11 @@ public class Date {
     }
 
     /**
-     * Returns a LocalDate object by parsing a string.
-     * If the given string is null or empty, it throws an IllegalArgumentException
+     * Returns a calendar date parsed using the supported date formats.
      *
-     * @param d Date in string
-     * @return LocalDate object that represents the date
-     * @throws IllegalArgumentException if the string is null, empty, or cannot be parsed.
+     * @param d Date text, with optional surrounding whitespace.
+     * @return Parsed calendar date.
+     * @throws IllegalArgumentException If the text is null, blank, unparseable, or outside years 0001 to 9999.
      */
     private LocalDate parseDate(String d) {
         if (d == null || d.isBlank()) {
@@ -95,6 +94,9 @@ public class Date {
         return date.isBefore(other.date);
     }
 
+    /**
+     * Returns this date formatted as {@code dd MMM uuuu} using English month names.
+     */
     @Override
     public String toString() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM uuuu", Locale.ENGLISH);

@@ -11,9 +11,13 @@ import org.junit.jupiter.api.Test;
 import stewie.parser.Command;
 import stewie.parser.Parser;
 
-/** Verifies command boundaries, optional fields, and locale-independent normalization. */
+/**
+ * Verifies command boundaries, optional fields, and locale-independent normalization.
+ */
 public class ParserEdgeCaseTest {
-    /** Verifies every command is recognized regardless of case and surrounding whitespace. */
+    /**
+     * Verifies every command is recognized regardless of case and surrounding whitespace.
+     */
     @Test
     public void getCommand_recognizesAllCommands() {
         for (Command command : Command.values()) {
@@ -25,7 +29,9 @@ public class ParserEdgeCaseTest {
         assertEquals(Command.TODO, Parser.getCommand("ToDo buy milk"));
     }
 
-    /** Verifies Unicode whitespace and Turkish casing cannot change command recognition. */
+    /**
+     * Verifies Unicode whitespace and Turkish casing cannot change command recognition.
+     */
     @Test
     public void normalize_isIndependentOfDefaultLocale() {
         Locale original = Locale.getDefault();
@@ -40,7 +46,9 @@ public class ParserEdgeCaseTest {
         }
     }
 
-    /** Verifies number boundaries and required update arguments without integer overflow. */
+    /**
+     * Verifies number boundaries and required update arguments without integer overflow.
+     */
     @Test
     public void parseIndex_checksBoundaries() {
         assertEquals(0, Parser.getTaskIndex("mark 0001"));
@@ -55,7 +63,9 @@ public class ParserEdgeCaseTest {
         }
     }
 
-    /** Verifies parser helpers preserve descriptions and split search terms on Unicode whitespace. */
+    /**
+     * Verifies parser helpers preserve descriptions and split search terms on Unicode whitespace.
+     */
     @Test
     public void parseText_preservesDescriptionsAndKeywords() {
         assertEquals("Read Book", Parser.parseTodo("  todo\tRead Book  "));
@@ -71,7 +81,9 @@ public class ParserEdgeCaseTest {
         }
     }
 
-    /** Verifies creation rejects missing, unknown, reordered, repeated, and empty fields. */
+    /**
+     * Verifies creation rejects missing, unknown, reordered, repeated, and empty fields.
+     */
     @Test
     public void parseCreation_rejectsMalformedFields() {
         for (String input : new String[] {null, "deadline", "deadline report", "deadline /by 2026-01-01",
@@ -88,7 +100,9 @@ public class ParserEdgeCaseTest {
                 Parser.parseDeadline("deadline read notes/book /by 1/1/2026"));
     }
 
-    /** Verifies omitted fields remain null and aliases and field order are handled correctly. */
+    /**
+     * Verifies omitted fields remain null and aliases and field order are handled correctly.
+     */
     @Test
     public void parseUpdate_preservesOmittedFields() {
         assertArrayEquals(new String[] {"Read Book", null, null, null}, Parser.parseUpdate("update 1 Read Book"));
@@ -99,7 +113,9 @@ public class ParserEdgeCaseTest {
         assertEquals("", Parser.parseUpdateDescription("update 1 d/1/1/2026"));
     }
 
-    /** Verifies empty, duplicate, and unsupported update fields are never silently discarded. */
+    /**
+     * Verifies empty, duplicate, and unsupported update fields are never silently discarded.
+     */
     @Test
     public void parseUpdate_rejectsMalformedFields() {
         for (String input : new String[] {"update 1 from/", "update 1 from/ to/2/1/2026",

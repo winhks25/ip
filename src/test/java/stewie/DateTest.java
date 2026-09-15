@@ -8,7 +8,9 @@ import org.junit.jupiter.api.Test;
 
 import stewie.model.Date;
 
-/** Verifies supported date formats and strict calendar validation. */
+/**
+ * Verifies supported date formats and strict calendar validation.
+ */
 public class DateTest {
     @Test
     public void parseDate_successful() {
@@ -57,7 +59,9 @@ public class DateTest {
                 () -> assertThrows(IllegalArgumentException.class, () -> new Date("not a date"))
         );
     }
-    /** Verifies invalid leap days and unsupported years cannot enter storage. */
+    /**
+     * Verifies invalid leap days and unsupported years cannot enter storage.
+     */
     @Test
     public void parseDate_rejectsInvalidCalendarValues() {
         for (String date : new String[] {"2026-02-30", "2025-02-29", "0000-01-01", "-0001-01-01"}) {

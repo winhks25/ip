@@ -15,9 +15,13 @@ import stewie.model.Event;
 import stewie.model.Task;
 import stewie.model.ToDo;
 
-/** Verifies model state transitions, identity, display strings, and date boundaries. */
+/**
+ * Verifies model state transitions, identity, display strings, and date boundaries.
+ */
 public class TaskModelTest {
-    /** Verifies all task types start unfinished and marking and unmarking are idempotent. */
+    /**
+     * Verifies all task types start unfinished and marking and unmarking are idempotent.
+     */
     @Test
     public void changeStatus_preservesTaskDetails() {
         Task[] tasks = {new ToDo("Read Book"), new Deadline("Report", "2026-01-01"),
@@ -41,7 +45,9 @@ public class TaskModelTest {
         }
     }
 
-    /** Verifies normalization preserves Unicode text while rejecting unsafe descriptions. */
+    /**
+     * Verifies normalization preserves Unicode text while rejecting unsafe descriptions.
+     */
     @Test
     public void createTask_validatesAndNormalizesDescriptions() {
         assertEquals("Read စာအုပ်", new ToDo("  Read\u2003  စာအုပ်  ").getDescription());
@@ -58,7 +64,9 @@ public class TaskModelTest {
         }
     }
 
-    /** Verifies identity distinguishes descriptions, task types, and each event boundary. */
+    /**
+     * Verifies identity distinguishes descriptions, task types, and each event boundary.
+     */
     @Test
     public void hasSameDetails_checksEveryIdentityField() {
         Task event = new Event("Trip", "2026-01-01", "2026-01-03");
@@ -72,7 +80,9 @@ public class TaskModelTest {
         assertFalse(new ToDo("one").hasSameDetails(new ToDo("two")));
     }
 
-    /** Verifies supported year endpoints and strict ordering, including equality. */
+    /**
+     * Verifies supported year endpoints and strict ordering, including equality.
+     */
     @Test
     public void date_checksSupportedYearBoundaries() {
         Date first = new Date("0001-01-01");
@@ -89,7 +99,9 @@ public class TaskModelTest {
         assertEquals("29 Feb 2000", new Date("2000-02-29").toString());
     }
 
-    /** Verifies English dates remain stable under Burmese operating-system language settings. */
+    /**
+     * Verifies English dates remain stable under Burmese operating-system language settings.
+     */
     @Test
     public void date_preservesEnglishFormattingInBurmeseLocale() {
         Locale original = Locale.getDefault();

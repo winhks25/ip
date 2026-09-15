@@ -9,7 +9,9 @@ import stewie.parser.Parser;
 import stewie.storage.StorageException;
 import stewie.ui.Dialogue;
 
-/** Applies chat commands and returns replies independently of JavaFX rendering. */
+/**
+ * Applies chat commands and returns replies independently of JavaFX rendering.
+ */
 final class GuiCommandHandler {
     static final String COMMAND_HELP = """
             The instructions. A brief reading should spare us both a great deal of theatre.
@@ -57,12 +59,16 @@ final class GuiCommandHandler {
 
     private final TaskList taskList;
 
-    /** Creates a handler for the task list shared by the workspace. */
+    /**
+     * Creates a handler for the task list shared by the workspace.
+     */
     GuiCommandHandler(TaskList taskList) {
         this.taskList = taskList;
     }
 
-    /** Handles normalized input, converting recoverable failures into assistant replies. */
+    /**
+     * Handles normalized input, converting recoverable failures into assistant replies.
+     */
     GuiCommandResult handle(String input) {
         if ("help".equals(input)) {
             return GuiCommandResult.message(COMMAND_HELP);
@@ -76,7 +82,9 @@ final class GuiCommandHandler {
         }
     }
 
-    /** Dispatches a command without constructing controls or changing the conversation. */
+    /**
+     * Dispatches a command without constructing controls or changing the conversation.
+     */
     private GuiCommandResult executeCommand(Command command, String input) {
         return switch (command) {
             case BYE -> GuiCommandResult.message(Dialogue.GOODBYE);
@@ -95,27 +103,35 @@ final class GuiCommandHandler {
         };
     }
 
-    /** Adds a todo and confirms only after persistence succeeds. */
+    /**
+     * Adds a todo and confirms only after persistence succeeds.
+     */
     private GuiCommandResult addTodo(String input) {
         taskList.addToDo(Parser.parseTodo(input));
         return GuiCommandResult.message(Dialogue.ADDED);
     }
 
-    /** Adds a deadline using the existing parser and date validation. */
+    /**
+     * Adds a deadline using the existing parser and date validation.
+     */
     private GuiCommandResult addDeadline(String input) {
         String[] parsedInput = Parser.parseDeadline(input);
         taskList.addDeadline(parsedInput[0], parsedInput[1]);
         return GuiCommandResult.message("Deadline recorded. Time is now officially judging you.");
     }
 
-    /** Adds an event using the existing parser and date validation. */
+    /**
+     * Adds an event using the existing parser and date validation.
+     */
     private GuiCommandResult addEvent(String input) {
         String[] parsedInput = Parser.parseEvent(input);
         taskList.addEvent(parsedInput[0], parsedInput[1], parsedInput[2]);
         return GuiCommandResult.message("Event scheduled. I trust the occasion warrants all this organisation.");
     }
 
-    /** Updates a task status and includes a fresh interactive list in the reply. */
+    /**
+     * Updates a task status and includes a fresh interactive list in the reply.
+     */
     private GuiCommandResult updateTaskStatus(String input, boolean isDone) {
         int index = Parser.getTaskIndex(input);
         if (!isValidTaskIndex(index)) {
@@ -133,7 +149,9 @@ final class GuiCommandHandler {
         return taskListResult(message, "The revised agenda, for your inspection:");
     }
 
-    /** Deletes a numbered task and returns the surviving commitments. */
+    /**
+     * Deletes a numbered task and returns the surviving commitments.
+     */
     private GuiCommandResult deleteTask(String input) {
         int index = Parser.getTaskIndex(input);
         if (!isValidTaskIndex(index)) {
@@ -144,7 +162,9 @@ final class GuiCommandHandler {
         return taskListResult("Deleted. I have dismissed it from our affairs.", "The surviving commitments:");
     }
 
-    /** Updates supplied fields while retaining the existing validation guidance. */
+    /**
+     * Updates supplied fields while retaining the existing validation guidance.
+     */
     private GuiCommandResult updateTask(String input) {
         int index = Parser.getUpdateTaskIndex(input);
         String[] updates = Parser.parseUpdate(input);
@@ -156,7 +176,9 @@ final class GuiCommandHandler {
         return taskListResult(Dialogue.UPDATED, "The revised agenda, for your inspection:");
     }
 
-    /** Returns search cards without controls because their numbers are local to the results. */
+    /**
+     * Returns search cards without controls because their numbers are local to the results.
+     */
     private GuiCommandResult findTasks(String input) {
         String[] matches = taskList.findTasks(Parser.parseFindKeywords(input));
         if (matches.length == 0) {
@@ -166,7 +188,9 @@ final class GuiCommandHandler {
         return new GuiCommandResult(List.of("Aha. The evidence you requested:"), List.of(matches), false);
     }
 
-    /** Returns a complete list, appending the empty-state message when needed. */
+    /**
+     * Returns a complete list, appending the empty-state message when needed.
+     */
     private GuiCommandResult taskListResult(String... messages) {
         List<String> tasks = List.of(taskList.produceTaskList());
         if (tasks.isEmpty()) {
@@ -178,10 +202,10 @@ final class GuiCommandHandler {
     }
 
     /**
-     * Checks whether an update command contains at least one field.
+     * Checks whether all optional update fields are missing.
      *
      * @param updates Parsed update fields.
-     * @return whether no update field was supplied
+     * @return Whether no update field was supplied.
      */
     private boolean areAllUpdateFieldsMissing(String[] updates) {
         for (String update : updates) {
@@ -195,8 +219,8 @@ final class GuiCommandHandler {
     /**
      * Returns whether a zero-based task index points to an existing task.
      *
-     * @param index the zero-based task index
-     * @return true when the index is valid
+     * @param index The zero-based task index.
+     * @return True when the index is valid.
      */
     private boolean isValidTaskIndex(int index) {
         return index >= 0 && index < taskList.produceTaskList().length;

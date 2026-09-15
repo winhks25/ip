@@ -1,19 +1,19 @@
 package stewie.model;
 
 /**
- * Represents an event.
- * An event has starting time (from) and ending time (to).
+ * Represents a task with a start date strictly before its end date.
  */
 public class Event extends Task {
     private final Date from;
     private final Date to;
 
     /**
-     * Initialize the Event object.
+     * Creates an unfinished event with a validated description and date range.
+     *
      * @param description Description of the event.
-     * @param from Start time of the event.
-     * @param to End time of the event.
-     * @throws IllegalArgumentException When the start time or end time is invalid.
+     * @param from Start date of the event in a supported format.
+     * @param to End date of the event in a supported format.
+     * @throws IllegalArgumentException If the description or a date is invalid, or the start is not before the end.
      */
     public Event(String description, String from, String to)
             throws IllegalArgumentException {
@@ -29,21 +29,22 @@ public class Event extends Task {
     }
 
     /**
-     * Returns start time of the event.
-     * @return from Start time of the event.
+     * Returns the event start date formatted as {@code dd MMM uuuu}.
      */
     public String getFrom() {
         return this.from.toString();
     }
 
     /**
-     * Returns end time of the event.
-     * @return to End time of the event.
+     * Returns the event end date formatted as {@code dd MMM uuuu}.
      */
     public String getTo() {
         return this.to.toString();
     }
 
+    /**
+     * Returns the event type marker, completion marker, description, and formatted date range.
+     */
     @Override
     public String toString() {
         return String.format("[E] [%s] %s (from: %s to: %s)", super.getStatusIcon(),

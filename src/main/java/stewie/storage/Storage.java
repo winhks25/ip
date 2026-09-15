@@ -11,7 +11,9 @@ import java.util.Arrays;
 
 import stewie.model.Task;
 
-/** Loads validated task records and replaces saved data only after a complete write succeeds. */
+/**
+ * Loads validated task records and replaces saved data only after a complete write succeeds.
+ */
 public class Storage {
     private final Path storagePath;
     // Retains the loaded bytes to detect external edits before replacing the file.
@@ -19,7 +21,9 @@ public class Storage {
     private boolean isReadOnly;
     private String loadWarning = "";
 
-    /** Creates storage at the default task file location. */
+    /**
+     * Creates storage at the default task file location.
+     */
     public Storage() {
         this(Path.of("data/stewie.txt"));
     }
@@ -60,7 +64,9 @@ public class Storage {
         }
     }
 
-    /** Rejects unsafe writes before creating the storage directory. */
+    /**
+     * Rejects unsafe writes before creating the storage directory.
+     */
     private void prepareForSave() throws IOException {
         if (isReadOnly) {
             throw new StorageException("Tasks are read-only. Back up and repair the task file, then restart.");
@@ -74,7 +80,9 @@ public class Storage {
         Files.createDirectories(storagePath.getParent());
     }
 
-    /** Replaces the original only after writing a complete temporary file with matching permissions. */
+    /**
+     * Replaces the original only after writing a complete temporary file with matching permissions.
+     */
     private void writeAtomically(byte[] content) throws IOException {
         Path temporaryFile = Files.createTempFile(storagePath.getParent(), ".stewie-", ".tmp");
         try {
@@ -87,14 +95,18 @@ public class Storage {
         }
     }
 
-    /** Retains POSIX permissions where an existing task file and filesystem support them. */
+    /**
+     * Retains POSIX permissions where an existing task file and filesystem support them.
+     */
     private void copyPermissions(Path temporaryFile) throws IOException {
         if (Files.exists(storagePath) && Files.getFileStore(storagePath).supportsFileAttributeView("posix")) {
             Files.setPosixFilePermissions(temporaryFile, Files.getPosixFilePermissions(storagePath));
         }
     }
 
-    /** Removes an unused temporary file without masking the outcome of the save. */
+    /**
+     * Removes an unused temporary file without masking the outcome of the save.
+     */
     private void deleteTemporaryFile(Path temporaryFile) {
         try {
             Files.deleteIfExists(temporaryFile);
@@ -123,13 +135,17 @@ public class Storage {
         return tasks;
     }
 
-    /** Clears warnings before attempting a fresh load. */
+    /**
+     * Clears warnings before attempting a fresh load.
+     */
     private void resetLoadState() {
         isReadOnly = false;
         loadWarning = "";
     }
 
-    /** Rejects symbolic links before retaining a snapshot of the existing file. */
+    /**
+     * Rejects symbolic links before retaining a snapshot of the existing file.
+     */
     private byte[] readTaskFile() throws IOException {
         if (Files.isSymbolicLink(storagePath)) {
             throw new IOException("Symbolic links are not supported for task files");
@@ -137,7 +153,9 @@ public class Storage {
         return readExistingFile();
     }
 
-    /** Collects valid tasks and the one-based line numbers of rejected records. */
+    /**
+     * Collects valid tasks and the one-based line numbers of rejected records.
+     */
     private ArrayList<String> loadRecords(String[] lines, ArrayList<Task> tasks) {
         ArrayList<String> invalidLines = new ArrayList<>();
         for (int index = 0; index < lines.length; index++) {
@@ -153,7 +171,9 @@ public class Storage {
         return invalidLines;
     }
 
-    /** Adds a parsed record only when its task details are not already present. */
+    /**
+     * Adds a parsed record only when its task details are not already present.
+     */
     private void addUniqueRecord(String line, ArrayList<Task> tasks) {
         Task task = TaskCodec.parse(line);
         if (tasks.stream().anyMatch(task::hasSameDetails)) {
@@ -162,7 +182,9 @@ public class Storage {
         tasks.add(task);
     }
 
-    /** Protects damaged input from overwrites while keeping its valid tasks available. */
+    /**
+     * Protects damaged input from overwrites while keeping its valid tasks available.
+     */
     private void warnAboutInvalidRecords(ArrayList<String> invalidLines) {
         if (!invalidLines.isEmpty()) {
             isReadOnly = true;
@@ -172,14 +194,18 @@ public class Storage {
         }
     }
 
-    /** Protects unread data and explains how the user can recover access. */
+    /**
+     * Protects unread data and explains how the user can recover access.
+     */
     private void warnAboutUnreadableFile() {
         isReadOnly = true;
         loadWarning = "Storage warning: Unable to read the task file. Tasks are read-only. "
                 + "Check the file path, permissions, and UTF-8 content, then restart.";
     }
 
-    /** Distinguishes a missing file from other I/O failures, which must never permit overwriting unread data. */
+    /**
+     * Distinguishes a missing file from other I/O failures, which must never permit overwriting unread data.
+     */
     private byte[] readExistingFile() throws IOException {
         try {
             return Files.readAllBytes(storagePath);

@@ -28,7 +28,9 @@ import stewie.parser.Parser;
 import stewie.storage.StorageException;
 import stewie.ui.Dialogue;
 
-/** Displays the conversation, composer, and interactive chat cards. */
+/**
+ * Displays the conversation, composer, and interactive chat cards.
+ */
 final class ChatPanel extends VBox {
     private static final String[] QUICK_COMMANDS = {"todo plan my week", "list", "help"};
     private final TaskList taskList;
@@ -41,7 +43,9 @@ final class ChatPanel extends VBox {
     private final TextField messageField = new TextField();
     private Timeline scrollAnimation;
 
-    /** Creates a chat view with its portrait and callbacks for changes and save errors. */
+    /**
+     * Creates a chat view with its portrait and callbacks for changes and save errors.
+     */
     ChatPanel(TaskList taskList, StackPane avatar, Runnable onTasksChanged,
             Consumer<StorageException> onStorageError) {
         this.taskList = taskList;
@@ -67,7 +71,9 @@ final class ChatPanel extends VBox {
         getChildren().addAll(header, conversationScroll, composer);
     }
 
-    /** Creates the chat heading with the assistant's identity and a right-aligned section hint. */
+    /**
+     * Creates the chat heading with the assistant's identity and a right-aligned section hint.
+     */
     private HBox createChatHeader() {
         HBox header = new HBox(14);
         header.getStyleClass().add("chat-header");
@@ -82,7 +88,9 @@ final class ChatPanel extends VBox {
         return header;
     }
 
-    /** Creates the assistant's display name and online status for the chat header. */
+    /**
+     * Creates the assistant's display name and online status for the chat header.
+     */
     private VBox createAssistantIdentity() {
         VBox identity = new VBox(3);
         Label title = new Label("Stewie Assistant");
@@ -100,7 +108,7 @@ final class ChatPanel extends VBox {
     /**
      * Creates the scrollable message area.
      *
-     * @return a scroll pane containing the conversation
+     * @return A scroll pane containing the conversation.
      */
     private ScrollPane createConversationScroll() {
         conversation.getStyleClass().add("conversation");
@@ -117,7 +125,7 @@ final class ChatPanel extends VBox {
     /**
      * Creates the command composer at the bottom of the chat panel.
      *
-     * @return the composer controls
+     * @return The composer controls.
      */
     private VBox createComposer() {
         VBox composer = new VBox(12);
@@ -126,7 +134,9 @@ final class ChatPanel extends VBox {
         return composer;
     }
 
-    /** Creates command suggestions that send immediately and restore focus to the message field. */
+    /**
+     * Creates command suggestions that send immediately and restore focus to the message field.
+     */
     private HBox createQuickCommands() {
         HBox quickCommands = new HBox(8);
         quickCommands.setAlignment(Pos.CENTER_LEFT);
@@ -143,7 +153,9 @@ final class ChatPanel extends VBox {
         return quickCommands;
     }
 
-    /** Creates the message entry row with matching Enter-key and Send-button actions. */
+    /**
+     * Creates the message entry row with matching Enter-key and Send-button actions.
+     */
     private HBox createInputRow() {
         HBox inputRow = new HBox(10);
         inputRow.setAlignment(Pos.CENTER_LEFT);
@@ -190,7 +202,7 @@ final class ChatPanel extends VBox {
     /**
      * Displays every current task as an interactive card.
      *
-     * @param response the assistant message shown above the cards
+     * @param response The assistant message shown above the cards.
      */
     private void showTaskList(String response) {
         appendMessage(false, response);
@@ -206,10 +218,10 @@ final class ChatPanel extends VBox {
     /**
      * Creates one task card for the conversation.
      *
-     * @param index the one-based task number
-     * @param taskText the task text from the task list
-     * @param isInteractive whether the card should expose task actions
-     * @return the task card
+     * @param index The one-based task number.
+     * @param taskText The task text from the task list.
+     * @param isInteractive Whether the card should expose task actions.
+     * @return The task card.
      */
     private HBox createTaskCard(int index, String taskText, boolean isInteractive) {
         HBox card = TaskCardFactory.create(index, taskText);
@@ -219,14 +231,18 @@ final class ChatPanel extends VBox {
         return card;
     }
 
-    /** Adds actions that share the revision captured when their card was created. */
+    /**
+     * Adds actions that share the revision captured when their card was created.
+     */
     private void addChatTaskControls(HBox card, int index, boolean isDone) {
         long cardRevision = taskList.getRevision();
         card.getChildren().addAll(createChatStatusCheckbox(index, isDone, cardRevision),
                 createChatDeleteButton(index, cardRevision));
     }
 
-    /** Creates the completion control for a chat task card. */
+    /**
+     * Creates the completion control for a chat task card.
+     */
     private CheckBox createChatStatusCheckbox(int index, boolean isDone, long cardRevision) {
         CheckBox doneBox = new CheckBox();
         doneBox.setSelected(isDone);
@@ -235,7 +251,9 @@ final class ChatPanel extends VBox {
         return doneBox;
     }
 
-    /** Applies a chat status change, restoring the old checkbox when the card is stale or saving fails. */
+    /**
+     * Applies a chat status change, restoring the old checkbox when the card is stale or saving fails.
+     */
     private void handleChatStatusChange(int index, boolean isDone, long cardRevision, CheckBox doneBox) {
         if (!isCurrentCard(cardRevision)) {
             doneBox.setSelected(isDone);
@@ -253,7 +271,9 @@ final class ChatPanel extends VBox {
         scrollToBottom();
     }
 
-    /** Saves a completion state using a zero-based task index. */
+    /**
+     * Saves a completion state using a zero-based task index.
+     */
     private void changeTaskStatus(int index, boolean isDone) {
         if (isDone) {
             taskList.markAsDone(index);
@@ -262,7 +282,9 @@ final class ChatPanel extends VBox {
         }
     }
 
-    /** Creates a delete control for the revision shown in a chat card. */
+    /**
+     * Creates a delete control for the revision shown in a chat card.
+     */
     private Button createChatDeleteButton(int index, long cardRevision) {
         Button deleteButton = new Button("×");
         deleteButton.getStyleClass().add("delete-button");
@@ -270,7 +292,9 @@ final class ChatPanel extends VBox {
         return deleteButton;
     }
 
-    /** Deletes a task only while the card still identifies the current task list. */
+    /**
+     * Deletes a task only while the card still identifies the current task list.
+     */
     private void handleChatDelete(int index, long cardRevision) {
         if (!isCurrentCard(cardRevision)) {
             return;
@@ -288,8 +312,8 @@ final class ChatPanel extends VBox {
     /**
      * Adds a message bubble to the conversation.
      *
-     * @param isUser whether the message came from the user
-     * @param text the message text
+     * @param isUser Whether the message came from the user.
+     * @param text The message text.
      */
     private void appendMessage(boolean isUser, String text) {
         Label message = new Label(text);
@@ -304,7 +328,9 @@ final class ChatPanel extends VBox {
         conversation.getChildren().add(row);
     }
 
-    /** Rejects stale chat controls before their old task numbers can affect another task. */
+    /**
+     * Rejects stale chat controls before their old task numbers can affect another task.
+     */
     private boolean isCurrentCard(long cardRevision) {
         if (cardRevision == taskList.getRevision()) {
             return true;
@@ -335,7 +361,9 @@ final class ChatPanel extends VBox {
         });
     }
 
-    /** Appends a group only when the response contains tasks, preserving search cards without actions. */
+    /**
+     * Appends a group only when the response contains tasks, preserving search cards without actions.
+     */
     private void appendTaskCards(List<String> tasks, boolean isInteractive) {
         if (tasks.isEmpty()) {
             return;

@@ -1,17 +1,17 @@
 package stewie.model;
 
 /**
- * Represents a task.
- * A task has description and the status "isDone"
+ * Represents a task with a normalized description and completion status.
  */
 public abstract class Task {
     private boolean isDone;
     private final String description;
 
     /**
-     * Initialize the task with description
+     * Creates an unfinished task with surrounding whitespace removed and repeated whitespace collapsed.
      *
      * @param description Nonempty task description without storage separators or control characters.
+     * @throws IllegalArgumentException If the description is null, blank, or contains a pipe or control character.
      */
     public Task(String description) {
         validateArgument(description, "Description");
@@ -25,9 +25,9 @@ public abstract class Task {
     }
 
     /**
-     * Returns the status icon X.
+     * Returns the completion marker used when displaying the task.
      *
-     * @return String X if the task is done, or an empty string otherwise
+     * @return {@code "X"} if the task is done, or a single space otherwise.
      */
     public String getStatusIcon() {
         return (isDone ? "X" : " ");
@@ -36,30 +36,30 @@ public abstract class Task {
     /**
      * Returns the description of the task.
      *
-     * @return description String
+     * @return Normalized task description.
      */
     public String getDescription() {
         return this.description;
     }
 
     /**
-     * Checks if the task is done
+     * Checks whether the task is complete.
      *
-     * @return boolean True or False
+     * @return True if the task is done, or false otherwise.
      */
     public boolean isDone() {
         return this.isDone;
     }
 
     /**
-     * Mark the task as done
+     * Marks the task as done.
      */
     public void markAsDone() {
         this.isDone = true;
     }
 
     /**
-     * Mark the task as not done
+     * Marks the task as not done.
      */
     public void markAsUndone() {
         this.isDone = false;
@@ -87,10 +87,11 @@ public abstract class Task {
     }
 
     /**
-     * Check an argument is null or empty string
-     * @param input Argument
-     * @param type Type of argument
-     * @throws IllegalArgumentException when the argument is null or empty string
+     * Validates that an argument contains non-whitespace text.
+     *
+     * @param input Text to validate.
+     * @param type Argument label used in the error message.
+     * @throws IllegalArgumentException If the argument is null or blank.
      */
     protected static void validateArgument(String input, String type) {
         if (input == null || input.isBlank()) {

@@ -17,7 +17,9 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** Verifies the real CLI entry point in child JVMs with isolated working directories and exact output. */
+/**
+ * Verifies the real CLI entry point in child JVMs with isolated working directories and exact output.
+ */
 public class CliTest {
     private static final String GREETING = """
             ███████╗ ████████╗ ███████╗ ██╗    ██╗ ██╗ ███████╗
@@ -39,21 +41,27 @@ public class CliTest {
     @TempDir
     private Path directory;
 
-    /** Verifies EOF terminates cleanly without creating storage or printing an unsolicited farewell. */
+    /**
+     * Verifies EOF terminates cleanly without creating storage or printing an unsolicited farewell.
+     */
     @Test
     public void run_handlesEndOfInput() throws Exception {
         assertEquals(GREETING, runCli(""));
         assertFalse(Files.exists(directory.resolve("data")));
     }
 
-    /** Verifies bye exits immediately and ignores subsequent input. */
+    /**
+     * Verifies bye exits immediately and ignores subsequent input.
+     */
     @Test
     public void run_stopsAtBye() throws Exception {
         assertEquals(GREETING + GOODBYE, runCli("  BYE  \ntodo ignored\n"));
         assertFalse(Files.exists(directory.resolve("data")));
     }
 
-    /** Verifies all successful command routes, normalization, persistence, and restart. */
+    /**
+     * Verifies all successful command routes, normalization, persistence, and restart.
+     */
     @Test
     public void run_handlesCompleteTaskLifecycle() throws Exception {
         String input = """
@@ -99,7 +107,9 @@ public class CliTest {
                 + "2. [E] [ ] trip (from: 02 Jan 2026 to: 04 Jan 2026)\n" + GOODBYE, runCli("list\nbye\n"));
     }
 
-    /** Verifies malformed numbers, missing update fields, invalid commands, and dates allow recovery. */
+    /**
+     * Verifies malformed numbers, missing update fields, invalid commands, and dates allow recovery.
+     */
     @Test
     public void run_recoversAfterInvalidCommands() throws Exception {
         String input = """
@@ -140,7 +150,9 @@ public class CliTest {
         assertFalse(Files.exists(directory.resolve("data/stewie.txt")));
     }
 
-    /** Verifies startup warnings and storage exceptions are visible without false success replies. */
+    /**
+     * Verifies startup warnings and storage exceptions are visible without false success replies.
+     */
     @Test
     public void run_protectsDamagedStorage() throws Exception {
         Path file = directory.resolve("data/stewie.txt");
@@ -156,7 +168,9 @@ public class CliTest {
         assertEquals(content, Files.readString(file));
     }
 
-    /** Verifies Burmese input survives a command session and an application restart in a Burmese locale. */
+    /**
+     * Verifies Burmese input survives a command session and an application restart in a Burmese locale.
+     */
     @Test
     public void run_preservesBurmeseInput() throws Exception {
         assertEquals(GREETING + "Consider it recorded. A small triumph for competent administration.\n"
@@ -166,12 +180,16 @@ public class CliTest {
                 runCli("find စာအုပ်\nbye\n", "my", "MM"));
     }
 
-    /** Runs the default English session independently of the host operating-system language. */
+    /**
+     * Runs the default English session independently of the host operating-system language.
+     */
     private String runCli(String input) throws IOException, URISyntaxException, InterruptedException {
         return runCli(input, "en", "US");
     }
 
-    /** Runs a bounded child process with the current Java 25 runtime and optional coverage instrumentation. */
+    /**
+     * Runs a bounded child process with the current Java 25 runtime and optional coverage instrumentation.
+     */
     private String runCli(String input, String language, String country)
             throws IOException, URISyntaxException, InterruptedException {
         List<String> command = createCliCommand(language, country);
@@ -193,7 +211,9 @@ public class CliTest {
         }
     }
 
-    /** Builds the CLI launch command using the current runtime, requested locale, and test classpath. */
+    /**
+     * Builds the CLI launch command using the current runtime, requested locale, and test classpath.
+     */
     private List<String> createCliCommand(String language, String country) throws URISyntaxException {
         boolean isWindows = System.getProperty("os.name").startsWith("Windows");
         Path java = Path.of(System.getProperty("java.home"), "bin", isWindows ? "java.exe" : "java");
@@ -205,7 +225,9 @@ public class CliTest {
         return command;
     }
 
-    /** Adds optional instrumentation with a separate output file that the Gradle worker cannot overwrite. */
+    /**
+     * Adds optional instrumentation with a separate output file that the Gradle worker cannot overwrite.
+     */
     private void addCoverageAgent(List<String> command) {
         for (String argument : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
             if (argument.startsWith("-javaagent:") && argument.contains("jacocoagent.jar")) {

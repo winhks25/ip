@@ -15,7 +15,7 @@ public class StewieApplication extends Application {
     /**
      * Creates and displays the Stewie application window.
      *
-     * @param stage the primary application window
+     * @param stage The primary application window.
      */
     @Override
     public void start(Stage stage) {
@@ -36,7 +36,7 @@ public class StewieApplication extends Application {
     /**
      * Launches the JavaFX application.
      *
-     * @param args command-line arguments supplied to the application
+     * @param args Command-line arguments supplied to the application.
      */
     public static void main(String[] args) {
         launch(args);
