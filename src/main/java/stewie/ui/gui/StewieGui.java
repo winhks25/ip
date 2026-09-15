@@ -581,47 +581,30 @@ public class StewieGui extends BorderPane {
 
         Command command = Parser.getCommand(input);
         try {
-            switch (command) {
-                case BYE:
-                    appendMessage(false, Dialogue.GOODBYE);
-                    break;
-                case LIST:
-                    showTaskList(Dialogue.LIST);
-                    break;
-                case MARK:
-                    updateTaskStatus(input, true);
-                    break;
-                case UNMARK:
-                    updateTaskStatus(input, false);
-                    break;
-                case DEADLINE:
-                    addDeadline(input);
-                    break;
-                case EVENT:
-                    addEvent(input);
-                    break;
-                case TODO:
-                    addTodo(input);
-                    break;
-                case DELETE:
-                    deleteTask(input);
-                    break;
-                case FIND:
-                    findTasks(input);
-                    break;
-                case UPDATE:
-                    updateTask(input);
-                    break;
-                default:
-                    appendMessage(false,
-                            "What precisely is the plan? Try `todo`, `event`, `deadline`, `list`, `find`, "
-                                    + "`mark`, `unmark`, `delete`, or `update`.");
-                    break;
-            }
+            executeCommand(command, input);
         } catch (StorageException exception) {
             appendMessage(false, exception.getMessage());
         } catch (IllegalArgumentException exception) {
             appendMessage(false, "A slight flaw in your plan: " + exception.getMessage());
+        }
+    }
+
+    /** Dispatches a parsed command while allowing the caller to report input and storage failures. */
+    private void executeCommand(Command command, String input) {
+        switch (command) {
+            case BYE -> appendMessage(false, Dialogue.GOODBYE);
+            case LIST -> showTaskList(Dialogue.LIST);
+            case MARK -> updateTaskStatus(input, true);
+            case UNMARK -> updateTaskStatus(input, false);
+            case DEADLINE -> addDeadline(input);
+            case EVENT -> addEvent(input);
+            case TODO -> addTodo(input);
+            case DELETE -> deleteTask(input);
+            case FIND -> findTasks(input);
+            case UPDATE -> updateTask(input);
+            default -> appendMessage(false,
+                    "What precisely is the plan? Try `todo`, `event`, `deadline`, `list`, `find`, "
+                            + "`mark`, `unmark`, `delete`, or `update`.");
         }
     }
 
