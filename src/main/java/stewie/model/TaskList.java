@@ -4,11 +4,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import stewie.storage.Storage;
-import stewie.ui.cli.Ui;
 
 /**
- * Represents a task list.
- * Task objects are stored in an arrayList.
+ * Manages ordered tasks and publishes changes only after a successful save.
+ * Presentation and user-facing error messages belong to the calling interface.
  */
 public class TaskList {
     private final ArrayList<Task> tasks;
@@ -85,7 +84,7 @@ public class TaskList {
     }
 
     /**
-     * Adds a task, persists the updated list, and confirms the addition.
+     * Adds a task and persists the updated list before publishing the change.
      *
      * @param task Task to add.
      */
@@ -94,7 +93,6 @@ public class TaskList {
         ArrayList<Task> proposed = new ArrayList<>(tasks);
         proposed.add(task);
         persist(proposed);
-        Ui.printTaskAddConfirmation(task, this.tasks.size());
     }
 
     /**
@@ -102,13 +100,10 @@ public class TaskList {
      * Saves the changes to the disk.
      *
      * @param index Index of the task to be marked as done.
+     * @throws IndexOutOfBoundsException If the index does not identify a task.
      */
     public void markAsDone(int index) {
-        try {
-            changeStatus(index, true);
-        } catch (IndexOutOfBoundsException e) {
-            Ui.printNumberedCommandFormat("mark");
-        }
+        changeStatus(index, true);
     }
 
     /**
@@ -116,13 +111,10 @@ public class TaskList {
      * Saves the changes to the disk.
      *
      * @param index Index of the task to be marked as not done.
+     * @throws IndexOutOfBoundsException If the index does not identify a task.
      */
     public void markAsUndone(int index) {
-        try {
-            changeStatus(index, false);
-        } catch (IndexOutOfBoundsException e) {
-            Ui.printNumberedCommandFormat("unmark");
-        }
+        changeStatus(index, false);
     }
 
     /**
@@ -130,15 +122,12 @@ public class TaskList {
      * Saves the changes to the disk.
      *
      * @param index Index of the task to be deleted.
+     * @throws IndexOutOfBoundsException If the index does not identify a task.
      */
     public void deleteTask(int index) {
-        try {
-            ArrayList<Task> proposed = new ArrayList<>(tasks);
-            proposed.remove(index);
-            persist(proposed);
-        } catch (IndexOutOfBoundsException e) {
-            Ui.printNumberedCommandFormat("delete");
-        }
+        ArrayList<Task> proposed = new ArrayList<>(tasks);
+        proposed.remove(index);
+        persist(proposed);
     }
 
     /**
@@ -146,6 +135,7 @@ public class TaskList {
      *
      * @param index Index of the task to update.
      * @param description Replacement description.
+     * @throws IndexOutOfBoundsException If the index does not identify a task.
      */
     public void updateTask(int index, String description) {
         updateTask(index, description, null, null, null);
@@ -159,16 +149,12 @@ public class TaskList {
      * @param deadlineValue Replacement deadline, or null to preserve it.
      * @param from Replacement event start time, or null to preserve it.
      * @param to Replacement event end time, or null to preserve it.
+     * @throws IndexOutOfBoundsException If the index does not identify a task.
      */
     public void updateTask(int index, String description, String deadlineValue, String from, String to) {
-        try {
-            Task updatedTask = TaskUpdater.update(tasks.get(index), description, deadlineValue, from, to);
-            rejectDuplicate(updatedTask, index);
-            replaceTask(index, updatedTask);
-            Ui.printTaskUpdateConfirmation(updatedTask);
-        } catch (IndexOutOfBoundsException e) {
-            Ui.printNumberedCommandFormat("update");
-        }
+        Task updatedTask = TaskUpdater.update(tasks.get(index), description, deadlineValue, from, to);
+        rejectDuplicate(updatedTask, index);
+        replaceTask(index, updatedTask);
     }
 
     /** Saves a replacement in a proposed list before publishing it to the live list. */

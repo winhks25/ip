@@ -1,5 +1,6 @@
 package stewie;
 
+import java.util.Locale;
 import java.util.Scanner;
 
 import stewie.model.TaskList;
@@ -57,6 +58,8 @@ public class Stewie {
             executeCommand(command, input);
         } catch (StorageException exception) {
             Ui.printStorageError(exception.getMessage());
+        } catch (IndexOutOfBoundsException exception) {
+            Ui.printNumberedCommandFormat(command.name().toLowerCase(Locale.ROOT));
         } catch (IllegalArgumentException exception) {
             Ui.printInputError(exception.getMessage());
         }
@@ -89,6 +92,7 @@ public class Stewie {
     private void addDeadline(String input) {
         String[] parsedInput = Parser.parseDeadline(input);
         this.taskList.addDeadline(parsedInput[0], parsedInput[1]);
+        printTaskAddConfirmation();
     }
 
     /**
@@ -100,6 +104,7 @@ public class Stewie {
     private void addEvent(String input) {
         String[] parsedInput = Parser.parseEvent(input);
         this.taskList.addEvent(parsedInput[0], parsedInput[1], parsedInput[2]);
+        printTaskAddConfirmation();
     }
 
     /**
@@ -110,6 +115,13 @@ public class Stewie {
      */
     private void addToDo(String input) {
         this.taskList.addToDo(Parser.parseTodo(input));
+        printTaskAddConfirmation();
+    }
+
+    /** Confirms the last added task only after the model has successfully saved it. */
+    private void printTaskAddConfirmation() {
+        String[] tasks = taskList.produceTaskList();
+        Ui.printTaskAddConfirmation(tasks[tasks.length - 1], tasks.length);
     }
 
     /**
@@ -168,6 +180,7 @@ public class Stewie {
             return;
         }
         this.taskList.updateTask(index, updates[0], updates[1], updates[2], updates[3]);
+        Ui.printTaskUpdateConfirmation(taskList.produceTaskList()[index]);
     }
 
     /**

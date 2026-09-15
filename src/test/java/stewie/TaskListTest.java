@@ -4,7 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.function.Consumer;
@@ -12,6 +15,8 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.api.parallel.ResourceLock;
+import org.junit.jupiter.api.parallel.Resources;
 
 import stewie.model.TaskList;
 import stewie.storage.Storage;
@@ -150,15 +155,15 @@ public class TaskListTest {
 
     /** Verifies invalid indices do not save or change state for any numbered operation. */
     @Test
-    public void numberedActions_ignoreOutOfRangeIndices() throws IOException {
+    public void numberedActions_rejectOutOfRangeIndices() throws IOException {
         addEveryType();
         String[] before = tasks.produceTaskList();
         byte[] saved = Files.readAllBytes(file);
         for (int index : new int[] {-1, 3, Integer.MAX_VALUE, Integer.MIN_VALUE}) {
-            tasks.markAsDone(index);
-            tasks.markAsUndone(index);
-            tasks.deleteTask(index);
-            tasks.updateTask(index, "new");
+            assertThrows(IndexOutOfBoundsException.class, () -> tasks.markAsDone(index));
+            assertThrows(IndexOutOfBoundsException.class, () -> tasks.markAsUndone(index));
+            assertThrows(IndexOutOfBoundsException.class, () -> tasks.deleteTask(index));
+            assertThrows(IndexOutOfBoundsException.class, () -> tasks.updateTask(index, "new"));
             assertArrayEquals(before, tasks.produceTaskList());
             assertArrayEquals(saved, Files.readAllBytes(file));
             assertEquals(3, tasks.getRevision());
@@ -198,6 +203,26 @@ public class TaskListTest {
         assertArrayEquals(new String[0], tasks.findTasks("absent"));
         assertArrayEquals(new String[0], tasks.findTasks());
         assertEquals(3, tasks.getRevision());
+    }
+
+    /** Verifies shared model operations leave all console presentation to the caller. */
+    @Test
+    @ResourceLock(Resources.SYSTEM_OUT)
+    public void mutations_doNotWriteConsoleOutput() {
+        PrintStream original = System.out;
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        try (PrintStream captured = new PrintStream(output, true, StandardCharsets.UTF_8)) {
+            System.setOut(captured);
+            addEveryType();
+            tasks.markAsDone(0);
+            tasks.markAsUndone(0);
+            tasks.updateTask(0, "revised book");
+            tasks.deleteTask(0);
+            assertThrows(IndexOutOfBoundsException.class, () -> tasks.markAsDone(99));
+        } finally {
+            System.setOut(original);
+        }
+        assertEquals("", output.toString(StandardCharsets.UTF_8));
     }
 
     /** Seeds the three supported task types with distinct details. */

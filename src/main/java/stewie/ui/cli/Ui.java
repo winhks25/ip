@@ -104,8 +104,18 @@ public class Ui {
      * @param numTasks Number of tasks in the task list.
      */
     public static void printTaskAddConfirmation(Task t, int numTasks) {
+        printTaskAddConfirmation(t.toString(), numTasks);
+    }
+
+    /**
+     * Prints an addition confirmation from the model's formatted snapshot.
+     *
+     * @param taskDescription Formatted description of the added task.
+     * @param numTasks Number of tasks after the successful addition.
+     */
+    public static void printTaskAddConfirmation(String taskDescription, int numTasks) {
         System.out.println(Dialogue.ADDED);
-        System.out.println(t);
+        System.out.println(taskDescription);
         System.out.printf("Your agenda now contains %d %s. Do try to keep up.%n",
                 numTasks, numTasks == 1 ? "task" : "tasks");
     }
@@ -116,8 +126,17 @@ public class Ui {
      * @param task Updated task.
      */
     public static void printTaskUpdateConfirmation(Task task) {
+        printTaskUpdateConfirmation(task.toString());
+    }
+
+    /**
+     * Prints an update confirmation from the model's formatted snapshot.
+     *
+     * @param taskDescription Formatted description of the updated task.
+     */
+    public static void printTaskUpdateConfirmation(String taskDescription) {
         System.out.println(Dialogue.UPDATED);
-        System.out.println(task);
+        System.out.println(taskDescription);
     }
 
     /**

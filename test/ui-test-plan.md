@@ -9,6 +9,10 @@ task dates still use English month names. `CliTest` checks both locale behaviors
 
 ## Additional GUI navigation checks
 
+- Launch the GUI from a terminal and add, update, mark, unmark, and delete tasks.
+  Show replies in the GUI without printing CLI task confirmations or numbered-command guidance
+  to the launching terminal. Running the CLI must retain the exact console output below.
+
 - Add two tasks, enter `list`, then delete the first task. Click a checkbox or delete button
   in the old chat list: show a refreshed list and an out-of-date notice; leave the surviving task unchanged.
   Repeat after an update or a status change. Controls in the refreshed list must work normally.
