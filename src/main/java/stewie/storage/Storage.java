@@ -1,8 +1,6 @@
 package stewie.storage;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
@@ -10,12 +8,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.stream.Collectors;
 
-import stewie.model.Deadline;
-import stewie.model.Event;
 import stewie.model.Task;
-import stewie.model.ToDo;
 
 /** Loads validated task records and replaces saved data only after a complete write succeeds. */
 public class Storage {
@@ -57,7 +51,7 @@ public class Storage {
     public void saveToDisk(ArrayList<Task> tasks) {
         try {
             prepareForSave();
-            byte[] content = serializeTasks(tasks);
+            byte[] content = TaskCodec.encode(tasks);
             writeAtomically(content);
             savedContent = content;
         } catch (IOException | SecurityException exception) {
@@ -78,12 +72,6 @@ public class Storage {
             throw new IOException("Task file is not writable");
         }
         Files.createDirectories(storagePath.getParent());
-    }
-
-    /** Encodes all task records using the same UTF-8 format as the loader. */
-    private byte[] serializeTasks(ArrayList<Task> tasks) {
-        String content = tasks.stream().map(Storage::serializeTask).collect(Collectors.joining("\n"));
-        return content.getBytes(StandardCharsets.UTF_8);
     }
 
     /** Replaces the original only after writing a complete temporary file with matching permissions. */
@@ -126,7 +114,7 @@ public class Storage {
         try {
             savedContent = readTaskFile();
             if (savedContent != null) {
-                ArrayList<String> invalidLines = loadRecords(decodeLines(savedContent), tasks);
+                ArrayList<String> invalidLines = loadRecords(TaskCodec.decodeLines(savedContent), tasks);
                 warnAboutInvalidRecords(invalidLines);
             }
         } catch (IOException | SecurityException exception) {
@@ -149,12 +137,6 @@ public class Storage {
         return readExistingFile();
     }
 
-    /** Decodes UTF-8 strictly and retains empty records so corruption remains visible. */
-    private String[] decodeLines(byte[] content) throws IOException {
-        String decoded = StandardCharsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(content)).toString();
-        return decoded.split("\\R", -1);
-    }
-
     /** Collects valid tasks and the one-based line numbers of rejected records. */
     private ArrayList<String> loadRecords(String[] lines, ArrayList<Task> tasks) {
         ArrayList<String> invalidLines = new ArrayList<>();
@@ -173,7 +155,7 @@ public class Storage {
 
     /** Adds a parsed record only when its task details are not already present. */
     private void addUniqueRecord(String line, ArrayList<Task> tasks) {
-        Task task = parseTask(line);
+        Task task = TaskCodec.parse(line);
         if (tasks.stream().anyMatch(task::hasSameDetails)) {
             throw new IllegalArgumentException("Duplicate task");
         }
@@ -204,40 +186,5 @@ public class Storage {
         } catch (NoSuchFileException exception) {
             return null;
         }
-    }
-
-    /** Validates the entire storage record, including its completion status and exact field count. */
-    private static Task parseTask(String line) {
-        String[] parts = line.split("\\s*\\|\\s*", -1);
-        if (parts.length < 3 || !(parts[1].equals("0") || parts[1].equals("1"))) {
-            throw new IllegalArgumentException("Invalid task status or field count");
-        }
-        Task task;
-        if (parts[0].equals("T") && parts.length == 3) {
-            task = new ToDo(parts[2]);
-        } else if (parts[0].equals("D") && parts.length == 4) {
-            task = new Deadline(parts[2], parts[3]);
-        } else if (parts[0].equals("E") && parts.length == 5) {
-            task = new Event(parts[2], parts[3], parts[4]);
-        } else {
-            throw new IllegalArgumentException("Invalid task type or field count");
-        }
-        if (parts[1].equals("1")) {
-            task.markAsDone();
-        }
-        return task;
-    }
-
-    /** Converts a validated task to the pipe-separated format used by the loader. */
-    private static String serializeTask(Task task) {
-        String status = task.isDone() ? "1" : "0";
-        if (task instanceof Deadline deadline) {
-            return String.format("D | %s | %s | %s", status, task.getDescription(), deadline.getDeadline());
-        }
-        if (task instanceof Event event) {
-            return String.format("E | %s | %s | %s | %s", status, task.getDescription(),
-                    event.getFrom(), event.getTo());
-        }
-        return String.format("T | %s | %s", status, task.getDescription());
     }
 }
