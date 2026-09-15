@@ -507,7 +507,12 @@ public class StewieGui extends BorderPane {
     private VBox createComposer() {
         VBox composer = new VBox(12);
         composer.getStyleClass().add("composer");
+        composer.getChildren().addAll(createQuickCommands(), createInputRow());
+        return composer;
+    }
 
+    /** Creates command suggestions that send immediately and restore focus to the message field. */
+    private HBox createQuickCommands() {
         HBox quickCommands = new HBox(8);
         quickCommands.setAlignment(Pos.CENTER_LEFT);
         for (String command : QUICK_COMMANDS) {
@@ -520,7 +525,11 @@ public class StewieGui extends BorderPane {
             });
             quickCommands.getChildren().add(chip);
         }
+        return quickCommands;
+    }
 
+    /** Creates the message entry row with matching Enter-key and Send-button actions. */
+    private HBox createInputRow() {
         HBox inputRow = new HBox(10);
         inputRow.setAlignment(Pos.CENTER_LEFT);
         messageField.setPromptText("Your next task, if you please...");
@@ -532,8 +541,7 @@ public class StewieGui extends BorderPane {
         sendButton.getStyleClass().add("send-button");
         sendButton.setOnAction(event -> sendMessage());
         inputRow.getChildren().addAll(messageField, sendButton);
-        composer.getChildren().addAll(quickCommands, inputRow);
-        return composer;
+        return inputRow;
     }
 
     /**
