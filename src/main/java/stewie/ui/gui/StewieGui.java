@@ -265,12 +265,31 @@ public class StewieGui extends BorderPane {
     private VBox createChatPanel() {
         VBox chatPanel = new VBox();
         chatPanel.getStyleClass().add("chat-panel");
+        HBox header = createChatHeader();
+        VBox.setVgrow(conversationScroll, Priority.ALWAYS);
+        VBox composer = createComposer();
+        chatPanel.getChildren().addAll(header, conversationScroll, composer);
+        return chatPanel;
+    }
 
+    /** Creates the chat heading with the assistant's identity and a right-aligned section hint. */
+    private HBox createChatHeader() {
         HBox header = new HBox(14);
         header.getStyleClass().add("chat-header");
         header.setAlignment(Pos.CENTER_LEFT);
 
         StackPane avatar = createLogo(48);
+        VBox identity = createAssistantIdentity();
+        Region headerSpacer = new Region();
+        HBox.setHgrow(headerSpacer, Priority.ALWAYS);
+        Label headerHint = new Label("TASKS / CHAT");
+        headerHint.getStyleClass().add("header-hint");
+        header.getChildren().addAll(avatar, identity, headerSpacer, headerHint);
+        return header;
+    }
+
+    /** Creates the assistant's display name and online status for the chat header. */
+    private VBox createAssistantIdentity() {
         VBox identity = new VBox(3);
         Label title = new Label("Stewie Assistant");
         title.getStyleClass().add("chat-title");
@@ -281,17 +300,7 @@ public class StewieGui extends BorderPane {
         statusText.getStyleClass().add("muted-label");
         status.getChildren().addAll(onlineDot, statusText);
         identity.getChildren().addAll(title, status);
-
-        Region headerSpacer = new Region();
-        HBox.setHgrow(headerSpacer, Priority.ALWAYS);
-        Label headerHint = new Label("TASKS / CHAT");
-        headerHint.getStyleClass().add("header-hint");
-        header.getChildren().addAll(avatar, identity, headerSpacer, headerHint);
-
-        VBox.setVgrow(conversationScroll, Priority.ALWAYS);
-        VBox composer = createComposer();
-        chatPanel.getChildren().addAll(header, conversationScroll, composer);
-        return chatPanel;
+        return identity;
     }
 
     /**
