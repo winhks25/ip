@@ -174,20 +174,7 @@ public class CliTest {
     /** Runs a bounded child process with the current Java 25 runtime and optional coverage instrumentation. */
     private String runCli(String input, String language, String country)
             throws IOException, URISyntaxException, InterruptedException {
-        boolean isWindows = System.getProperty("os.name").startsWith("Windows");
-        Path java = Path.of(System.getProperty("java.home"), "bin", isWindows ? "java.exe" : "java");
-        Path classes = Path.of(Stewie.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-        List<String> command = new ArrayList<>(List.of(java.toString(), "-ea", "-Dfile.encoding=UTF-8",
-                "-Duser.language=" + language, "-Duser.country=" + country));
-        // Keep child coverage in a separate file so the Gradle worker cannot overwrite it on exit.
-        for (String argument : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
-            if (argument.startsWith("-javaagent:") && argument.contains("jacocoagent.jar")) {
-                String coverage = Path.of(System.getProperty("stewie.cliCoverageFile")).toAbsolutePath().toString();
-                String agent = argument.substring(0, argument.indexOf('='));
-                command.add(agent + "=destfile=" + coverage + ",append=true");
-            }
-        }
-        command.addAll(List.of("-cp", classes.toString(), "stewie.Stewie"));
+        List<String> command = createCliCommand(language, country);
         Path stdout = directory.resolve("stdout.txt");
         Path stderr = directory.resolve("stderr.txt");
         Process process = new ProcessBuilder(command).directory(directory.toFile())
@@ -203,6 +190,29 @@ public class CliTest {
         } finally {
             process.destroyForcibly();
             process.waitFor(5, TimeUnit.SECONDS);
+        }
+    }
+
+    /** Builds the CLI launch command using the current runtime, requested locale, and test classpath. */
+    private List<String> createCliCommand(String language, String country) throws URISyntaxException {
+        boolean isWindows = System.getProperty("os.name").startsWith("Windows");
+        Path java = Path.of(System.getProperty("java.home"), "bin", isWindows ? "java.exe" : "java");
+        Path classes = Path.of(Stewie.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+        List<String> command = new ArrayList<>(List.of(java.toString(), "-ea", "-Dfile.encoding=UTF-8",
+                "-Duser.language=" + language, "-Duser.country=" + country));
+        addCoverageAgent(command);
+        command.addAll(List.of("-cp", classes.toString(), "stewie.Stewie"));
+        return command;
+    }
+
+    /** Adds optional instrumentation with a separate output file that the Gradle worker cannot overwrite. */
+    private void addCoverageAgent(List<String> command) {
+        for (String argument : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
+            if (argument.startsWith("-javaagent:") && argument.contains("jacocoagent.jar")) {
+                String coverage = Path.of(System.getProperty("stewie.cliCoverageFile")).toAbsolutePath().toString();
+                String agent = argument.substring(0, argument.indexOf('='));
+                command.add(agent + "=destfile=" + coverage + ",append=true");
+            }
         }
     }
 }
