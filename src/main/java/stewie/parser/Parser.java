@@ -168,28 +168,34 @@ public class Parser {
         int field = 0;
         int start = 0;
         while (matcher.find()) {
-            String value = fields.substring(start, matcher.start()).strip();
-            if (field != 0 && value.isEmpty()) {
-                throw new IllegalArgumentException("Update fields cannot be empty.");
-            }
-            values[field] = value.isEmpty() ? null : value;
-            field = switch (matcher.group().toLowerCase(Locale.ROOT)) {
-                case "d/", "by/" -> 1;
-                case "from/" -> 2;
-                case "to/" -> 3;
-                default -> throw new IllegalArgumentException("Use update fields: d/ (or by/), from/, to/.");
-            };
+            storeUpdateValue(values, field, fields.substring(start, matcher.start()));
+            field = getUpdateFieldIndex(matcher.group());
             if (values[field] != null) {
                 throw new IllegalArgumentException("Supply each update field only once; d/ and by/ are aliases.");
             }
             start = matcher.end();
         }
-        String value = fields.substring(start).strip();
+        storeUpdateValue(values, field, fields.substring(start));
+        return values;
+    }
+
+    /** Returns the destination index for a supported update marker, treating deadline aliases equally. */
+    private static int getUpdateFieldIndex(String marker) {
+        return switch (marker.toLowerCase(Locale.ROOT)) {
+            case "d/", "by/" -> 1;
+            case "from/" -> 2;
+            case "to/" -> 3;
+            default -> throw new IllegalArgumentException("Use update fields: d/ (or by/), from/, to/.");
+        };
+    }
+
+    /** Stores a trimmed field value, allowing only the optional description to be empty. */
+    private static void storeUpdateValue(String[] values, int field, String rawValue) {
+        String value = rawValue.strip();
         if (field != 0 && value.isEmpty()) {
             throw new IllegalArgumentException("Update fields cannot be empty.");
         }
         values[field] = value.isEmpty() ? null : value;
-        return values;
     }
 
     /**
