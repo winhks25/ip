@@ -160,6 +160,42 @@ Create the application JAR with its dependencies:
 The output is `build/libs/stewie.jar`, containing JavaFX for the build machine's
 OS and architecture. Its launcher also works with a standard JDK without JavaFX installed.
 
+### Windows releases
+
+Build the Windows x64 distribution on macOS, Linux, or Windows with Java 25:
+
+```sh
+./gradlew windowsJars
+```
+
+In Windows PowerShell, use `.\gradlew.bat windowsJars` instead. The full `build`
+task also creates `build/libs/stewie-windows-x64.jar`.
+
+Copy **stewie-windows-x64.jar** to a writable folder on the Windows computer.
+Open PowerShell in that folder, confirm `java -version` reports an **x64 Java 25**
+installation, and launch:
+
+```powershell
+java -jar .\stewie-windows-x64.jar
+```
+
+This JAR contains Windows JavaFX classes and x64 native DLLs, so a separate
+JavaFX SDK and module-path flags are unnecessary. Use it for Intel/AMD x64
+Windows computers; it is not a native Windows ARM64 distribution.
+You may rename it to `stewie.jar` and use `java -jar .\stewie.jar`.
+Continue launching from the same folder to retain access to `data/stewie.txt`.
+
+Do not send a macOS-built `build/libs/stewie.jar` to Windows: that generic
+artifact contains the build machine's JavaFX libraries. If an older release
+reports "JavaFX runtime components are missing", replace it with the new
+Windows JAR. The release manifest uses `stewie.ui.gui.Launcher`, a plain Java
+entry point that starts the bundled JavaFX application.
+
+Before distribution, run `python3 test/check-windows-jar.py` (Windows:
+`py -3 test/check-windows-jar.py`) and the
+[Windows release startup checks](test/ui-test-plan.md#windows-release-startup-checks).
+Archive checks on another OS do not replace a Windows GUI smoke test.
+
 ### Linux releases
 
 Build both Linux distributions from any supported build machine, including macOS:

@@ -91,6 +91,29 @@ The remaining non-GUI gaps are:
 
 ## Manual platform and display matrix
 
+Windows release packaging verification on 2026-09-16:
+
+- Built `stewie-windows-x64.jar` on macOS using Zulu Java 25.0.3 with
+  `./gradlew build`. All 74 JUnit tests passed and Checkstyle was up to date.
+- All 15 ordered console cases passed exact output comparisons; the full
+  input/output record is generated at `out/windows-fix-ui-session.txt`.
+- `python3 test/check-windows-jar.py` passed: the manifest selects the plain
+  `stewie.ui.gui.Launcher`, Windows JavaFX classes and GUI resources are present,
+  icon services are retained, and all 54 bundled DLLs have x64 PE headers.
+  No macOS/Linux native libraries or platform classes are bundled.
+- Both existing Linux archive checks also passed after the packaging change.
+- A Windows host was unavailable. Windows 11 Pro N GUI startup, persistence,
+  keyboard input, and display scaling remain **not run** for the new artifact.
+  The reported older JAR fails before opening the GUI; that report is not a
+  test result for this replacement artifact.
+
+For a Windows retest, use `stewie-windows-x64.jar` from `./gradlew windowsJars`
+(PowerShell: `.\gradlew.bat windowsJars`), not a macOS-built `stewie.jar`.
+Run the [Windows release startup checks](ui-test-plan.md#windows-release-startup-checks)
+on the reported Windows 11 Pro N system with standard x64 Java 25, then record
+the artifact checksum (`Get-FileHash .\stewie-windows-x64.jar -Algorithm SHA256`)
+along with the OS/JDK details and observed results.
+
 Linux release verification on 2026-09-16:
 
 - Built both Linux JARs on macOS using Zulu Java 25.0.3. The build passed
