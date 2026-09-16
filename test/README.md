@@ -91,9 +91,34 @@ The remaining non-GUI gaps are:
 
 ## Manual platform and display matrix
 
+Linux release verification on 2026-09-16:
+
+- Built both Linux JARs on macOS using Zulu Java 25.0.3. The build passed
+  Checkstyle and all 74 JUnit tests; all 15 ordered console sessions passed.
+- `python3 test/check-linux-jars.py` passed for both architectures.
+- Launched each macOS-built JAR with `java -jar` in an Ubuntu 22.04.5 container
+  running standard Temurin Java 25.0.4, GTK 3, Xvfb, and Openbox, without a separate
+  JavaFX installation. Both displayed the visible "Stewie — your task studio"
+  window and exited with status 0 after Alt+F4. ARM64 ran natively in Docker's
+  Linux VM; x86-64 used emulation on the ARM64 Mac.
+- Both launches printed JavaFX's warning about classes loaded from an unnamed
+  module, which is expected with this fat-JAR distribution. Neither reported
+  missing JavaFX runtime components or native-library failures.
+
+These are automated startup checks, not the full manual desktop, command,
+language, or display-scaling matrix below. Other distributions still need
+their own native smoke tests.
+
 Use a disposable project copy or launch directory so the real agenda stays safe.
-Use a Java 25 build appropriate for each OS; a JavaFX JAR built on one OS is not
-proof that native libraries work on another. Run the existing
+Use a Java 25 build appropriate for each OS. Build Linux release JARs with
+`./gradlew linuxJars` and choose `stewie-linux-x64.jar` for x86-64 or
+`stewie-linux-aarch64.jar` for ARM64. These tasks replace the build host's JavaFX
+dependencies with the target's JavaFX classes and native libraries.
+Run `python3 test/check-linux-jars.py` after building to check both manifests,
+bundled resources and JavaFX classes, icon services, and native ELF CPU types.
+This archive check runs on macOS too; it does not replace a Linux GUI launch.
+Run the [Linux release startup checks](ui-test-plan.md#linux-release-startup-checks),
+then the existing
 [GUI navigation and recovery checks](ui-test-plan.md#additional-gui-navigation-checks)
 for each environment below. Record the actual OS/JDK versions and display scaling.
 

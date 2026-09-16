@@ -7,6 +7,29 @@ JUnit coverage and the OS, language, resolution, and scaling matrix are document
 Under a Burmese JVM locale, task-count confirmations use Burmese digits (for example, `၁`);
 task dates still use English month names. `CliTest` checks both locale behaviors separately.
 
+## Linux release startup checks
+
+Prepare with Java 25: `./gradlew linuxJars`, then run
+`python3 test/check-linux-jars.py` to verify both archives and their native CPU types.
+These checks supplement the ordered
+console sessions; they need a real Linux desktop or an Xvfb display.
+
+- On Ubuntu 22.04 x86-64 with a standard Java 25 JDK (without JavaFX), launch
+  `java -jar stewie-linux-x64.jar` from a fresh temporary directory. Expect the
+  "Stewie — your task studio" window and greeting, with no missing JavaFX runtime,
+  missing native library, or incompatible architecture error. Close the window:
+  expect exit status 0. Repeat on another glibc-based Linux distribution.
+- On Linux ARM64 with ARM64 Java 25, repeat using `java -jar stewie-linux-aarch64.jar`.
+- Build the Linux JARs on macOS as well as Linux. Repeat the relevant startup check
+  with the macOS-built artifact, proving packaging does not depend on the build host.
+- For each Linux JAR, verify the manifest uses `stewie.ui.gui.Launcher`, JavaFX
+  classes and Linux `.so` files are bundled, and no macOS `.dylib` or Windows `.dll`
+  files are present. Verify native ELF machine types match the JAR's architecture.
+- After successful startup, run the GUI navigation checks below, including adding
+  a task, closing the window, and relaunching from the same directory to check persistence.
+- On macOS, build with `./gradlew shadowJar` and launch `java -jar build/libs/stewie.jar`
+  to check that the shared launcher still opens the existing desktop interface.
+
 ## Additional GUI navigation checks
 
 - Launch the GUI from a terminal and add, update, mark, unmark, and delete tasks.

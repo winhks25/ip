@@ -157,9 +157,45 @@ Create the application JAR with its dependencies:
 ./gradlew shadowJar
 ```
 
-The output is `build/libs/stewie.jar`. JavaFX includes platform-specific native
-libraries, so a JAR built on one operating system is not a verified distribution
-for another.
+The output is `build/libs/stewie.jar`, containing JavaFX for the build machine's
+OS and architecture. Its launcher also works with a standard JDK without JavaFX installed.
+
+### Linux releases
+
+Build both Linux distributions from any supported build machine, including macOS:
+
+```sh
+./gradlew linuxJars
+```
+
+`./gradlew build` also creates these JARs. Distribute the file matching the Linux
+machine's architecture (`uname -m`):
+
+| Linux architecture | Release file | Launch command |
+| --- | --- | --- |
+| `x86_64` (Intel/AMD) | `build/libs/stewie-linux-x64.jar` | `java -jar stewie-linux-x64.jar` |
+| `aarch64` (ARM64) | `build/libs/stewie-linux-aarch64.jar` | `java -jar stewie-linux-aarch64.jar` |
+
+Both include JavaFX 25; installing a separate JavaFX SDK or configuring a module
+path is unnecessary. You can rename the matching JAR to `stewie.jar` if desired.
+Do not distribute the macOS build's `stewie.jar` as a Linux release.
+
+Use Java 25 for the same architecture and a glibc-based graphical Linux desktop
+with GTK 3.20 or newer and X11 (or XWayland on Wayland).
+The bundled ARM64 libraries require glibc 2.35 or newer (as provided by Ubuntu 22.04).
+On Ubuntu 22.04, install missing desktop libraries with:
+
+```sh
+sudo apt-get update
+sudo apt-get install libgtk-3-0 libgl1 libxtst6 libxi6 libxrender1 libxrandr2 fontconfig
+```
+
+Other distributions use their equivalent GTK 3, X11, OpenGL, and font packages.
+The [JavaFX Linux requirements](https://openjfx.io/highlights/25/) still apply:
+bundling JavaFX cannot support every Linux system. Headless servers without a
+display, 32-bit CPUs, and musl-based systems such as stock Alpine are not supported
+by these desktop JARs. See the [release checks](test/ui-test-plan.md#linux-release-startup-checks)
+before publishing them.
 
 Run JUnit tests, Checkstyle, and coverage reports:
 
