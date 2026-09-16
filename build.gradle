@@ -116,6 +116,8 @@ def releasePlatforms = [
     'LinuxX64': [classifier: 'linux', archive: 'linux-x64'],
     'LinuxArm64': [classifier: 'linux-aarch64', archive: 'linux-aarch64'],
     'WindowsX64': [classifier: 'win', archive: 'windows-x64'],
+    'MacX64': [classifier: 'mac', archive: 'mac-x64'],
+    'MacArm64': [classifier: 'mac-aarch64', archive: 'mac-aarch64'],
 ]
 def releaseJars = releasePlatforms.collectEntries { suffix, platform ->
     def targetJavafx = configurations.create("javafx${suffix}") {
@@ -141,6 +143,24 @@ def releaseJars = releasePlatforms.collectEntries { suffix, platform ->
         exclude 'module-info.class', 'META-INF/versions/**/module-info.class'
     }
     [(suffix): releaseJar]
+}
+
+// Store complete platform JARs separately so identically named native libraries never collide.
+shadowJar {
+    configurations = []
+    include 'stewie/launcher/**', '**/*.jar'
+    manifest {
+        attributes 'Main-Class': 'stewie.launcher.UniversalLauncher'
+    }
+    releaseJars.values().each { releaseJar ->
+        from(releaseJar.flatMap { it.archiveFile }) {
+            into 'platforms'
+        }
+    }
+}
+
+tasks.named('startShadowScripts') {
+    mainClass = 'stewie.launcher.UniversalLauncher'
 }
 
 tasks.register('linuxJars') {

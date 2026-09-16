@@ -7,6 +7,28 @@ JUnit coverage and the OS, language, resolution, and scaling matrix are document
 Under a Burmese JVM locale, task-count confirmations use Burmese digits (for example, `၁`);
 task dates still use English month names. `CliTest` checks both locale behaviors separately.
 
+## Universal release startup checks
+
+Prepare with Java 25: `./gradlew shadowJar` (PowerShell: `.\gradlew.bat shadowJar`).
+The output `build/libs/stewie.jar` contains five isolated platform JARs. Run
+`python3 test/check-universal-jar.py` to check every bundled runtime and native CPU type.
+
+- Copy only `stewie.jar` to a fresh writable directory, including a directory
+  whose name contains spaces. Run `java -jar stewie.jar` with standard Java 25,
+  without JavaFX installed or a network connection. Expect the Stewie window
+  and greeting, with no missing runtime, native-library, or architecture error.
+- Repeat the same JAR on Windows x64 (including Windows 11 Pro N), macOS Intel
+  and Apple Silicon, and glibc-based Linux/Ubuntu x64 and ARM64 with a desktop.
+  The JVM architecture determines which runtime is selected.
+- Add `todo universal smoke test`, close the window, and check exit status 0.
+  Relaunch from the same directory and send `list`: the task must persist in
+  `data/stewie.txt` in that directory, rather than in the temporary runtime folder.
+- Verify the temporary `stewie-runtime-*` directory is removed after normal exit.
+- On an unsupported OS or JVM architecture, expect a clear unsupported-platform
+  message and exit status 1, rather than attempting to load incompatible native code.
+- Run the existing GUI navigation, persistence, input, and scaling checks with
+  the universal JAR on each available platform. Archive checks alone are not GUI tests.
+
 ## Windows release startup checks
 
 Prepare with Java 25: `./gradlew windowsJars` (PowerShell: `.\gradlew.bat windowsJars`).
