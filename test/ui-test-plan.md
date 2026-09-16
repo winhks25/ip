@@ -7,6 +7,31 @@ JUnit coverage and the OS, language, resolution, and scaling matrix are document
 Under a Burmese JVM locale, task-count confirmations use Burmese digits (for example, `၁`);
 task dates still use English month names. `CliTest` checks both locale behaviors separately.
 
+## Windows release startup checks
+
+Prepare with Java 25: `./gradlew windowsJars` (PowerShell: `.\gradlew.bat windowsJars`).
+Run `python3 test/check-windows-jar.py` (Windows: `py -3 test/check-windows-jar.py`)
+to check the manifest, Windows JavaFX classes, resources, icon services, and x64
+PE headers of every DLL. The archive check works on macOS too, but does not prove
+that the GUI opens on Windows.
+
+- On Windows 11 x64, including the reported Pro N edition, use a standard x64
+  Java 25 JDK without JavaFX. Copy only `build/libs/stewie-windows-x64.jar` into
+  a fresh writable directory, open PowerShell there, and run
+  `java -jar .\stewie-windows-x64.jar`. Expect the "Stewie — your task studio"
+  window and greeting, with no missing JavaFX runtime or native-library error.
+- In Chat, send `todo windows smoke test`, then `list`. Expect one unfinished
+  task. Close the window; expect `$LASTEXITCODE` to be `0`. Relaunch from the
+  same directory, send `list`, and confirm the task was restored. Send `mark 1`,
+  then `list`, and confirm the task is completed. Close and relaunch once more
+  to verify the completion state persists. Closing must again exit with `0`.
+- Repeat with the JAR built on macOS and with the JAR renamed to `stewie.jar`,
+  using `java -jar .\stewie.jar`, to cover the original smoke-test command.
+- Run the GUI navigation and display-scaling checks below on Windows after
+  startup succeeds. Record the exact JDK, OS edition, artifact, and results.
+- Build with `./gradlew build` and confirm the Windows and both Linux release
+  JARs are created. Run both archive checkers to protect existing Linux packaging.
+
 ## Linux release startup checks
 
 Prepare with Java 25: `./gradlew linuxJars`, then run

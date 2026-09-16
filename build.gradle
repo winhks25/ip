@@ -112,18 +112,23 @@ tasks.withType(ShadowJar).configureEach {
 }
 
 // Keep architectures separate: their native libraries have identical names but different machine code.
-def linuxJars = ['LinuxX64': 'linux', 'LinuxArm64': 'linux-aarch64'].collect { suffix, platform ->
-    def linuxJavafx = configurations.create("javafx${suffix}") {
+def releasePlatforms = [
+    'LinuxX64': [classifier: 'linux', archive: 'linux-x64'],
+    'LinuxArm64': [classifier: 'linux-aarch64', archive: 'linux-aarch64'],
+    'WindowsX64': [classifier: 'win', archive: 'windows-x64'],
+]
+def releaseJars = releasePlatforms.collectEntries { suffix, platform ->
+    def targetJavafx = configurations.create("javafx${suffix}") {
         canBeConsumed = false
         transitive = false
     }
     ['base', 'graphics', 'controls', 'fxml'].each { module ->
-        dependencies.add(linuxJavafx.name, "org.openjfx:javafx-${module}:${javafx.version}:${platform}")
+        dependencies.add(targetJavafx.name, "org.openjfx:javafx-${module}:${javafx.version}:${platform.classifier}")
     }
-    tasks.register("shadowJar${suffix}", ShadowJar) {
+    def releaseJar = tasks.register("shadowJar${suffix}", ShadowJar) {
         group = 'distribution'
-        description = "Packages the application with JavaFX native libraries for ${platform}."
-        archiveFileName = "stewie-${platform == 'linux' ? 'linux-x64' : 'linux-aarch64'}.jar"
+        description = "Packages the application with JavaFX native libraries for ${platform.archive}."
+        archiveFileName = "stewie-${platform.archive}.jar"
         from sourceSets.main.output
         configurations = [project.configurations.runtimeClasspath]
         dependencies {
@@ -131,20 +136,27 @@ def linuxJars = ['LinuxX64': 'linux', 'LinuxArm64': 'linux-aarch64'].collect { s
             exclude(dependency('org.openjfx:.*:.*'))
         }
         from {
-            linuxJavafx.collect { zipTree(it) }
+            targetJavafx.collect { zipTree(it) }
         }
         exclude 'module-info.class', 'META-INF/versions/**/module-info.class'
     }
+    [(suffix): releaseJar]
 }
 
 tasks.register('linuxJars') {
     group = 'distribution'
     description = 'Builds runnable Linux x86-64 and ARM64 JARs on any build host.'
-    dependsOn linuxJars
+    dependsOn releaseJars.LinuxX64, releaseJars.LinuxArm64
+}
+
+tasks.register('windowsJars') {
+    group = 'distribution'
+    description = 'Builds a runnable Windows x86-64 JAR on any build host.'
+    dependsOn releaseJars.WindowsX64
 }
 
 assemble {
-    dependsOn tasks.named('linuxJars')
+    dependsOn tasks.named('linuxJars'), tasks.named('windowsJars')
 }
 
 run {
