@@ -1,3 +1,5 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
     id 'java'
     id 'application'
@@ -85,7 +87,7 @@ test {
 }
 
 application {
-    mainClass = 'stewie.ui.gui.StewieApplication'
+    mainClass = 'stewie.ui.gui.Launcher'
 }
 
 jar {
@@ -97,7 +99,52 @@ jar {
 
 shadowJar {
     archiveFileName = 'stewie.jar'
+}
+
+tasks.withType(ShadowJar).configureEach {
+    filesMatching('META-INF/services/**') {
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
     mergeServiceFiles()
+    manifest {
+        attributes 'Main-Class': application.mainClass.get(), 'Enable-Native-Access': 'ALL-UNNAMED'
+    }
+}
+
+// Keep architectures separate: their native libraries have identical names but different machine code.
+def linuxJars = ['LinuxX64': 'linux', 'LinuxArm64': 'linux-aarch64'].collect { suffix, platform ->
+    def linuxJavafx = configurations.create("javafx${suffix}") {
+        canBeConsumed = false
+        transitive = false
+    }
+    ['base', 'graphics', 'controls', 'fxml'].each { module ->
+        dependencies.add(linuxJavafx.name, "org.openjfx:javafx-${module}:${javafx.version}:${platform}")
+    }
+    tasks.register("shadowJar${suffix}", ShadowJar) {
+        group = 'distribution'
+        description = "Packages the application with JavaFX native libraries for ${platform}."
+        archiveFileName = "stewie-${platform == 'linux' ? 'linux-x64' : 'linux-aarch64'}.jar"
+        from sourceSets.main.output
+        configurations = [project.configurations.runtimeClasspath]
+        dependencies {
+            // Replace the build host's JavaFX, including its platform-specific Java classes.
+            exclude(dependency('org.openjfx:.*:.*'))
+        }
+        from {
+            linuxJavafx.collect { zipTree(it) }
+        }
+        exclude 'module-info.class', 'META-INF/versions/**/module-info.class'
+    }
+}
+
+tasks.register('linuxJars') {
+    group = 'distribution'
+    description = 'Builds runnable Linux x86-64 and ARM64 JARs on any build host.'
+    dependsOn linuxJars
+}
+
+assemble {
+    dependsOn tasks.named('linuxJars')
 }
 
 run {
