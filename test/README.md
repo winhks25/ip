@@ -91,6 +91,35 @@ The remaining non-GUI gaps are:
 
 ## Manual platform and display matrix
 
+Universal release verification on 2026-09-16:
+
+- Built `build/libs/stewie.jar` (approximately 41 MB) with Java 25. It contains
+  Windows x64, macOS x64/ARM64, and Linux x64/ARM64 packages in separate entries.
+- All 78 JUnit tests passed, including platform aliases, unsupported systems,
+  missing packages, and a real child-JVM test of argument handling, working
+  directory, Java version, and exit status. Main and test Checkstyle checks passed.
+- All 15 ordered console sessions passed; the full input/output record is
+  `out/universal-ui-session.txt`. Console behavior and expectations are unchanged.
+- `python3 test/check-universal-jar.py` passed for all five packages, including
+  their plain launchers, JavaFX modules, icons, resources, native OS formats,
+  and CPU headers. Both existing platform archive checkers also passed.
+- The same universal JAR opened the real Stewie stage on Apple Silicon macOS
+  with Zulu Java 25.0.3. Both JVMs used `--limit-modules=java.se` to exclude the
+  JDK's own JavaFX modules and require the bundled dependencies.
+- The same JAR opened the real Stewie stage in both existing Ubuntu 22.04 test
+  images using standard Temurin Java 25.0.4 and Xvfb. ARM64 ran natively in the
+  Docker VM; x64 used emulation. Network access was disabled in both containers.
+- These automated startup checks used a separate test agent to observe the
+  real application's stage title and `isShowing()` state, then call JavaFX's
+  normal exit API. All three launches ran in folders containing spaces, exited
+  with status 0, and removed the extracted temporary runtime. The agent is not
+  included in the release. JavaFX printed its existing unnamed-module warning.
+- Windows x64 and Intel macOS native GUI launches remain **not run**. Full GUI
+  command, persistence, keyboard, language, and scaling checks remain separate
+  from these startup checks. Use the
+  [universal release startup plan](ui-test-plan.md#universal-release-startup-checks)
+  for those checks; a successful archive inspection is not a native launch test.
+
 Windows release packaging verification on 2026-09-16:
 
 - Built `stewie-windows-x64.jar` on macOS using Zulu Java 25.0.3 with
@@ -107,8 +136,9 @@ Windows release packaging verification on 2026-09-16:
   The reported older JAR fails before opening the GUI; that report is not a
   test result for this replacement artifact.
 
-For a Windows retest, use `stewie-windows-x64.jar` from `./gradlew windowsJars`
-(PowerShell: `.\gradlew.bat windowsJars`), not a macOS-built `stewie.jar`.
+For a Windows retest, use the current universal `stewie.jar` or
+`stewie-windows-x64.jar` from `./gradlew windowsJars`
+(PowerShell: `.\gradlew.bat windowsJars`). The old host-only `stewie.jar` is not suitable.
 Run the [Windows release startup checks](ui-test-plan.md#windows-release-startup-checks)
 on the reported Windows 11 Pro N system with standard x64 Java 25, then record
 the artifact checksum (`Get-FileHash .\stewie-windows-x64.jar -Algorithm SHA256`)

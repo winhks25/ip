@@ -157,8 +157,38 @@ Create the application JAR with its dependencies:
 ./gradlew shadowJar
 ```
 
-The output is `build/libs/stewie.jar`, containing JavaFX for the build machine's
-OS and architecture. Its launcher also works with a standard JDK without JavaFX installed.
+The output is **`build/libs/stewie.jar`**, a single distribution file for all
+the supported desktop platforms below. Upload this file to your release; users
+do not need to choose an OS-specific download.
+
+| Operating system | Supported Java 25 architectures |
+| --- | --- |
+| Windows | x64 (Intel/AMD) |
+| macOS | x64 (Intel) and ARM64 (Apple Silicon) |
+| Linux, including Ubuntu | x64 and ARM64 on a glibc-based graphical desktop |
+
+Copy the JAR into a writable folder and launch it with:
+
+```sh
+java -jar stewie.jar
+```
+
+JavaFX and the icon dependencies for all five targets are bundled. A separate
+JavaFX SDK, module-path flags, and runtime downloads are unnecessary. Java 25
+must already be installed. Linux still needs the desktop libraries described
+below. Native Windows ARM64, 32-bit JVMs, and musl-based Linux are unsupported.
+
+The launcher selects the package matching the running JVM, extracts it to a
+temporary directory, and starts it with the same Java installation. Separate
+packages prevent Intel and ARM native libraries with identical filenames from
+colliding. The temporary package is removed after normal exit; task data remains
+in `data/stewie.txt` relative to the folder you launched from. This requires a
+writable system temporary directory and starts a second Java process internally.
+
+Run `python3 test/check-universal-jar.py` to inspect all bundled runtimes, then
+follow the [universal startup checks](test/ui-test-plan.md#universal-release-startup-checks)
+on each supported platform. `./gradlew build` also creates the universal JAR.
+The smaller platform-specific JARs below remain available as optional downloads.
 
 ### Windows releases
 
@@ -185,8 +215,9 @@ Windows computers; it is not a native Windows ARM64 distribution.
 You may rename it to `stewie.jar` and use `java -jar .\stewie.jar`.
 Continue launching from the same folder to retain access to `data/stewie.txt`.
 
-Do not send a macOS-built `build/libs/stewie.jar` to Windows: that generic
-artifact contains the build machine's JavaFX libraries. If an older release
+The current universal `build/libs/stewie.jar` also works as the Windows download.
+Older host-only builds of `stewie.jar` contain only the builder's JavaFX libraries.
+If an older release
 reports "JavaFX runtime components are missing", replace it with the new
 Windows JAR. The release manifest uses `stewie.ui.gui.Launcher`, a plain Java
 entry point that starts the bundled JavaFX application.
@@ -214,7 +245,8 @@ machine's architecture (`uname -m`):
 
 Both include JavaFX 25; installing a separate JavaFX SDK or configuring a module
 path is unnecessary. You can rename the matching JAR to `stewie.jar` if desired.
-Do not distribute the macOS build's `stewie.jar` as a Linux release.
+The current universal `stewie.jar` also bundles both Linux targets; older host-only
+macOS builds of `stewie.jar` do not.
 
 Use Java 25 for the same architecture and a glibc-based graphical Linux desktop
 with GTK 3.20 or newer and X11 (or XWayland on Wayland).
