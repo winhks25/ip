@@ -67,8 +67,9 @@ def check_runtime(jar, platform):
 
 
 def check_universal():
-    """Verify the outer bootstrap and all five self-contained platform packages."""
+    """Verify the size limit and reconstruct all five runtimes from shared files and overlays."""
     path = ROOT / 'build/libs/stewie.jar'
+    assert path.stat().st_size <= 12_000_000, 'Universal JAR exceeds 12 MB'
     with ZipFile(path) as jar:
         names = jar.namelist()
         assert len(names) == len(set(names)), 'Duplicate outer entries'
@@ -79,8 +80,19 @@ def check_universal():
         assert not any(name.endswith(('.dll', '.so', '.dylib')) for name in names), 'Unisolated natives'
         for platform in PLATFORMS:
             resource = f'platforms/stewie-{platform}.jar'
-            with ZipFile(BytesIO(jar.read(resource))) as runtime:
+            reconstructed = BytesIO()
+            with ZipFile(reconstructed, 'w') as output:
+                for part in ('platforms/common.jar', resource):
+                    with ZipFile(BytesIO(jar.read(part))) as payload:
+                        for name in payload.namelist():
+                            output.writestr(name, payload.read(name))
+            with ZipFile(reconstructed) as runtime:
                 check_runtime(runtime, platform)
+                with ZipFile(path.parent / f'stewie-{platform}.jar') as original:
+                    expected = {n: original.read(n) for n in original.namelist() if not n.endswith('/')}
+                    actual = {n: runtime.read(n) for n in runtime.namelist()}
+                    assert actual == expected, f'{platform}: reconstructed runtime differs from original'
+                print(f'PASS: {platform}; every reconstructed file matches the complete platform JAR')
     print(f'PASS: {path.name}; all five runtimes isolated ({path.stat().st_size:,} bytes)')
 
 

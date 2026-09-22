@@ -178,12 +178,14 @@ JavaFX SDK, module-path flags, and runtime downloads are unnecessary. Java 25
 must already be installed. Linux still needs the desktop libraries described
 below. Native Windows ARM64, 32-bit JVMs, and musl-based Linux are unsupported.
 
-The launcher selects the package matching the running JVM, extracts it to a
-temporary directory, and starts it with the same Java installation. Separate
-packages prevent Intel and ARM native libraries with identical filenames from
-colliding. The temporary package is removed after normal exit; task data remains
-in `data/stewie.txt` relative to the folder you launched from. This requires a
-writable system temporary directory and starts a second Java process internally.
+The universal JAR stores identical files once, alongside five platform overlays.
+The build enforces a 12,000,000-byte limit. The launcher combines shared files
+with the matching overlay in a `.stewie-runtime-*` directory inside the folder
+you launched from, then starts it with the same Java installation. This preserves
+platform-specific JavaFX classes and keeps Intel and ARM native libraries separate.
+The runtime directory is removed after normal exit; task data remains in
+`data/stewie.txt`. The launch folder must be writable. Startup needs no network
+connection and starts a second Java process internally.
 
 Run `python3 test/check-universal-jar.py` to inspect all bundled runtimes, then
 follow the [universal startup checks](test/ui-test-plan.md#universal-release-startup-checks)

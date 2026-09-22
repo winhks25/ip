@@ -10,7 +10,7 @@ task dates still use English month names. `CliTest` checks both locale behaviors
 ## Universal release startup checks
 
 Prepare with Java 25: `./gradlew shadowJar` (PowerShell: `.\gradlew.bat shadowJar`).
-The output `build/libs/stewie.jar` contains five isolated platform JARs. Run
+The output `build/libs/stewie.jar` contains shared files and five isolated platform overlays, totaling at most 12,000,000 bytes. Run
 `python3 test/check-universal-jar.py` to check every bundled runtime and native CPU type.
 
 - Copy only `stewie.jar` to a fresh writable directory, including a directory
@@ -23,7 +23,8 @@ The output `build/libs/stewie.jar` contains five isolated platform JARs. Run
 - Add `todo universal smoke test`, close the window, and check exit status 0.
   Relaunch from the same directory and send `list`: the task must persist in
   `data/stewie.txt` in that directory, rather than in the temporary runtime folder.
-- Verify the temporary `stewie-runtime-*` directory is removed after normal exit.
+- Verify the temporary `.stewie-runtime-*` directory is created inside the launch directory
+  and removed after normal exit.
 - On an unsupported OS or JVM architecture, expect a clear unsupported-platform
   message and exit status 1, rather than attempting to load incompatible native code.
 - Run the existing GUI navigation, persistence, input, and scaling checks with

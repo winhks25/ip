@@ -145,16 +145,67 @@ def releaseJars = releasePlatforms.collectEntries { suffix, platform ->
     [(suffix): releaseJar]
 }
 
-// Store complete platform JARs separately so identically named native libraries never collide.
+// Share byte-identical files, retaining platform-specific classes and native libraries in overlays.
+// Inner archives are stored uncompressed so the outer JAR can compress across neighboring class files.
+def universalPayload = tasks.register('universalPayload') {
+    dependsOn releaseJars.values()
+    inputs.files(releaseJars.values().collect { it.flatMap { task -> task.archiveFile } })
+    def destination = layout.buildDirectory.dir('universal-payload')
+    outputs.dir(destination)
+    doLast {
+        def runtimes = releaseJars.collectEntries { suffix, provider ->
+            def entries = [:]
+            new java.util.zip.ZipFile(provider.get().archiveFile.get().asFile).withCloseable { archive ->
+                archive.entries().each { entry ->
+                    if (!entry.directory) {
+                        entries[entry.name] = archive.getInputStream(entry).withCloseable { it.bytes }
+                    }
+                }
+            }
+            [(releasePlatforms[suffix].archive): entries]
+        }
+        def common = runtimes.values().first().findAll { name, bytes ->
+            runtimes.values().every { java.util.Arrays.equals(bytes, it[name]) }
+        }
+        delete destination
+        def directory = destination.get().asFile
+        directory.mkdirs()
+        def writeArchive = { name, entries ->
+            new java.util.zip.ZipOutputStream(new FileOutputStream(new File(directory, name))).withCloseable { zip ->
+                entries.each { path, bytes ->
+                    def checksum = new java.util.zip.CRC32()
+                    checksum.update(bytes)
+                    def entry = new java.util.zip.ZipEntry(path)
+                    entry.method = java.util.zip.ZipEntry.STORED
+                    entry.size = bytes.length
+                    entry.crc = checksum.value
+                    entry.time = 0
+                    zip.putNextEntry(entry)
+                    zip.write(bytes)
+                    zip.closeEntry()
+                }
+            }
+        }
+        writeArchive('common.jar', common)
+        runtimes.each { platform, entries ->
+            writeArchive("stewie-${platform}.jar", entries.findAll { name, bytes -> !common.containsKey(name) })
+        }
+    }
+}
+
 shadowJar {
     configurations = []
     include 'stewie/launcher/**', '**/*.jar'
     manifest {
         attributes 'Main-Class': 'stewie.launcher.UniversalLauncher'
     }
-    releaseJars.values().each { releaseJar ->
-        from(releaseJar.flatMap { it.archiveFile }) {
-            into 'platforms'
+    from(universalPayload) {
+        into 'platforms'
+    }
+    doLast {
+        def size = archiveFile.get().asFile.length()
+        if (size > 12_000_000) {
+            throw new GradleException("Universal JAR exceeds 12 MB: ${size} bytes")
         }
     }
 }

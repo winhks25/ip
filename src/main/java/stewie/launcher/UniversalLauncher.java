@@ -8,10 +8,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Provides a single-JAR entry point for the supported desktop operating systems and CPU architectures.
- * Each bundled platform JAR keeps its own JavaFX classes and native libraries to avoid filename collisions.
+ * Shared files are bundled once; platform overlays keep differing classes and native libraries separate.
  */
 public final class UniversalLauncher {
     private UniversalLauncher() {
@@ -64,7 +67,7 @@ public final class UniversalLauncher {
     }
 
     /**
-     * Extracts only the selected package into a private temporary directory and removes it after the app exits.
+     * Assembles the selected runtime inside the working directory and removes it after the app exits.
      */
     static int launchBundled(String platform, String[] args) throws IOException, InterruptedException {
         String resource = "/platforms/stewie-" + platform + ".jar";
@@ -72,17 +75,39 @@ public final class UniversalLauncher {
             if (input == null) {
                 throw new IOException("Missing bundled runtime " + resource + ". Download the complete stewie.jar.");
             }
-            Path directory = Files.createTempDirectory("stewie-runtime-");
+            Path directory = Files.createTempDirectory(Path.of("."), ".stewie-runtime-");
             Path archive = directory.resolve("stewie.jar");
             // Also attempt cleanup if the terminal interrupts the launcher during a running session.
             directory.toFile().deleteOnExit();
             archive.toFile().deleteOnExit();
             try {
-                Files.copy(input, archive);
+                try (InputStream common = UniversalLauncher.class.getResourceAsStream("/platforms/common.jar")) {
+                    if (common == null) {
+                        throw new IOException("Missing bundled runtime /platforms/common.jar.");
+                    }
+                    try (ZipOutputStream output = new ZipOutputStream(Files.newOutputStream(archive))) {
+                        appendEntries(common, output);
+                        appendEntries(input, output);
+                    }
+                }
                 return launchArchive(archive, args);
             } finally {
                 Files.deleteIfExists(archive);
                 Files.deleteIfExists(directory);
+            }
+        }
+    }
+
+    /**
+     * Copies shared or platform entries into the runtime JAR without extracting arbitrary paths to disk.
+     */
+    private static void appendEntries(InputStream input, ZipOutputStream output) throws IOException {
+        try (ZipInputStream archive = new ZipInputStream(input)) {
+            ZipEntry entry;
+            while ((entry = archive.getNextEntry()) != null) {
+                output.putNextEntry(new ZipEntry(entry.getName()));
+                archive.transferTo(output);
+                output.closeEntry();
             }
         }
     }
